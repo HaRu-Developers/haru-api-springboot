@@ -1,0 +1,36 @@
+services:
+  app-blue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: andylee259/haru-app:latest
+    container_name: app-blue
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=blue
+      - SPRING_CONFIG_ADDITIONAL_LOCATION=file:/app/config/
+    volumes:
+      - /home/ubuntu/app/config/application-secret.yml:/app/config/application-secret.yml:ro
+    networks:
+      - haru-network
+
+  app-green:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: andylee259/haru-app:latest
+    container_name: app-green
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=green
+      - SPRING_CONFIG_ADDITIONAL_LOCATION=file:/app/config/
+    volumes:
+      - /home/ubuntu/app/config/application-secret.yml:/app/config/application-secret.yml:ro
+    networks:
+      - haru-network
+
+networks:
+  haru-network:
+    driver: bridge
