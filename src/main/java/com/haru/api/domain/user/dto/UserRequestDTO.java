@@ -18,4 +18,15 @@ public class UserRequestDTO {
         @NotBlank(message = "이름은 빈값일 수 없습니다.")
         private String name;
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class LoginRequest {
+        @NotBlank(message = "이메일은 빈값일 수 없습니다.")
+        private String email;
+        @NotBlank(message = "비밀번호는 빈값일 수 없습니다.")
+        private String password;
+    }
 }

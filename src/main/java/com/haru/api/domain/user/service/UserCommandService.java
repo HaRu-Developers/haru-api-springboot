@@ -6,4 +6,5 @@ import jakarta.validation.Valid;
 
 public interface UserCommandService {
     void signUp(UserRequestDTO.SignUpRequest request);
+    void login(UserRequestDTO.LoginRequest request);
 }
