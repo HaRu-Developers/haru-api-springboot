@@ -1,9 +1,9 @@
-package com.haru.apiPayload.exception;
+package com.haru.api.global.apiPayload.exception;
 
 
-import com.haru.apiPayload.ApiResponse;
-import com.haru.apiPayload.code.ErrorReasonDTO;
-import com.haru.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.ApiResponse;
+import com.haru.api.global.apiPayload.code.ErrorReasonDTO;
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
-package com.haru.apiPayload.code.status;
+package com.haru.api.global.apiPayload.code.status;
 
 
-import com.haru.apiPayload.code.BaseCode;
-import com.haru.apiPayload.code.ReasonDTO;
+import com.haru.api.global.apiPayload.code.BaseCode;
+import com.haru.api.global.apiPayload.code.ReasonDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

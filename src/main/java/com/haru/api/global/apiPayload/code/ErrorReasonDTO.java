@@ -1,4 +1,4 @@
-package com.haru.apiPayload.code;
+package com.haru.api.global.apiPayload.code;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

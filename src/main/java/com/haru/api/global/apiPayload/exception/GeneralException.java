@@ -1,8 +1,8 @@
-package com.haru.apiPayload.exception;
+package com.haru.api.global.apiPayload.exception;
 
 
-import com.haru.apiPayload.code.BaseErrorCode;
-import com.haru.apiPayload.code.ErrorReasonDTO;
+import com.haru.api.global.apiPayload.code.BaseErrorCode;
+import com.haru.api.global.apiPayload.code.ErrorReasonDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
