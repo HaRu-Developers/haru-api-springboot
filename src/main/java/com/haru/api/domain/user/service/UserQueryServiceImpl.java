@@ -9,6 +9,8 @@ import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserQueryServiceImpl implements UserQueryService {
@@ -22,5 +24,23 @@ public class UserQueryServiceImpl implements UserQueryService {
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         return UserConverter.toUserDTO(user);
+    }
+
+    @Override
+    public List<UserResponseDTO.UserDTO> getSimilarEmailUsers(Long userId, String email) {
+
+        userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        List<Users> users = userRepository.findTop4UsersByEmailContainingIgnoreCase(email);
+
+        return users.parallelStream()
+                .map(user -> UserResponseDTO.UserDTO.builder()
+                        .id(user.getId())
+                        .email(user.getEmail())
+                        .imageUrl(user.getProfileImage())
+                        .name(user.getName())
+                        .build())
+                .toList();
     }
 }
