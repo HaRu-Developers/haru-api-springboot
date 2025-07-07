@@ -42,4 +42,5 @@ out/
 /target
 
 ### .yml file
-application.yml
+src/main/resources/application-secret.yml
+src/test/resources/application-test.yml

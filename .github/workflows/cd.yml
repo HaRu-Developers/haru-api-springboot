@@ -1,0 +1,57 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create application-secret.yml
+        run: |
+          mkdir -p ./temp_secret
+          echo "${{ secrets.APPLICATION_SECRET }}" > ./temp_secret/application-secret.yml
+        shell: bash
+
+      - name: Copy application-secret.yml to EC2
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          username: ubuntu
+          host: ${{ secrets.EC2_HOST }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: ./temp_secret/application-secret.yml
+          target: /home/ubuntu/secret/
+
+      - name: Copy docker-compose.yml
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          username: ubuntu
+          host: ${{ secrets.EC2_HOST }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: ./docker-compose.yml
+          target: /home/ubuntu/cicd/
+
+      - name: Upload deploy.sh to EC2
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: ./deploy.sh
+          target: /home/ubuntu/cicd/
+
+      - name: SSH and Deploy
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/haru-app:latest
+            sudo chmod +x /home/ubuntu/cicd/deploy.sh
+            sudo /home/ubuntu/cicd/deploy.sh
