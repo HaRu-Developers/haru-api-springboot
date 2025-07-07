@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   pull_request:
-    branches: [ develop ]
+    branches: [ dev ]
   push:
-    branches: [ develop ]
+    branches: [ dev ]
   workflow_dispatch:
 
 jobs:
