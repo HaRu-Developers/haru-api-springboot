@@ -40,3 +40,6 @@ out/
 .DS_Store
 .env
 /target
+
+### .yml file
+application.yml
