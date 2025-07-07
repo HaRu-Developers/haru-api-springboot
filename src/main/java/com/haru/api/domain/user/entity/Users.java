@@ -24,6 +24,7 @@ public class Users extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, length = 20)
+    @Setter
     private String name;
 
     @Column(nullable = false, length = 50)

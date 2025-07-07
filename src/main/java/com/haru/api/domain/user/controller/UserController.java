@@ -26,17 +26,32 @@ public class UserController {
             @RequestBody @Valid UserRequestDTO.SignUpRequest request
     ) {
         userCommandService.signUp(request);
+
         return ApiResponse.onSuccess(null);
     }
 
-    @Operation(summary = "유저 정보 조회", description =
-            "# 유저 정보 조회 API 입니다. 현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
+    @Operation(summary = "회원 정보 조회", description =
+            "# 회원 정보 조회 API 입니다. 현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
     )
     @GetMapping("/{userId}/info")
     public ApiResponse<UserResponseDTO.UserDTO> getUserInfo(
             @PathVariable Long userId
     ) {
         UserResponseDTO.UserDTO userDTO = userQueryService.getUserInfo(userId);
+
+        return ApiResponse.onSuccess(userDTO);
+    }
+
+    @Operation(summary = "회원 정보 수정", description =
+            "# 회원 정보 수정 API 입니다. 현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
+    )
+    @PatchMapping("/{userId}/info")
+    public ApiResponse<UserResponseDTO.UserDTO> updateUserInfo(
+            @PathVariable Long userId,
+            @RequestBody @Valid UserRequestDTO.UserInfoUpdateRequest request
+    ) {
+        UserResponseDTO.UserDTO userDTO = userCommandService.updateUserInfo(userId, request);
+
         return ApiResponse.onSuccess(userDTO);
     }
 }
