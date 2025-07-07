@@ -18,4 +18,11 @@ public class UserRequestDTO {
         @NotBlank(message = "이름은 빈값일 수 없습니다.")
         private String name;
     }
+
+    @Getter
+    @Builder
+    public static class UserInfoUpdateRequest {
+        @NotBlank(message = "이름은 빈 값일 수 없습니다.")
+        private String name;
+    }
 }
