@@ -10,6 +10,7 @@ public class UserResponseDTO {
     public static class UserDTO {
         private Long id;
         private String email;
+        private String imageUrl;
         private String name;
     }
 }
