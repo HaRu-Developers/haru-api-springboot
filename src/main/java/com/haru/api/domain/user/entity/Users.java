@@ -40,4 +40,8 @@ public class Users extends BaseEntity {
     private String profileImage;
 
     private LocalDateTime inactiveDate;
+
+    public void encodePassword(String password) {
+        this.password = password;
+    }
 }
