@@ -26,7 +26,17 @@ public class UserController {
             @RequestBody @Valid UserRequestDTO.SignUpRequest request
     ) {
         userCommandService.signUp(request);
+        return ApiResponse.onSuccess(null);
+    }
 
+    @Operation(summary = "로그인", description =
+            "# 로그인 API 입니다. 이메일과 패스워드를 body에 입력해주세요."
+    )
+    @PostMapping("/login")
+    public ApiResponse<Object> login(
+            @RequestBody @Valid UserRequestDTO.LoginRequest request
+    ) {
+        userCommandService.login(request);
         return ApiResponse.onSuccess(null);
     }
 

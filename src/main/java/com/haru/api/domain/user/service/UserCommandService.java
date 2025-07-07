@@ -5,6 +5,7 @@ import com.haru.api.domain.user.dto.UserResponseDTO;
 
 public interface UserCommandService {
     void signUp(UserRequestDTO.SignUpRequest request);
+    void login(UserRequestDTO.LoginRequest request);
 
     UserResponseDTO.UserDTO updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request);
 }
