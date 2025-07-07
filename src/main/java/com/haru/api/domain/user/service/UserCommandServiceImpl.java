@@ -7,7 +7,11 @@ import com.haru.api.domain.user.entity.Users;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +21,7 @@ public class UserCommandServiceImpl implements UserCommandService{
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
     @Override
     public void signUp(UserRequestDTO.SignUpRequest request) {
@@ -26,6 +31,13 @@ public class UserCommandServiceImpl implements UserCommandService{
     }
 
     @Override
+    public void login(UserRequestDTO.LoginRequest request) {
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
+        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+    }
+
+    @Override
+    @Transactional
     public UserResponseDTO.UserDTO updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request) {
         String name = request.getName();
         Users user = userRepository.findById(userId)

@@ -9,8 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<Users, Long> {
-
-    List<Users> findTop4UsersByEmailContainingIgnoreCase(String email);
+    List<Users> findTop4UsersByEmailContainingIgnoreCase(String email); // <<< 이 부분은 내 브랜치에서 추가된 메서드
 
     Optional<Users> findByEmail(String email);
 }
