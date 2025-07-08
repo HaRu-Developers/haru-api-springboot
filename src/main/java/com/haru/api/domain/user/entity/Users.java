@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Getter
 @DynamicUpdate
 @DynamicInsert
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Users extends BaseEntity {
@@ -44,5 +43,15 @@ public class Users extends BaseEntity {
 
     public void encodePassword(String password) {
         this.password = password;
+    }
+
+    @Builder
+    public Users(String name, String email, String password, Status status, String profileImage, LocalDateTime inactiveDate) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.status = status;
+        this.profileImage = profileImage;
+        this.inactiveDate = inactiveDate;
     }
 }
