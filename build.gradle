@@ -63,7 +63,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'
 
 	// h2 database for test
-	runtimeOnly 'com.h2database:h2'
+	testImplementation 'com.h2database:h2'
 
 	// redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
