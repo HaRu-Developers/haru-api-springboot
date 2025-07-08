@@ -43,6 +43,18 @@ public class UserController {
         );
     }
 
+    @Operation(summary = "토큰 갱신", description =
+            "# access token 갱신 API 입니다. access token과 refresh token을 header에 입력해주세요."
+    )
+    @PostMapping("/refresh")
+    public ApiResponse<UserResponseDTO.RefreshResponse> refreshToken(
+            @RequestHeader("RefreshToken") String refreshToken
+    ) {
+        return ApiResponse.onSuccess(
+                userCommandService.refresh(refreshToken)
+        );
+    }
+
     @Operation(summary = "회원 정보 조회", description =
             "# 회원 정보 조회 API 입니다. \n" +
                     "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."

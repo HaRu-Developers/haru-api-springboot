@@ -8,4 +8,6 @@ public interface UserCommandService {
     UserResponseDTO.LoginResponse login(UserRequestDTO.LoginRequest request);
 
     UserResponseDTO.UserDTO updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request);
+
+    UserResponseDTO.RefreshResponse refresh(String refreshToken);
 }

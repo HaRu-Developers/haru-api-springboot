@@ -6,6 +6,7 @@ import com.haru.api.domain.user.dto.UserResponseDTO;
 import com.haru.api.domain.user.entity.Users;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.user.security.jwt.JwtUtils;
+import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import jakarta.transaction.Transactional;
@@ -21,6 +22,8 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static com.haru.api.global.apiPayload.code.status.ErrorStatus.REFRESHTOKEN_NOT_EQUAL;
 
 @Service
 @RequiredArgsConstructor
@@ -56,6 +59,28 @@ public class UserCommandServiceImpl implements UserCommandService{
 
         return UserConverter.toLoginResponse(getUser, accessToken, refreshToken);
     }
+
+    @Override
+    public UserResponseDTO.RefreshResponse refresh(String refreshToken) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        String key = "users:" + userId.toString();
+        String accessToken;
+        String newRefreshToken;
+
+        // 전달된 refresh token과 redis의 refresh token비교
+        String getRefreshTokenFromRedis = redisTemplate.opsForValue().get(key);
+        System.out.println("userId: " + userId);
+        System.out.println("redis에서 가져온 refreshToken: " + getRefreshTokenFromRedis);
+        if (refreshToken.equals(getRefreshTokenFromRedis)) {
+            accessToken = generateAccessToken(userId, accessExpTime);
+            newRefreshToken = generateAndSaveRefreshToken(key, refreshExpTime);
+        } else {
+            throw new MemberHandler(REFRESHTOKEN_NOT_EQUAL);
+        }
+
+        return UserConverter.toRefreshResponse(userId, accessToken, newRefreshToken);
+    }
+
 
     @Override
     @Transactional

@@ -64,7 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String refreshToken = request.getHeader("refreshToken");
 
         // 특정 경로(토큰 갱신 api)에서만 Refresh Token 처리
-        if ("/users/refresh".equals(requestUri)) {
+        if ("/api/v1/users/refresh".equals(requestUri)) {
             if (refreshToken != null) {
                 try {
                     // access token 검증

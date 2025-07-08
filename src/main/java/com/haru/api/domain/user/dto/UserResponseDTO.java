@@ -21,4 +21,12 @@ public class UserResponseDTO {
         private String accessToken;
         private String refreshToken;
     }
+
+    @Getter
+    @Builder
+    public static class RefreshResponse {
+        private Long userId;
+        private String accessToken;
+        private String refreshToken;
+    }
 }

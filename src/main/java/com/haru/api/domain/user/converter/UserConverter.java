@@ -29,4 +29,12 @@ public class UserConverter {
                 .refreshToken(refreshToken)
                 .build();
     }
+
+    public static UserResponseDTO.RefreshResponse toRefreshResponse(Long userId, String accessToken, String refreshToken) {
+        return UserResponseDTO.RefreshResponse.builder()
+                .userId(userId)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
 }
