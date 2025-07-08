@@ -21,4 +21,12 @@ public class UserConverter {
                 .name(users.getName())
                 .build();
     }
+
+    public static UserResponseDTO.LoginResponse toLoginResponse(Users users, String accessToken, String refreshToken) {
+        return UserResponseDTO.LoginResponse.builder()
+                .userid(users.getId())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
 }
