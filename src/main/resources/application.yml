@@ -1,7 +1,5 @@
 spring:
   config:
-    activate:
-      on-profile: local,green,blue
     import:
       - optional:classpath:application-secret.yml
       - optional:file:/app/config/application-secret.yml
