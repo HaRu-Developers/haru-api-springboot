@@ -10,4 +10,6 @@ public interface UserCommandService {
     UserResponseDTO.UserDTO updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request);
 
     UserResponseDTO.RefreshResponse refresh(String refreshToken);
+
+    void logout(String accessToken);
 }

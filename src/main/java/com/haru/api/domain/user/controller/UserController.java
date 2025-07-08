@@ -55,6 +55,17 @@ public class UserController {
         );
     }
 
+    @Operation(summary = "로그아웃 API", description =
+            "# 로그아웃 API 입니다. 로그아웃하고자 하는 유저의 access token을 header에 입력해주세요."
+    )
+    @DeleteMapping("/logout")
+    public ApiResponse<?> logout(
+            @RequestHeader("Authorization") String accessToken
+    ) {
+        userCommandService.logout(accessToken);
+        return ApiResponse.onSuccess("");
+    }
+
     @Operation(summary = "회원 정보 조회", description =
             "# 회원 정보 조회 API 입니다. \n" +
                     "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
