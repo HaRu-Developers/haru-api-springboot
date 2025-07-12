@@ -7,7 +7,7 @@ public interface UserCommandService {
     void signUp(UserRequestDTO.SignUpRequest request);
     UserResponseDTO.LoginResponse login(UserRequestDTO.LoginRequest request);
 
-    UserResponseDTO.UserDTO updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request);
+    UserResponseDTO.User updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request);
 
     UserResponseDTO.RefreshResponse refresh(String refreshToken);
 

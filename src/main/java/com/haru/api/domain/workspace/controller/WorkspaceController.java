@@ -20,15 +20,15 @@ public class WorkspaceController {
             "# 워크스페이스 생성 API 입니다. 워크스페이스 제목과 초대하고자 하는 사람의 이메일을 입력해주세요."
     )
     @PostMapping
-    public ApiResponse<WorkspaceResponseDTO.WorkspaceDTO> createWorkspace(
+    public ApiResponse<WorkspaceResponseDTO.Workspace> createWorkspace(
             @RequestBody WorkspaceRequestDTO.WorkspaceCreateRequest request
     ) {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        WorkspaceResponseDTO.WorkspaceDTO workspaceDTO = workspaceCommandService.createWorkspace(userId, request);
+        WorkspaceResponseDTO.Workspace workspace = workspaceCommandService.createWorkspace(userId, request);
 
-        return ApiResponse.onSuccess(workspaceDTO);
+        return ApiResponse.onSuccess(workspace);
     }
 
 }

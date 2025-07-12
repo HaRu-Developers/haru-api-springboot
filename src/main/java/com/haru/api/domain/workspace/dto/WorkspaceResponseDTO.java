@@ -7,7 +7,7 @@ public class WorkspaceResponseDTO {
 
     @Getter
     @Builder
-    public static class WorkspaceDTO {
+    public static class Workspace {
         private Long workspaceId;
         private String name;
     }

@@ -5,5 +5,5 @@ import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 
 public interface WorkspaceCommandService {
 
-    WorkspaceResponseDTO.WorkspaceDTO createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request);
+    WorkspaceResponseDTO.Workspace createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request);
 }

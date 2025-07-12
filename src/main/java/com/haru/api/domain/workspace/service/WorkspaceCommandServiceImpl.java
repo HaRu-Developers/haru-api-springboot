@@ -24,13 +24,13 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     private final UserWorkspaceRepository userWorkspaceRepository;
 
     @Override
-    public WorkspaceResponseDTO.WorkspaceDTO createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request) {
+    public WorkspaceResponseDTO.Workspace createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request) {
 
         Users foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         // workspace 생성 및 저장
-        Workspace workspace = workspaceRepository.save(Workspace.builder()
+        Workspace workspace = workspaceRepository.save(com.haru.api.domain.workspace.entity.Workspace.builder()
                 .title(request.getName())
                 .build());
 
