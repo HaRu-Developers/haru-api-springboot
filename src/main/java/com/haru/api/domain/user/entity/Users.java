@@ -4,18 +4,19 @@ import com.haru.api.domain.user.entity.enums.Status;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "users")
 @Getter
 @DynamicUpdate
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Builder
 public class Users extends BaseEntity {
 
     @Id
@@ -45,13 +46,4 @@ public class Users extends BaseEntity {
         this.password = password;
     }
 
-    @Builder
-    public Users(String name, String email, String password, Status status, String profileImage, LocalDateTime inactiveDate) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.status = status;
-        this.profileImage = profileImage;
-        this.inactiveDate = inactiveDate;
-    }
 }

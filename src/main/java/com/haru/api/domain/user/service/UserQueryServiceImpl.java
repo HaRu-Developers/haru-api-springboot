@@ -18,7 +18,7 @@ public class UserQueryServiceImpl implements UserQueryService {
     private final UserRepository userRepository;
 
     @Override
-    public UserResponseDTO.UserDTO getUserInfo(Long userId) {
+    public UserResponseDTO.User getUserInfo(Long userId) {
 
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
@@ -27,7 +27,7 @@ public class UserQueryServiceImpl implements UserQueryService {
     }
 
     @Override
-    public List<UserResponseDTO.UserDTO> getSimilarEmailUsers(Long userId, String email) {
+    public List<UserResponseDTO.User> getSimilarEmailUsers(Long userId, String email) {
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
@@ -35,7 +35,7 @@ public class UserQueryServiceImpl implements UserQueryService {
         List<Users> users = userRepository.findTop4UsersByEmailContainingIgnoreCase(email);
 
         return users.parallelStream()
-                .map(user -> UserResponseDTO.UserDTO.builder()
+                .map(user -> UserResponseDTO.User.builder()
                         .id(user.getId())
                         .email(user.getEmail())
                         .imageUrl(user.getProfileImage())

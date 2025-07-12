@@ -71,12 +71,12 @@ public class UserController {
                     "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
     )
     @GetMapping("/{userId}/info")
-    public ApiResponse<UserResponseDTO.UserDTO> getUserInfo(
+    public ApiResponse<UserResponseDTO.User> getUserInfo(
             @PathVariable Long userId
     ) {
-        UserResponseDTO.UserDTO userDTO = userQueryService.getUserInfo(userId);
+        UserResponseDTO.User user = userQueryService.getUserInfo(userId);
 
-        return ApiResponse.onSuccess(userDTO);
+        return ApiResponse.onSuccess(user);
     }
 
     @Operation(summary = "회원 정보 수정", description =
@@ -84,13 +84,13 @@ public class UserController {
                     "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
     )
     @PatchMapping("/{userId}/info")
-    public ApiResponse<UserResponseDTO.UserDTO> updateUserInfo(
+    public ApiResponse<UserResponseDTO.User> updateUserInfo(
             @PathVariable Long userId,
             @RequestBody @Valid UserRequestDTO.UserInfoUpdateRequest request
     ) {
-        UserResponseDTO.UserDTO userDTO = userCommandService.updateUserInfo(userId, request);
+        UserResponseDTO.User user = userCommandService.updateUserInfo(userId, request);
 
-        return ApiResponse.onSuccess(userDTO);
+        return ApiResponse.onSuccess(user);
     }
 
     @Operation(summary = "이메일로 회원 리스트 조회", description =
@@ -99,13 +99,13 @@ public class UserController {
                     "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
     )
     @GetMapping("{userId}/search")
-    public ApiResponse<List<UserResponseDTO.UserDTO>> searchUsers(
+    public ApiResponse<List<UserResponseDTO.User>> searchUsers(
             @PathVariable Long userId,
             @RequestParam String email
     ) {
-        List<UserResponseDTO.UserDTO> userDTOs = userQueryService.getSimilarEmailUsers(userId, email);
+        List<UserResponseDTO.User> users = userQueryService.getSimilarEmailUsers(userId, email);
 
-        return ApiResponse.onSuccess(userDTOs);
+        return ApiResponse.onSuccess(users);
     }
 
 }

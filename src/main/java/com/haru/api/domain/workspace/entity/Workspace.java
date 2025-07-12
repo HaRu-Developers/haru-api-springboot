@@ -7,12 +7,14 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
+@Table(name = "workspaces")
 @Getter
 @DynamicUpdate
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class Workspaces extends BaseEntity {
+@Builder
+public class Workspace extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,9 +26,4 @@ public class Workspaces extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
-    @Builder
-    public Workspaces(String title, String imageUrl) {
-        this.title = title;
-        this.imageUrl = imageUrl;
-    }
 }

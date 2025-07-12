@@ -7,7 +7,7 @@ public class UserResponseDTO {
 
     @Getter
     @Builder
-    public static class UserDTO {
+    public static class User {
         private Long id;
         private String email;
         private String imageUrl;
