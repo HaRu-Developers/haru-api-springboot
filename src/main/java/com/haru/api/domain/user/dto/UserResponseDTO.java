@@ -13,4 +13,20 @@ public class UserResponseDTO {
         private String imageUrl;
         private String name;
     }
+
+    @Getter
+    @Builder
+    public static class LoginResponse {
+        private Long userid;
+        private String accessToken;
+        private String refreshToken;
+    }
+
+    @Getter
+    @Builder
+    public static class RefreshResponse {
+        private Long userId;
+        private String accessToken;
+        private String refreshToken;
+    }
 }

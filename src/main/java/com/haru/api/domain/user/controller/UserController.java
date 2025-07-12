@@ -35,11 +35,35 @@ public class UserController {
             "# 로그인 API 입니다. 이메일과 패스워드를 body에 입력해주세요."
     )
     @PostMapping("/login")
-    public ApiResponse<Object> login(
+    public ApiResponse<UserResponseDTO.LoginResponse> login(
             @RequestBody @Valid UserRequestDTO.LoginRequest request
     ) {
-        userCommandService.login(request);
-        return ApiResponse.onSuccess(null);
+        return ApiResponse.onSuccess(
+                userCommandService.login(request)
+        );
+    }
+
+    @Operation(summary = "토큰 갱신", description =
+            "# access token 갱신 API 입니다. access token과 refresh token을 header에 입력해주세요."
+    )
+    @PostMapping("/refresh")
+    public ApiResponse<UserResponseDTO.RefreshResponse> refreshToken(
+            @RequestHeader("RefreshToken") String refreshToken
+    ) {
+        return ApiResponse.onSuccess(
+                userCommandService.refresh(refreshToken)
+        );
+    }
+
+    @Operation(summary = "로그아웃 API", description =
+            "# 로그아웃 API 입니다. 로그아웃하고자 하는 유저의 access token을 header에 입력해주세요."
+    )
+    @DeleteMapping("/logout")
+    public ApiResponse<?> logout(
+            @RequestHeader("Authorization") String accessToken
+    ) {
+        userCommandService.logout(accessToken);
+        return ApiResponse.onSuccess("");
     }
 
     @Operation(summary = "회원 정보 조회", description =
