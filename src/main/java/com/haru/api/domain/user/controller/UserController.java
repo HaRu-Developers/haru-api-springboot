@@ -2,6 +2,7 @@ package com.haru.api.domain.user.controller;
 
 import com.haru.api.domain.user.dto.UserRequestDTO;
 import com.haru.api.domain.user.dto.UserResponseDTO;
+import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.domain.user.service.UserCommandService;
 import com.haru.api.domain.user.service.UserQueryService;
 import com.haru.api.global.apiPayload.ApiResponse;
@@ -70,10 +71,11 @@ public class UserController {
             "# 회원 정보 조회 API 입니다. \n" +
                     "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
     )
-    @GetMapping("/{userId}/info")
-    public ApiResponse<UserResponseDTO.User> getUserInfo(
-            @PathVariable Long userId
-    ) {
+    @GetMapping("/info")
+    public ApiResponse<UserResponseDTO.User> getUserInfo() {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
         UserResponseDTO.User user = userQueryService.getUserInfo(userId);
 
         return ApiResponse.onSuccess(user);
