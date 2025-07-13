@@ -1,7 +1,7 @@
 package com.haru.api.domain.meeting.entity;
 
 import com.haru.api.domain.user.entity.Users;
-import com.haru.api.domain.workspace.entity.Workspaces;
+import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,16 +34,16 @@ public class Meetings extends BaseEntity {
     private Users users;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private Workspaces workspaces;
+    private Workspace workspaces;
 
-    private Meetings(String title, String agendaResult, Users users, Workspaces workspaces) {
+    private Meetings(String title, String agendaResult, Users users, Workspace workspaces) {
         this.title = title;
         this.agendaResult = agendaResult;
         this.users = users;
         this.workspaces = workspaces;
     }
 
-    public static Meetings createInitialMeeting(String title, String agendaResult, Users users, Workspaces workspaces) {
+    public static Meetings createInitialMeeting(String title, String agendaResult, Users users, Workspace workspaces) {
         return new Meetings(title, agendaResult, users, workspaces);
     }
 
