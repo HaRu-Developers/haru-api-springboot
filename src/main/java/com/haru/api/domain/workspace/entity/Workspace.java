@@ -22,6 +22,7 @@ public class Workspace extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, length = 50)
+    @Setter
     private String title;
 
     @Column(columnDefinition = "TEXT")

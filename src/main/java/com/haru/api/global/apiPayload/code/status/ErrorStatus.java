@@ -27,6 +27,7 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // Workspace 관련 에러
     WORKSPACE_NOT_FOUND(HttpStatus.BAD_REQUEST,"WORKSPACE1001", "워크스페이스가 없습니다."),
+    WORKSPACE_MODIFY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "WORKSPACE1002", "워크스페이스 수정 권한이 없습니다."),
 
     // AI회의 Meetings 관련 에러
     MEETING_FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING1001", "안건지가 업로드되지 않았습니다."),

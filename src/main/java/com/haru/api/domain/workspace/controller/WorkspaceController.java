@@ -8,6 +8,7 @@ import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.service.WorkspaceCommandService;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,7 @@ public class WorkspaceController {
     )
     @PostMapping
     public ApiResponse<WorkspaceResponseDTO.Workspace> createWorkspace(
-            @RequestBody WorkspaceRequestDTO.WorkspaceCreateRequest request
+            @RequestBody @Valid WorkspaceRequestDTO.WorkspaceCreateRequest request
     ) {
 
         Long userId = SecurityUtil.getCurrentUserId();
@@ -37,7 +38,7 @@ public class WorkspaceController {
     }
 
     @Operation(summary = "워크스페이스 리스트 제목 조회", description =
-            "# 워크스페이스 리스트 제목 조회 API 입니다. jwt 토큰을 헤더에 넣어서 보내주세요"
+            "# 워크스페이스 리스트 제목 조회 API 입니다. jwt 토큰을 헤더에 넣어주세요"
     )
     @GetMapping("/me")
     public ApiResponse<List<UserWorkspaceWithTitleDTO>> getWorkspaceWithTitleList() {
@@ -47,6 +48,21 @@ public class WorkspaceController {
         List<UserWorkspaceWithTitleDTO> workspaceWithTitleList = userWorkspaceQueryService.getUserWorkspaceList(userId);
 
         return ApiResponse.onSuccess(workspaceWithTitleList);
+    }
+
+    @Operation(summary = "워크스페이스 수정", description =
+            "# 워크스페이스 수정 API 입니다. jwt 토큰을 헤더에 넣어주세요"
+    )
+    @PatchMapping("/{workspaceId}")
+    public ApiResponse<WorkspaceResponseDTO.Workspace> updateWorkspace(
+            @RequestBody @Valid WorkspaceRequestDTO.WorkspaceUpdateRequest request,
+            @PathVariable Long workspaceId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        WorkspaceResponseDTO.Workspace workspace = workspaceCommandService.updateWorkspace(userId, workspaceId, request);
+
+        return ApiResponse.onSuccess(workspace);
     }
 
 }
