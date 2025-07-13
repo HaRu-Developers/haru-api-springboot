@@ -85,11 +85,12 @@ public class UserController {
             "# 회원 정보 수정 API 입니다. \n" +
                     "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
     )
-    @PatchMapping("/{userId}/info")
+    @PatchMapping("/info")
     public ApiResponse<UserResponseDTO.User> updateUserInfo(
-            @PathVariable Long userId,
             @RequestBody @Valid UserRequestDTO.UserInfoUpdateRequest request
     ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
         UserResponseDTO.User user = userCommandService.updateUserInfo(userId, request);
 
         return ApiResponse.onSuccess(user);
