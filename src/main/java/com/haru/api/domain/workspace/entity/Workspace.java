@@ -1,5 +1,6 @@
 package com.haru.api.domain.workspace.entity;
 
+import com.haru.api.domain.user.entity.Users;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,5 +26,9 @@ public class Workspace extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id")
+    private Users creator;
 
 }

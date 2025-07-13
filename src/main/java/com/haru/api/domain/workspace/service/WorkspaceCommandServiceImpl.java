@@ -30,8 +30,9 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         // workspace 생성 및 저장
-        Workspace workspace = workspaceRepository.save(com.haru.api.domain.workspace.entity.Workspace.builder()
+        Workspace workspace = workspaceRepository.save(Workspace.builder()
                 .title(request.getName())
+                        .creator(foundUser)
                 .build());
 
 
@@ -39,7 +40,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
         // request로 받은 이메일로 초대 메일 전송하는 메서드
 
-        // user_workspace 테이블에 생성자 정보 저장
+        // users_workspaces 테이블에 생성자 정보 저장
         userWorkspaceRepository.save(UserWorkspace.builder()
                 .user(foundUser)
                 .workspace(workspace)
@@ -48,4 +49,6 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
         return WorkspaceConverter.toWorkspaceDTO(workspaceRepository.save(workspace));
     }
+
+
 }
