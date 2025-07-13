@@ -25,7 +25,7 @@ import java.util.Map;
 @Slf4j //???
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Value("${jwt.JWT_HEADER}")
+    @Value("${jwt.header}")
     private String jwtHeader;
     private static final String[] whitelist = {
             "/api/v1/users/signup",
