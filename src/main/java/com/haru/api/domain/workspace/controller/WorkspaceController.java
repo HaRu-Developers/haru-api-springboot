@@ -65,4 +65,18 @@ public class WorkspaceController {
         return ApiResponse.onSuccess(workspace);
     }
 
+    @Operation(summary = "워크스페이스 초대 수락", description =
+            "# 워크스페이스 초대 수락 API 입니다. jwt 토큰을 헤더에 넣어주세요"
+    )
+    @PostMapping("/workspaces/invite-accept")
+    public ApiResponse<?> acceptInvite(
+            @RequestParam("code") String code
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        workspaceCommandService.acceptInvite(userId, code);
+
+        return ApiResponse.onSuccess(null);
+    }
+
 }

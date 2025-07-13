@@ -8,4 +8,6 @@ public interface WorkspaceCommandService {
     WorkspaceResponseDTO.Workspace createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request);
 
     WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceid, WorkspaceRequestDTO.WorkspaceUpdateRequest request);
+
+    void acceptInvite(Long userId, String code);
 }
