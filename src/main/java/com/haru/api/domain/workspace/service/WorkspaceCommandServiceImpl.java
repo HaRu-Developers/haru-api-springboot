@@ -12,8 +12,10 @@ import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
+import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     private final UserWorkspaceRepository userWorkspaceRepository;
 
     @Override
+    @Transactional
     public WorkspaceResponseDTO.Workspace createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request) {
 
         Users foundUser = userRepository.findById(userId)
@@ -48,6 +51,24 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
                 .build());
 
         return WorkspaceConverter.toWorkspaceDTO(workspaceRepository.save(workspace));
+    }
+
+    @Override
+    @Transactional
+    public WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceId, WorkspaceRequestDTO.WorkspaceUpdateRequest request) {
+
+        Users foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        if (foundUser.getId() != foundWorkspace.getCreator().getId())
+            throw new WorkspaceHandler(ErrorStatus.WORKSPACE_MODIFY_NOT_ALLOWED);
+
+        foundWorkspace.setTitle(request.getTitle());
+
+        return WorkspaceConverter.toWorkspaceDTO(foundWorkspace);
     }
 
 
