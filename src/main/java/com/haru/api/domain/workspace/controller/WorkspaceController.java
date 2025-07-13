@@ -1,6 +1,8 @@
 package com.haru.api.domain.workspace.controller;
 
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
+import com.haru.api.domain.userWorkspace.dto.UserWorkspaceWithTitleDTO;
+import com.haru.api.domain.userWorkspace.service.UserWorkspaceQueryService;
 import com.haru.api.domain.workspace.dto.WorkspaceRequestDTO;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.service.WorkspaceCommandService;
@@ -9,12 +11,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/workspaces")
 public class WorkspaceController {
 
     private final WorkspaceCommandService workspaceCommandService;
+    private final UserWorkspaceQueryService userWorkspaceQueryService;
 
     @Operation(summary = "워크스페이스 생성", description =
             "# 워크스페이스 생성 API 입니다. 워크스페이스 제목과 초대하고자 하는 사람의 이메일을 입력해주세요."
@@ -29,6 +34,19 @@ public class WorkspaceController {
         WorkspaceResponseDTO.Workspace workspace = workspaceCommandService.createWorkspace(userId, request);
 
         return ApiResponse.onSuccess(workspace);
+    }
+
+    @Operation(summary = "워크스페이스 리스트 제목 조회", description =
+            "# 워크스페이스 리스트 제목 조회 API 입니다. jwt 토큰을 헤더에 넣어서 보내주세요"
+    )
+    @GetMapping("/me")
+    public ApiResponse<List<UserWorkspaceWithTitleDTO>> getWorkspaceWithTitleList() {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        List<UserWorkspaceWithTitleDTO> workspaceWithTitleList = userWorkspaceQueryService.getUserWorkspaceList(userId);
+
+        return ApiResponse.onSuccess(workspaceWithTitleList);
     }
 
 }
