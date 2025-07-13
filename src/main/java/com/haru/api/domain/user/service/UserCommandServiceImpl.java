@@ -97,7 +97,7 @@ public class UserCommandServiceImpl implements UserCommandService{
 
     @Override
     @Transactional
-    public UserResponseDTO.UserDTO updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request) {
+    public UserResponseDTO.User updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request) {
         String name = request.getName();
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
