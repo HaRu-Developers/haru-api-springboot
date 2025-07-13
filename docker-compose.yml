@@ -11,7 +11,7 @@ services:
       - SPRING_PROFILES_ACTIVE=blue
       - SPRING_CONFIG_ADDITIONAL_LOCATION=file:/app/config/
     volumes:
-      - /home/ubuntu/app/config/application-secret.yml:/app/config/application-secret.yml:ro
+      - /home/ubuntu/secret/temp_secret/application-secret.yml:/app/config/application-secret.yml:ro
     networks:
       - haru-network
 
@@ -27,7 +27,7 @@ services:
       - SPRING_PROFILES_ACTIVE=green
       - SPRING_CONFIG_ADDITIONAL_LOCATION=file:/app/config/
     volumes:
-      - /home/ubuntu/app/config/application-secret.yml:/app/config/application-secret.yml:ro
+      - /home/ubuntu/secret/temp_secret/application-secret.yml:/app/config/application-secret.yml:ro
     networks:
       - haru-network
 
