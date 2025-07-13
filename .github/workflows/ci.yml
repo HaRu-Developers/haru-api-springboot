@@ -15,9 +15,9 @@ jobs:
 
     env:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_ACCESS_EXP_TIME: ${{ secrets.JWT_ACCESS_EXP_TIME }}
-      JWT_REFRESH_EXP_TIME: ${{ secrets.JWT_REFRESH_EXP_TIME }}
-      JWT_JWT_HEADER: ${{ secrets.JWT_JWT_HEADER }}
+      JWT_ACCESS_EXPIRATION: ${{ secrets.JWT_ACCESS_EXPIRATION }}
+      JWT_REFRESH_EXPIRATION: ${{ secrets.JWT_REFRESH_EXPIRATION }}
+      JWT_HEADER: ${{ secrets.JWT_HEADER }}
 
     steps:
       - uses: actions/checkout@v4

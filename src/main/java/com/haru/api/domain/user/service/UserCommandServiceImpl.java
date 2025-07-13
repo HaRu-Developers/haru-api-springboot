@@ -29,9 +29,9 @@ import static com.haru.api.global.apiPayload.code.status.ErrorStatus.REFRESHTOKE
 @RequiredArgsConstructor
 public class UserCommandServiceImpl implements UserCommandService{
 
-    @Value("${jwt.ACCESS_EXP_TIME}")
+    @Value("${jwt.access-expiration}")
     private int accessExpTime;
-    @Value("${jwt.REFRESH_EXP_TIME}")
+    @Value("${jwt.refresh-expiration}")
     private int refreshExpTime;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
