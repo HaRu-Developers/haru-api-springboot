@@ -101,11 +101,12 @@ public class UserController {
                     "workspace에서 회원을 초대할 때 사용할 기능입니다. \n" +
                     "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
     )
-    @GetMapping("{userId}/search")
+    @GetMapping("/search")
     public ApiResponse<List<UserResponseDTO.User>> searchUsers(
-            @PathVariable Long userId,
             @RequestParam String email
     ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
         List<UserResponseDTO.User> users = userQueryService.getSimilarEmailUsers(userId, email);
 
         return ApiResponse.onSuccess(users);
