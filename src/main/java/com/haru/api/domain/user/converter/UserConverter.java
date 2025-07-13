@@ -14,8 +14,8 @@ public class UserConverter {
                 .build();
     }
 
-    public static UserResponseDTO.UserDTO toUserDTO(Users users) {
-        return UserResponseDTO.UserDTO.builder()
+    public static UserResponseDTO.User toUserDTO(Users users) {
+        return UserResponseDTO.User.builder()
                 .id(users.getId())
                 .email(users.getEmail())
                 .name(users.getName())
