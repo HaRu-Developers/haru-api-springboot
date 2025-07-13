@@ -40,3 +40,7 @@ out/
 .DS_Store
 .env
 /target
+
+### .yml file
+src/main/resources/application-secret.yml
+src/test/resources/application-test.yml

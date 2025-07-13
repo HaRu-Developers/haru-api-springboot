@@ -1,0 +1,19 @@
+spring:
+  config:
+    import:
+      - optional:classpath:application-secret.yml
+      - optional:file:/app/config/application-secret.yml
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+        show_sql: true
+        highlight_sql : true
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.web.client.DefaultRestClient: OFF

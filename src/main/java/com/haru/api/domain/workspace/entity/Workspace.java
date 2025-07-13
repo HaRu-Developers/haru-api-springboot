@@ -1,0 +1,29 @@
+package com.haru.api.domain.workspace.entity;
+
+import com.haru.api.global.common.entity.BaseEntity;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+
+@Entity
+@Table(name = "workspaces")
+@Getter
+@DynamicUpdate
+@DynamicInsert
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+public class Workspace extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 50)
+    private String title;
+
+    @Column(columnDefinition = "TEXT")
+    private String imageUrl;
+
+}
