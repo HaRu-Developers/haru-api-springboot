@@ -25,6 +25,8 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER1001", "사용자가 없습니다."),
     REFRESHTOKEN_NOT_EQUAL(HttpStatus.BAD_REQUEST, "MEMBER1002", "리프레시 토큰이 일치하지 않습니다."),
 
+    // Workspace 관련 에러
+    WORKSPACE_NOT_FOUND(HttpStatus.BAD_REQUEST,"WORKSPACE1001", "워크스페이스가 없습니다."),
 
     // AI회의 Meetings 관련 에러
     MEETING_FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING1001", "안건지가 업로드되지 않았습니다."),
