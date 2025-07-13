@@ -1,7 +1,7 @@
 package com.haru.api.domain.workspace.controller;
 
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
-import com.haru.api.domain.userWorkspace.dto.UserWorkspaceWithTitleDTO;
+import com.haru.api.domain.userWorkspace.dto.UserWorkspaceResponseDTO;
 import com.haru.api.domain.userWorkspace.service.UserWorkspaceQueryService;
 import com.haru.api.domain.workspace.dto.WorkspaceRequestDTO;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
@@ -41,11 +41,11 @@ public class WorkspaceController {
             "# 워크스페이스 리스트 제목 조회 API 입니다. jwt 토큰을 헤더에 넣어주세요"
     )
     @GetMapping("/me")
-    public ApiResponse<List<UserWorkspaceWithTitleDTO>> getWorkspaceWithTitleList() {
+    public ApiResponse<List<UserWorkspaceResponseDTO.UserWorkspaceWithTitle>> getWorkspaceWithTitleList() {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        List<UserWorkspaceWithTitleDTO> workspaceWithTitleList = userWorkspaceQueryService.getUserWorkspaceList(userId);
+        List<UserWorkspaceResponseDTO.UserWorkspaceWithTitle> workspaceWithTitleList = userWorkspaceQueryService.getUserWorkspaceList(userId);
 
         return ApiResponse.onSuccess(workspaceWithTitleList);
     }
