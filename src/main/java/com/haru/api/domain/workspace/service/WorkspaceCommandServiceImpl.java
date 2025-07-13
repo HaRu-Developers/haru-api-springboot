@@ -10,9 +10,12 @@ import com.haru.api.domain.workspace.dto.WorkspaceRequestDTO;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.domain.workspaceInvitation.entity.WorkspaceInvitation;
+import com.haru.api.domain.workspaceInvitation.repository.WorkspaceInvitationRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.global.apiPayload.exception.handler.WorkspaceInvitationHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,9 +27,10 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
+    private final WorkspaceInvitationRepository workspaceInvitationRepository;
 
-    @Override
     @Transactional
+    @Override
     public WorkspaceResponseDTO.Workspace createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request) {
 
         Users foundUser = userRepository.findById(userId)
@@ -53,8 +57,8 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         return WorkspaceConverter.toWorkspaceDTO(workspaceRepository.save(workspace));
     }
 
-    @Override
     @Transactional
+    @Override
     public WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceId, WorkspaceRequestDTO.WorkspaceUpdateRequest request) {
 
         Users foundUser = userRepository.findById(userId)
@@ -69,6 +73,31 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         foundWorkspace.setTitle(request.getTitle());
 
         return WorkspaceConverter.toWorkspaceDTO(foundWorkspace);
+    }
+
+    @Transactional
+    @Override
+    public void acceptInvite(Long userId, String code) {
+
+        Users foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findByInvitationCode(code)
+                .orElseThrow(() -> new WorkspaceInvitationHandler(ErrorStatus.INVITATION_NOT_FOUND));
+
+        if(foundWorkspaceInvitation.getIsAccepted())
+            throw new WorkspaceInvitationHandler(ErrorStatus.ALREADY_ACCEPTED);
+
+        if(!foundWorkspaceInvitation.getEmail().equals(foundUser.getEmail()))
+            throw new WorkspaceInvitationHandler(ErrorStatus.EMAIL_MISMATCH);
+
+        userWorkspaceRepository.save(UserWorkspace.builder()
+                .user(foundUser)
+                .workspace(foundWorkspaceInvitation.getWorkspace())
+                .auth(Auth.MEMBER)
+                .build());
+
+        foundWorkspaceInvitation.setIsAccepted(true);
     }
 
 
