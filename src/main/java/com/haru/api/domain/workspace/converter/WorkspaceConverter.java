@@ -8,6 +8,7 @@ public class WorkspaceConverter {
         return WorkspaceResponseDTO.Workspace.builder()
                 .workspaceId(workspace.getId())
                 .name(workspace.getTitle())
+                .imageUrl(workspace.getImageUrl())
                 .build();
     }
 }

@@ -10,5 +10,6 @@ public class WorkspaceResponseDTO {
     public static class Workspace {
         private Long workspaceId;
         private String name;
+        private String imageUrl;
     }
 }
