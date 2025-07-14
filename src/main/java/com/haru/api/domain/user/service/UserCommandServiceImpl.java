@@ -95,15 +95,17 @@ public class UserCommandServiceImpl implements UserCommandService{
     }
 
 
-    @Override
     @Transactional
+    @Override
     public UserResponseDTO.User updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request) {
         String name = request.getName();
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
-        user.setName(name);
 
-        return UserConverter.toUserDTO(user);
+        Users foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        foundUser.setName(name);
+
+        return UserConverter.toUserDTO(foundUser);
     }
 
     private String generateAccessToken(Long userId, int accessExpTime) {

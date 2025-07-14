@@ -15,4 +15,11 @@ public class WorkspaceRequestDTO {
         private String name;
         private List<String> memberEmails;
     }
+
+    @Getter
+    @Builder
+    public static class WorkspaceUpdateRequest {
+        @NotBlank(message = "수정하고자 하는 제목은 빈 값일 수 없습니다.")
+        private String title;
+    }
 }
