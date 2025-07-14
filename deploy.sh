@@ -90,6 +90,9 @@ down_old_container() {
 main() {
   determine_target
 
+ # 최신 이미지 pull
+  echo "Pulling latest image for app-$TARGET..."
+  docker compose -f docker-compose.yml pull "app-$TARGET"
 
   # 대상 컨테이너 실행
   echo "Starting $TARGET container..."
