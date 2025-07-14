@@ -3,6 +3,8 @@ FROM gradle:8.4.0-jdk17 AS dependencies
 WORKDIR /build
 
 COPY gradlew .
+RUN chmod +x gradlew
+
 # COPY gradle.properties /root/.gradle/gradle.properties
 COPY gradle/wrapper/gradle-wrapper.jar gradle/wrapper/
 COPY gradle/wrapper/gradle-wrapper.properties gradle/wrapper/
