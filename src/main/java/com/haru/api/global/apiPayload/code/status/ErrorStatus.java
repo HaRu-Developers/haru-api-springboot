@@ -11,9 +11,6 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum ErrorStatus implements BaseErrorCode {
 
-    // For test
-    TEMP_EXCEPTION(HttpStatus.BAD_REQUEST, "TEMP4001", "이거는 테스트"),
-
     // 가장 일반적인 응답
     _INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "서버 에러, 관리자에게 문의 바랍니다."),
     _BAD_REQUEST(HttpStatus.BAD_REQUEST,"COMMON400","잘못된 요청입니다."),
@@ -33,9 +30,16 @@ public enum ErrorStatus implements BaseErrorCode {
     ALREADY_ACCEPTED(HttpStatus.BAD_REQUEST, "INVITATION2005", "이미 초대가 수락된 초대장입니다."),
 
     // AI회의 Meetings 관련 에러 3000
-    MEETING_FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING3001", "안건지가 업로드되지 않았습니다.");
-
-
+    MEETING_FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING3001", "안건지가 업로드되지 않았습니다."),
+  
+    // 인가 관련 에러 9000
+    AUTHORIZATION_EXCEPTION(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9001", "인증에 실패하였습니다."),
+    JWT_ACCESSTOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9002", "AccessToekn이 만료되었습니다."),
+    JWT_REFRESHTOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9003", "RefreshToekn이 만료되었습니다."),
+    LOGOUT_USER(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9004", "로그아웃된 유저입니다."),
+    JWT_TOKEN_NOT_RECEIVED(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9005", "JWT 토큰이 전달되지 않았습니다."),
+    JWT_TOKEN_OUT_OF_FORM(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9006", "JWT 토큰의 형식이 올바르지 않습니다.");
+  
 
     private final HttpStatus httpStatus;
     private final String code;
@@ -57,7 +61,6 @@ public enum ErrorStatus implements BaseErrorCode {
                 .code(code)
                 .isSuccess(false)
                 .httpStatus(httpStatus)
-                .build()
-                ;
+                .build();
     }
 }

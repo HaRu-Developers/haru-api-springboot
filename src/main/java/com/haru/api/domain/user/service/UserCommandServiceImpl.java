@@ -119,7 +119,7 @@ public class UserCommandServiceImpl implements UserCommandService{
     private String generateAndSaveRefreshToken(String key, int refreshExpTime) {
         // 인증 완료 후 jwt토큰(refreshToken) 생성
         String refreshToken = jwtUtils.generateToken(Collections.emptyMap(), refreshExpTime);
-        redisTemplate.opsForValue().set(key, refreshToken, refreshExpTime, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(key, refreshToken, refreshExpTime, TimeUnit.SECONDS);
         return refreshToken;
     }
 }
