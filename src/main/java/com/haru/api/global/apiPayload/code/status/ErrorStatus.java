@@ -23,22 +23,18 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // 회원 관려 에러 1000
     MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER1001", "사용자가 없습니다."),
-    REFRESHTOKEN_NOT_EQUAL(HttpStatus.BAD_REQUEST, "MEMBER1002", "리프레시 토큰이 일치하지 않습니다."),
+    REFRESH_TOKEN_NOT_EQUAL(HttpStatus.BAD_REQUEST, "MEMBER1002", "리프레시 토큰이 일치하지 않습니다."),
 
-    // Workspace 관련 에러
-    WORKSPACE_NOT_FOUND(HttpStatus.BAD_REQUEST,"WORKSPACE1001", "워크스페이스가 없습니다."),
-    WORKSPACE_MODIFY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "WORKSPACE1002", "워크스페이스 수정 권한이 없습니다."),
+    // Workspace 관련 에러 2000
+    WORKSPACE_NOT_FOUND(HttpStatus.BAD_REQUEST,"WORKSPACE2001", "워크스페이스가 없습니다."),
+    WORKSPACE_MODIFY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "WORKSPACE2002", "워크스페이스 수정 권한이 없습니다."),
+    INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "INVITATION2003", "초대 코드에 해당하는 초대장이 존재하지 않습니다."),
+    EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "INVITATION2004", "초대장의 이메일과 현재 유저의 이메일이 일치하지 않습니다."),
+    ALREADY_ACCEPTED(HttpStatus.BAD_REQUEST, "INVITATION2005", "이미 초대가 수락된 초대장입니다."),
 
-    // AI회의 Meetings 관련 에러
-    MEETING_FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING1001", "안건지가 업로드되지 않았습니다."),
+    // AI회의 Meetings 관련 에러 3000
+    MEETING_FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING3001", "안건지가 업로드되지 않았습니다.");
 
-    // workspace 초대 관련 에러
-    INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "INVITATION1001", "초대 코드에 해당하는 초대장이 존재하지 않습니다."),
-    EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "INVITATION1002", "초대장의 이메일과 현재 유저의 이메일이 일치하지 않습니다."),
-    ALREADY_ACCEPTED(HttpStatus.BAD_REQUEST, "INVITATION1003", "이미 초대가 수락된 초대장입니다."),
-
-    // 예시,,,
-    ARTICLE_NOT_FOUND(HttpStatus.NOT_FOUND, "ARTICLE4001", "게시글이 없습니다.");
 
 
     private final HttpStatus httpStatus;

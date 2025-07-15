@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.haru.api.global.apiPayload.code.status.ErrorStatus.REFRESHTOKEN_NOT_EQUAL;
+import static com.haru.api.global.apiPayload.code.status.ErrorStatus.REFRESH_TOKEN_NOT_EQUAL;
 
 @Service
 @RequiredArgsConstructor
@@ -75,7 +75,7 @@ public class UserCommandServiceImpl implements UserCommandService{
             accessToken = generateAccessToken(userId, accessExpTime);
             newRefreshToken = generateAndSaveRefreshToken(key, refreshExpTime);
         } else {
-            throw new MemberHandler(REFRESHTOKEN_NOT_EQUAL);
+            throw new MemberHandler(REFRESH_TOKEN_NOT_EQUAL);
         }
 
         return UserConverter.toRefreshResponse(userId, accessToken, newRefreshToken);
