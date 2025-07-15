@@ -5,7 +5,7 @@ import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.meeting.entity.Meetings;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
-import com.haru.api.domain.user.entity.Users;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
@@ -33,7 +33,7 @@ public class MeetingServiceImpl implements MeetingService{
             MultipartFile agendaFile,
             MeetingRequestDTO.createMeetingRequest request)
     {
-        Users foundUser = userRepository.findById(userId)
+        User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         Workspace foundWorkspace = workspaceRepository.findById(request.getWorkspaceId())

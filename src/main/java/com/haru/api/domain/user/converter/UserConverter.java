@@ -2,29 +2,29 @@ package com.haru.api.domain.user.converter;
 
 import com.haru.api.domain.user.dto.UserRequestDTO;
 import com.haru.api.domain.user.dto.UserResponseDTO;
-import com.haru.api.domain.user.entity.Users;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.entity.enums.Status;
 
 public class UserConverter {
-    public static Users toUsers(UserRequestDTO.SignUpRequest request) {
-        return Users.builder()
+    public static User toUsers(UserRequestDTO.SignUpRequest request) {
+        return User.builder()
                 .email(request.getEmail())
                 .name(request.getName())
                 .status(Status.ACTIVE)
                 .build();
     }
 
-    public static UserResponseDTO.User toUserDTO(Users users) {
+    public static UserResponseDTO.User toUserDTO(User user) {
         return UserResponseDTO.User.builder()
-                .id(users.getId())
-                .email(users.getEmail())
-                .name(users.getName())
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
                 .build();
     }
 
-    public static UserResponseDTO.LoginResponse toLoginResponse(Users users, String accessToken, String refreshToken) {
+    public static UserResponseDTO.LoginResponse toLoginResponse(User user, String accessToken, String refreshToken) {
         return UserResponseDTO.LoginResponse.builder()
-                .userid(users.getId())
+                .userid(user.getId())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();

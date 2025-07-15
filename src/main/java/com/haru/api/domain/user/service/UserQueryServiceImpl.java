@@ -2,7 +2,7 @@ package com.haru.api.domain.user.service;
 
 import com.haru.api.domain.user.converter.UserConverter;
 import com.haru.api.domain.user.dto.UserResponseDTO;
-import com.haru.api.domain.user.entity.Users;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
@@ -20,7 +20,7 @@ public class UserQueryServiceImpl implements UserQueryService {
     @Override
     public UserResponseDTO.User getUserInfo(Long userId) {
 
-        Users user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         return UserConverter.toUserDTO(user);
@@ -32,7 +32,7 @@ public class UserQueryServiceImpl implements UserQueryService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        List<Users> users = userRepository.findTop4UsersByEmailContainingIgnoreCase(email);
+        List<User> users = userRepository.findTop4UsersByEmailContainingIgnoreCase(email);
 
         return users.parallelStream()
                 .map(user -> UserResponseDTO.User.builder()

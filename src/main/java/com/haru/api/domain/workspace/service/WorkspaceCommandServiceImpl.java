@@ -1,6 +1,6 @@
 package com.haru.api.domain.workspace.service;
 
-import com.haru.api.domain.user.entity.Users;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.userWorkspace.entity.Auth;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
@@ -33,7 +33,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     @Override
     public WorkspaceResponseDTO.Workspace createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request) {
 
-        Users foundUser = userRepository.findById(userId)
+        User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         // workspace 생성 및 저장
@@ -61,7 +61,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     @Override
     public WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceId, WorkspaceRequestDTO.WorkspaceUpdateRequest request) {
 
-        Users foundUser = userRepository.findById(userId)
+        User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
@@ -79,7 +79,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     @Override
     public void acceptInvite(Long userId, String code) {
 
-        Users foundUser = userRepository.findById(userId)
+        User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findByInvitationCode(code)

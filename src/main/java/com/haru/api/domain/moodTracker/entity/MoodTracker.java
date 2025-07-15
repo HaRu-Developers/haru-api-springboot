@@ -1,7 +1,7 @@
 package com.haru.api.domain.moodTracker.entity;
 
 import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
-import com.haru.api.domain.user.entity.Users;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -27,7 +27,7 @@ public class MoodTracker extends BaseEntity {
     // 🔹 만든 사람 (User)와 N:1 관계
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private Users user;
+    private User user;
 
     // 🔹 작업공간과 N:1 관계
     @ManyToOne(fetch = FetchType.LAZY)
