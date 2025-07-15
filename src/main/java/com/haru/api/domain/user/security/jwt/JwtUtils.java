@@ -69,7 +69,7 @@ public class JwtUtils {
                     .parseClaimsJws(token) // 파싱 및 검증, 실패 시 에러
                     .getBody();
         } catch(ExpiredJwtException expiredJwtException){
-            throw new CustomJwtException(ErrorStatus.JWT_ACCESSTOKEN_EXPIRED);
+            throw new CustomJwtException(ErrorStatus.JWT_ACCESS_TOKEN_EXPIRED);
         } catch(Exception e){
             throw new CustomJwtException(ErrorStatus.AUTHORIZATION_EXCEPTION);
         }
@@ -113,7 +113,7 @@ public class JwtUtils {
                     .parseClaimsJws(token) // 파싱 및 검증, 실패 시 에러
                     .getBody();
         } catch(ExpiredJwtException expiredJwtException){
-            throw new CustomJwtException(ErrorStatus.JWT_REFRESHTOKEN_EXPIRED);
+            throw new CustomJwtException(ErrorStatus.JWT_REFRESH_TOKEN_EXPIRED);
         } catch(Exception e){
             throw new CustomJwtException(ErrorStatus.AUTHORIZATION_EXCEPTION);
         }
