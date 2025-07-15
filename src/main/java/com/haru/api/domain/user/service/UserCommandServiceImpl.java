@@ -3,7 +3,7 @@ package com.haru.api.domain.user.service;
 import com.haru.api.domain.user.converter.UserConverter;
 import com.haru.api.domain.user.dto.UserRequestDTO;
 import com.haru.api.domain.user.dto.UserResponseDTO;
-import com.haru.api.domain.user.entity.Users;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.user.security.jwt.JwtUtils;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
@@ -41,7 +41,7 @@ public class UserCommandServiceImpl implements UserCommandService{
 
     @Override
     public void signUp(UserRequestDTO.SignUpRequest request) {
-        Users user = UserConverter.toUsers(request);
+        User user = UserConverter.toUsers(request);
         user.encodePassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
     }
@@ -52,7 +52,7 @@ public class UserCommandServiceImpl implements UserCommandService{
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
         // jwt토큰(access token, refresh token) 생성
-        Users getUser = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+        User getUser = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
         String key = "users:" + getUser.getId().toString();
         String accessToken = generateAccessToken(getUser.getId(), accessExpTime);
         String refreshToken = generateAndSaveRefreshToken(key, refreshExpTime);
@@ -100,7 +100,7 @@ public class UserCommandServiceImpl implements UserCommandService{
     public UserResponseDTO.User updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request) {
         String name = request.getName();
 
-        Users foundUser = userRepository.findById(userId)
+        User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         foundUser.setName(name);

@@ -1,11 +1,15 @@
 package com.haru.api.domain.workspace.entity;
 
-import com.haru.api.domain.user.entity.Users;
+import com.haru.api.domain.snsEvent.entity.SnsEvent;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "workspaces")
@@ -30,6 +34,8 @@ public class Workspace extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id")
-    private Users creator;
+    private User creator;
 
+    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL)
+    private List<SnsEvent> snsEventList = new ArrayList<>();
 }

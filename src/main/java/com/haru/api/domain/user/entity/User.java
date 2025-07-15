@@ -1,5 +1,6 @@
 package com.haru.api.domain.user.entity;
 
+import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.user.entity.enums.Status;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -8,6 +9,8 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -17,7 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Users extends BaseEntity {
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,4 +49,6 @@ public class Users extends BaseEntity {
         this.password = password;
     }
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<SnsEvent> snsEventList = new ArrayList<>();
 }

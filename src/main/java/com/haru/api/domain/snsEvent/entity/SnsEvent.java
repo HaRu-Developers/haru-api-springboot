@@ -1,37 +1,40 @@
-package com.haru.api.domain.userWorkspace.entity;
+package com.haru.api.domain.snsEvent.entity;
 
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
-import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
-@Table(name = "users_workspaces")
+@Table(name = "sns_events")
 @Getter
 @DynamicUpdate
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class UserWorkspace extends BaseEntity {
+public class SnsEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
+    private String title;
+
+    @Column(length = 100)
+    private String snsLink;
+
+    @Column(length = 200)
+    private String snsLinkTitle;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workspace_id", nullable = false)
+    @JoinColumn(name = "workspace_id")
     private Workspace workspace;
-
-    @Column(name = "auth", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Auth auth;
-
 }

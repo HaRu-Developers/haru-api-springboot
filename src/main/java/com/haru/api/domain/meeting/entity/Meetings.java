@@ -1,6 +1,6 @@
 package com.haru.api.domain.meeting.entity;
 
-import com.haru.api.domain.user.entity.Users;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -31,20 +31,20 @@ public class Meetings extends BaseEntity {
     private String proceeding;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private Users users;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Workspace workspaces;
 
-    private Meetings(String title, String agendaResult, Users users, Workspace workspaces) {
+    private Meetings(String title, String agendaResult, User user, Workspace workspaces) {
         this.title = title;
         this.agendaResult = agendaResult;
-        this.users = users;
+        this.user = user;
         this.workspaces = workspaces;
     }
 
-    public static Meetings createInitialMeeting(String title, String agendaResult, Users users, Workspace workspaces) {
-        return new Meetings(title, agendaResult, users, workspaces);
+    public static Meetings createInitialMeeting(String title, String agendaResult, User user, Workspace workspaces) {
+        return new Meetings(title, agendaResult, user, workspaces);
     }
 
     public void updateProceeding(String proceeding) {
