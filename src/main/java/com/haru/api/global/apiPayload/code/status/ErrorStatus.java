@@ -37,6 +37,14 @@ public enum ErrorStatus implements BaseErrorCode {
     EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "INVITATION1002", "초대장의 이메일과 현재 유저의 이메일이 일치하지 않습니다."),
     ALREADY_ACCEPTED(HttpStatus.BAD_REQUEST, "INVITATION1003", "이미 초대가 수락된 초대장입니다."),
 
+    // 인가 관련 에러
+    AUTHORIZATION_EXCEPTION(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9001", "인증에 실패하였습니다."),
+    JWT_ACCESSTOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9002", "AccessToekn이 만료되었습니다."),
+    JWT_REFRESHTOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9003", "RefreshToekn이 만료되었습니다."),
+    LOGOUT_USER(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9004", "로그아웃된 유저입니다."),
+    JWT_TOKEN_NOT_RECEIVED(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9005", "JWT 토큰이 전달되지 않았습니다."),
+    JWT_TOKEN_OUT_OF_FORM(HttpStatus.UNAUTHORIZED, "AUTHORIZATION9006", "JWT 토큰의 형식이 올바르지 않습니다."),
+
     // 예시,,,
     ARTICLE_NOT_FOUND(HttpStatus.NOT_FOUND, "ARTICLE4001", "게시글이 없습니다.");
 
@@ -61,7 +69,6 @@ public enum ErrorStatus implements BaseErrorCode {
                 .code(code)
                 .isSuccess(false)
                 .httpStatus(httpStatus)
-                .build()
-                ;
+                .build();
     }
 }

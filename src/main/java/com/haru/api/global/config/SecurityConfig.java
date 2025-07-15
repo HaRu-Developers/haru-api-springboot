@@ -1,6 +1,7 @@
 package com.haru.api.global.config;
 
 import com.haru.api.domain.user.security.CustomAuthenticationProvider;
+import com.haru.api.domain.user.security.jwt.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final CustomAuthenticationProvider customAuthenticationProvider;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -38,6 +40,10 @@ public class SecurityConfig {
                 ) // 세션을 Stateless로 설정
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/**").permitAll()
+                )
+                .exceptionHandling(
+                        exception -> exception
+                                .authenticationEntryPoint(jwtAuthenticationEntryPoint) // JWT 인증 실패 시 처리
                 );
         return http.build();
     }
