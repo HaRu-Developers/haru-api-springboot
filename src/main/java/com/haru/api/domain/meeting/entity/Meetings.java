@@ -46,7 +46,9 @@ public class Meetings extends BaseEntity {
     public static Meetings createInitialMeeting(String title, String agendaResult, User user, Workspace workspaces) {
         return new Meetings(title, agendaResult, user, workspaces);
     }
-
+    public void updateTitle(String title) {
+        this.title = title;
+    }
     public void updateProceeding(String proceeding) {
         this.proceeding = proceeding;
     }
