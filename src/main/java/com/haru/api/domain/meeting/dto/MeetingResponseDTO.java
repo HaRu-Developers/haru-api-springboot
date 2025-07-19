@@ -1,6 +1,7 @@
 package com.haru.api.domain.meeting.dto;
 
-import com.haru.api.domain.meeting.entity.Meetings;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,9 +12,18 @@ public class MeetingResponseDTO {
     @Getter
     @Builder
     public static class createMeetingResponse{
-        private String title;
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long meetingId;
-        private LocalDateTime updatedAt;
+        private String title;
+    }
 
+    @Getter
+    @Builder
+    public static class getMeetingResponse{
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long meetingId;
+        private String title;
+        private boolean isCreator;
+        private LocalDateTime updatedAt;
     }
 }

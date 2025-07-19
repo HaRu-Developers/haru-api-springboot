@@ -31,7 +31,7 @@ public class Meetings extends BaseEntity {
     private String proceeding;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private User user;
+    private User creator;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Workspace workspaces;
@@ -39,7 +39,7 @@ public class Meetings extends BaseEntity {
     private Meetings(String title, String agendaResult, User user, Workspace workspaces) {
         this.title = title;
         this.agendaResult = agendaResult;
-        this.user = user;
+        this.creator = user;
         this.workspaces = workspaces;
     }
 
