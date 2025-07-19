@@ -5,11 +5,14 @@ import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "mood_trackers")
@@ -27,7 +30,7 @@ public class MoodTracker extends BaseEntity {
     // 🔹 만든 사람 (User)와 N:1 관계
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User creator;
 
     // 🔹 작업공간과 N:1 관계
     @ManyToOne(fetch = FetchType.LAZY)
@@ -43,6 +46,7 @@ public class MoodTracker extends BaseEntity {
     @Column(name = "due_date")
     private LocalDateTime dueDate; // 마감일
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 10)
     private MoodTrackerVisibility visibility; // 공개범위 (PUBLIC, PRIVATE)
 
@@ -52,6 +56,21 @@ public class MoodTracker extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String report; // 리포트
 
-    @Column(columnDefinition = "TEXT")
-    private String suggestion; // 하루제안
+    @ElementCollection
+    @CollectionTable(
+            name = "mood_tracker_suggestions",
+            joinColumns = @JoinColumn(name = "mood_tracker_id")
+    )
+    @Column(name = "suggestion", columnDefinition = "TEXT")
+    private List<String> suggestions = new ArrayList<>();
+
+    @Min(0)
+    private Integer respondentsNum; // 답변자 수
+
+    @OneToMany(mappedBy = "moodTracker", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SurveyQuestion> surveyQuestions = new ArrayList<>();
+
+    public void updateTitle(String title) {
+        this.title = title;
+    }
 }
