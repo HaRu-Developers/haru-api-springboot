@@ -75,4 +75,21 @@ public class MeetingServiceImpl implements MeetingService{
         meeting.updateTitle(newTitle);
 
     }
+
+    @Override
+    @Transactional
+    public void deleteMeeting(Long userId, Long meetingId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        Meetings meeting = meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+
+        // 삭제권한 확인
+        if (!meeting.getUser().getId().equals(userId)) {
+            throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
+        }
+
+        meetingRepository.delete(meeting);
+    }
 }

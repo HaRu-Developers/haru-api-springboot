@@ -8,4 +8,5 @@ public interface MeetingService {
 
     public MeetingResponseDTO.createMeetingResponse createMeeting(Long userId, MultipartFile agendaFile, MeetingRequestDTO.createMeetingRequest request);
     public void updateMeetingTitle(Long userId, Long meetingId, String newTitle);
+    public void deleteMeeting(Long userId, Long meetingId);
 }
