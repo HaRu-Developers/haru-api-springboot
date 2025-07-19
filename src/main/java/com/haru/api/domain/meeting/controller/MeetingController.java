@@ -49,4 +49,15 @@ public class MeetingController {
 
         return ApiResponse.onSuccess("제목수정이 완료되었습니다.");
     }
+
+    @DeleteMapping("/{meetingId}")
+    public ApiResponse<String> deleteMeeting(
+            @PathVariable("meetingId") Long meetingId) {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        meetingService.deleteMeeting(userId, meetingId);
+
+        return ApiResponse.onSuccess("회의가 삭제되었습니다.");
+    }
 }
