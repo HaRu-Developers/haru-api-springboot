@@ -10,6 +10,7 @@ import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.TempHandler;
 import lombok.RequiredArgsConstructor;
@@ -54,5 +55,24 @@ public class MeetingServiceImpl implements MeetingService{
 
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
+    }
+
+    @Override
+    @Transactional
+    public void updateMeetingTitle(Long userId, Long meetingId, String newTitle) {
+
+        Meetings meeting = meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        // 회의 생성자 권한 확인
+        if (!meeting.getUser().getId().equals(userId)) {
+            throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
+        }
+
+        meeting.updateTitle(newTitle);
+
     }
 }
