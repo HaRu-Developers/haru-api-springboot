@@ -8,12 +8,8 @@ import com.haru.api.global.apiPayload.ApiResponse;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -40,5 +36,17 @@ public class MeetingController {
         MeetingResponseDTO.createMeetingResponse response = meetingService.createMeeting(userId, agendaFile, request);
 
         return ApiResponse.onSuccess(response);
+    }
+
+    @PatchMapping("/{meetingId}/title")
+    public ApiResponse<String> updateMeetingTitle(
+            @PathVariable("meetingId")Long meetingId,
+            @RequestBody MeetingRequestDTO.updateTitle request) {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        meetingService.updateMeetingTitle(userId, meetingId, request.getTitle());
+
+        return ApiResponse.onSuccess("제목수정이 완료되었습니다.");
     }
 }
