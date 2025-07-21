@@ -14,13 +14,13 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
-    private final CustomDetailsService customDetailsSerivce;
+    private final CustomDetailsService customDetailsService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public Authentication authenticate(Authentication authentication)
             throws AuthenticationException {
-        UserDetails userDetails = customDetailsSerivce.loadUserByUsername((String) authentication.getPrincipal(), (String) authentication.getCredentials());
+        UserDetails userDetails = customDetailsService.loadUserByUsername((String) authentication.getPrincipal(), (String) authentication.getCredentials());
 
         String password = authentication.getCredentials().toString();
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {
