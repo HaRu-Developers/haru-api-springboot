@@ -18,6 +18,7 @@ public interface MoodTrackerRepository extends JpaRepository<MoodTracker, Long> 
             "'TEAM_MOOD_TRACKER', " +
             "null) " +
             "FROM MoodTracker mt " +
-            "WHERE mt.title LIKE %:title%")
-    List<WorkspaceResponseDTO.Document> findDocumentsByTitleLike(String title);
+            "WHERE mt.title LIKE %:title% " +
+            "AND mt.workspace.id = :workspaceId")
+    List<WorkspaceResponseDTO.Document> findDocumentsByTitleLike(String title, Long workspaceId);
 }

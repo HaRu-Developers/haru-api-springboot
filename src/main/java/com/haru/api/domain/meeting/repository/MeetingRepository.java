@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface MeetingRepository extends JpaRepository<Meetings, Long> {
-    List<Meetings> findByWorkspacesOrderByUpdatedAtDesc(Workspace workspace);
+    List<Meetings> findByWorkspaceOrderByUpdatedAtDesc(Workspace workspace);
 
     @Query("SELECT new com.haru.api.domain.workspace.dto.WorkspaceResponseDTO$Document(" +
             "mt.id, " +
@@ -19,6 +19,7 @@ public interface MeetingRepository extends JpaRepository<Meetings, Long> {
             "'AI_MEETING_MANAGER', " +
             "null) " +
             "FROM Meetings mt " +
-            "WHERE mt.title LIKE %:title%")
-    List<WorkspaceResponseDTO.Document> findDocumentsByTitleLike(String title);
+            "WHERE mt.title LIKE %:title% " +
+            "AND mt.workspace.id = :workspaceId")
+    List<WorkspaceResponseDTO.Document> findDocumentsByTitleLike(String title, Long workspaceId);
 }

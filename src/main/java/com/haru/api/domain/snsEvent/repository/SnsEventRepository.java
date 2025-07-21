@@ -15,6 +15,7 @@ public interface SnsEventRepository extends JpaRepository<SnsEvent, Long> {
             "'SNS_EVENT_ASSISTANT', " +
             "null) " +
             "FROM SnsEvent se " +
-            "WHERE se.title LIKE %:title%")
-    List<WorkspaceResponseDTO.Document> findDocumentsByTitleLike(String title);
+            "WHERE se.title LIKE %:title% " +
+            "AND se.workspace.id = :workspaceId")
+    List<WorkspaceResponseDTO.Document> findDocumentsByTitleLike(String title, Long workspaceId);
 }
