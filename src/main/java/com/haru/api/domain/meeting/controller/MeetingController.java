@@ -10,11 +10,10 @@ import com.haru.api.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/meetings")
@@ -23,6 +22,7 @@ public class MeetingController {
 
     private final MeetingService meetingService;
 
+    
     @PostMapping(
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE },
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -38,6 +38,17 @@ public class MeetingController {
         Long userId = SecurityUtil.getCurrentUserId();
 
         MeetingResponseDTO.createMeetingResponse response = meetingService.createMeeting(userId, agendaFile, request);
+
+        return ApiResponse.onSuccess(response);
+    }
+
+    @GetMapping("/workspaces/{workspaceId}")
+    public ApiResponse<List<MeetingResponseDTO.getMeetingResponse>> getMeetings(
+            @PathVariable("workspaceId") Long workspaceId){
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        List<MeetingResponseDTO.getMeetingResponse> response = meetingService.getMeetings(userId, workspaceId);
 
         return ApiResponse.onSuccess(response);
     }
