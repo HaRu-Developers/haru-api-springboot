@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MeetingServiceImpl implements MeetingService{
+public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
@@ -60,20 +60,7 @@ public class MeetingServiceImpl implements MeetingService{
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
     }
 
-    @Override
-    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, Long workspaceId) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        List<Meetings> foundMeetings = meetingRepository.findByWorkspacesOrderByUpdatedAtDesc(foundWorkspace);
-
-        return foundMeetings.stream()
-                .map(meeting -> MeetingConverter.toGetMeetingResponse(meeting, userId))
-                .collect(Collectors.toList());
-    }
 
     @Override
     @Transactional

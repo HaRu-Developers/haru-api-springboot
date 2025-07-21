@@ -2,7 +2,8 @@ package com.haru.api.domain.meeting.controller;
 
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
-import com.haru.api.domain.meeting.service.MeetingService;
+import com.haru.api.domain.meeting.service.MeetingCommandService;
+import com.haru.api.domain.meeting.service.MeetingQueryService;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.global.apiPayload.ApiResponse;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -19,7 +20,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MeetingController {
 
-    private final MeetingService meetingService;
+    private final MeetingCommandService meetingCommandService;
+    private final MeetingQueryService meetingQueryService;
 
 
     @PostMapping(
@@ -36,7 +38,7 @@ public class MeetingController {
         }
         Long userId = SecurityUtil.getCurrentUserId();
 
-        MeetingResponseDTO.createMeetingResponse response = meetingService.createMeeting(userId, agendaFile, request);
+        MeetingResponseDTO.createMeetingResponse response = meetingCommandService.createMeeting(userId, agendaFile, request);
 
         return ApiResponse.onSuccess(response);
     }
@@ -47,7 +49,7 @@ public class MeetingController {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        List<MeetingResponseDTO.getMeetingResponse> response = meetingService.getMeetings(userId, workspaceId);
+        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryService.getMeetings(userId, workspaceId);
 
         return ApiResponse.onSuccess(response);
     }
@@ -59,7 +61,7 @@ public class MeetingController {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        meetingService.updateMeetingTitle(userId, meetingId, request.getTitle());
+        meetingCommandService.updateMeetingTitle(userId, meetingId, request.getTitle());
 
         return ApiResponse.onSuccess("제목수정이 완료되었습니다.");
     }
@@ -70,7 +72,7 @@ public class MeetingController {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        meetingService.deleteMeeting(userId, meetingId);
+        meetingCommandService.deleteMeeting(userId, meetingId);
 
         return ApiResponse.onSuccess("회의가 삭제되었습니다.");
     }
