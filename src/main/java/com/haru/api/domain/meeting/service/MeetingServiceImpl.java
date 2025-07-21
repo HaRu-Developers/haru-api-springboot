@@ -12,11 +12,14 @@ import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
-import com.haru.api.global.apiPayload.exception.handler.TempHandler;
+import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +41,7 @@ public class MeetingServiceImpl implements MeetingService{
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         Workspace foundWorkspace = workspaceRepository.findById(request.getWorkspaceId())
-                .orElseThrow(() -> new TempHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         // agendaFile을 openAi 활용하여 요약 - 미구현
         String agendaResult = "안건지 요약 - 미구현";
@@ -55,6 +58,21 @@ public class MeetingServiceImpl implements MeetingService{
 
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
+    }
+
+    @Override
+    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, Long workspaceId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        List<Meetings> foundMeetings = meetingRepository.findByWorkspacesOrderByUpdatedAtDesc(foundWorkspace);
+
+        return foundMeetings.stream()
+                .map(meeting -> MeetingConverter.toGetMeetingResponse(meeting, userId))
+                .collect(Collectors.toList());
     }
 
     @Override

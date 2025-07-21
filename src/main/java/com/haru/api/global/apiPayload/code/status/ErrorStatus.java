@@ -39,7 +39,11 @@ public enum ErrorStatus implements BaseErrorCode {
     JWT_REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTHORIZATION4003", "RefreshToken이 만료되었습니다."),
     LOGOUT_USER(HttpStatus.UNAUTHORIZED, "AUTHORIZATION4004", "로그아웃된 유저입니다."),
     JWT_TOKEN_NOT_RECEIVED(HttpStatus.UNAUTHORIZED, "AUTHORIZATION4005", "JWT 토큰이 전달되지 않았습니다."),
-    JWT_TOKEN_OUT_OF_FORM(HttpStatus.UNAUTHORIZED, "AUTHORIZATION4006", "JWT 토큰의 형식이 올바르지 않습니다.");
+    JWT_TOKEN_OUT_OF_FORM(HttpStatus.UNAUTHORIZED, "AUTHORIZATION4006", "JWT 토큰의 형식이 올바르지 않습니다."),
+
+    // 분위기 트래커 관련 에러
+    MOOD_TRACKER_NOT_FOUND(HttpStatus.BAD_REQUEST,"MOODTRACKER4001", "분위기 트래커가 없습니다."),
+    MOOD_TRACKER_MODIFY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "MOODTRACKER4002", "분위기 트래커에 권한이 없습니다."),;
 
     private final HttpStatus httpStatus;
     private final String code;
