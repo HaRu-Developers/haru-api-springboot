@@ -86,7 +86,7 @@ public class MeetingServiceImpl implements MeetingService{
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         // 회의 생성자 권한 확인
-        if (!meeting.getUser().getId().equals(userId)) {
+        if (!meeting.getCreator().getId().equals(userId)) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
 
@@ -104,7 +104,7 @@ public class MeetingServiceImpl implements MeetingService{
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
         // 삭제권한 확인
-        if (!meeting.getUser().getId().equals(userId)) {
+        if (!meeting.getCreator().getId().equals(userId)) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
 
