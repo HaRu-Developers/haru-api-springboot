@@ -6,6 +6,7 @@ import com.haru.api.domain.userWorkspace.service.UserWorkspaceQueryService;
 import com.haru.api.domain.workspace.dto.WorkspaceRequestDTO;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.service.WorkspaceCommandService;
+import com.haru.api.domain.workspace.service.WorkspaceQueryService;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -21,6 +22,7 @@ public class WorkspaceController {
 
     private final WorkspaceCommandService workspaceCommandService;
     private final UserWorkspaceQueryService userWorkspaceQueryService;
+    private final WorkspaceQueryService workspaceQueryService;
 
     @Operation(summary = "워크스페이스 생성", description =
             "# 워크스페이스 생성 API 입니다. 워크스페이스 제목과 초대하고자 하는 사람의 이메일을 입력해주세요."
@@ -77,6 +79,21 @@ public class WorkspaceController {
         workspaceCommandService.acceptInvite(userId, code);
 
         return ApiResponse.onSuccess(null);
+    }
+
+    @Operation(summary = "워크스페이스 문서 검색", description =
+            "# 워크스페이스 문서 검색 API 입니다. jwt 토큰을 헤더에 넣고, path variable로 workspaceId, query string에 문서 제목을 넣어주세요"
+    )
+    @GetMapping("/{workspaceId}")
+    public ApiResponse<List<WorkspaceResponseDTO.Document>> getDocument(
+            @PathVariable Long workspaceId,
+            @RequestParam String title
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        List<WorkspaceResponseDTO.Document> documents = workspaceQueryService.getDocuments(userId, workspaceId, title);
+
+        return ApiResponse.onSuccess(documents);
     }
 
 }
