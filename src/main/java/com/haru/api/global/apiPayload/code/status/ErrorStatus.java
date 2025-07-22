@@ -29,6 +29,9 @@ public enum ErrorStatus implements BaseErrorCode {
     EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "WORKSPACE4004", "초대장의 이메일과 현재 유저의 이메일이 일치하지 않습니다."),
     ALREADY_ACCEPTED(HttpStatus.BAD_REQUEST, "WORKSPACE4005", "이미 초대가 수락된 초대장입니다."),
 
+    // UserWorkspace 관련 에러
+    USER_WORKSPACE_NOT_FOUND(HttpStatus.NOT_FOUND, "USERWORKSPACE4001", "해당 유저가 해당 워크스페이스에 속해있지 않습니다."),
+
     // AI회의 Meetings 관련 에러
     MEETING_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4001","회의를 찾을 수 없습니다."),
     MEETING_FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4002", "안건지가 업로드되지 않았습니다."),

@@ -9,5 +9,5 @@ public interface WorkspaceCommandService {
 
     WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceid, WorkspaceRequestDTO.WorkspaceUpdateRequest request);
 
-    void acceptInvite(Long userId, String code);
+    void acceptInvite(String code);
 }

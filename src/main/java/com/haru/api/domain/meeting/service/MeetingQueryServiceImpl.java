@@ -2,7 +2,7 @@ package com.haru.api.domain.meeting.service;
 
 import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
-import com.haru.api.domain.meeting.entity.Meetings;
+import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
@@ -35,7 +35,7 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        List<Meetings> foundMeetings = meetingRepository.findByWorkspacesOrderByUpdatedAtDesc(foundWorkspace);
+        List<Meeting> foundMeetings = meetingRepository.findByWorkspaceOrderByUpdatedAtDesc(foundWorkspace);
 
         return foundMeetings.stream()
                 .map(meeting -> MeetingConverter.toGetMeetingResponse(meeting, userId))

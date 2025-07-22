@@ -3,7 +3,7 @@ package com.haru.api.domain.meeting.service;
 import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
-import com.haru.api.domain.meeting.entity.Meetings;
+import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
@@ -17,9 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,14 +44,14 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         String agendaResult = "안건지 요약 - 미구현";
 
 
-        Meetings newMeetings = Meetings.createInitialMeeting(
+        Meeting newMeeting = Meeting.createInitialMeeting(
                 request.getTitle(),
                 agendaResult,
                 foundUser,
                 foundWorkspace
         );
 
-        Meetings savedMeeting = meetingRepository.save(newMeetings);
+        Meeting savedMeeting = meetingRepository.save(newMeeting);
 
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
@@ -66,7 +63,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     @Transactional
     public void updateMeetingTitle(Long userId, Long meetingId, String newTitle) {
 
-        Meetings meeting = meetingRepository.findById(meetingId)
+        Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
         User foundUser = userRepository.findById(userId)
@@ -87,7 +84,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        Meetings meeting = meetingRepository.findById(meetingId)
+        Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
         // 삭제권한 확인

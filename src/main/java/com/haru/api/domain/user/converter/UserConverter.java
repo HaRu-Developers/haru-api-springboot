@@ -6,10 +6,11 @@ import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.entity.enums.Status;
 
 public class UserConverter {
-    public static User toUsers(UserRequestDTO.SignUpRequest request) {
+    public static User toUsers(UserRequestDTO.SignUpRequest request, String password) {
         return User.builder()
                 .email(request.getEmail())
                 .name(request.getName())
+                .password(password)
                 .status(Status.ACTIVE)
                 .build();
     }
