@@ -58,6 +58,9 @@ public class MeetingController {
         return ApiResponse.onSuccess(response);
     }
 
+    @Operation(summary = "AI회의록 조회", description =
+            "# workspaceId를 받아 회의록 list를 반환합니다. access token을 header에 입력해주세요."
+    )
     @GetMapping("/workspaces/{workspaceId}")
     public ApiResponse<List<MeetingResponseDTO.getMeetingResponse>> getMeetings(
             @PathVariable("workspaceId") Long workspaceId){
@@ -69,6 +72,9 @@ public class MeetingController {
         return ApiResponse.onSuccess(response);
     }
 
+    @Operation(summary = "AI회의록 제목 수정", description =
+            "# meetingId을 pathparam, 수정할 title을 requestBody로 받아 회의록 제목을 수정핣니다. access token을 header에 입력해주세요."
+    )
     @PatchMapping("/{meetingId}/title")
     public ApiResponse<String> updateMeetingTitle(
             @PathVariable("meetingId")Long meetingId,
@@ -81,6 +87,9 @@ public class MeetingController {
         return ApiResponse.onSuccess("제목수정이 완료되었습니다.");
     }
 
+    @Operation(summary = "AI회의록 삭제", description =
+            "# meetingId를 받아 회의록을 삭제합니다. access token을 header에 입력해주세요."
+    )
     @DeleteMapping("/{meetingId}")
     public ApiResponse<String> deleteMeeting(
             @PathVariable("meetingId") Long meetingId) {
