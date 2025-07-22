@@ -26,8 +26,9 @@ public class CheckboxChoice {
     @JoinColumn(name = "survey_question_id", nullable = false)
     private SurveyQuestion surveyQuestion;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     @OneToMany(mappedBy = "checkboxChoice", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CheckboxChoiceAnswer> checkboxChoiceAnswers = new ArrayList<>();
+    private List<CheckboxChoiceAnswer> checkboxChoiceAnswerList = new ArrayList<>();
 }

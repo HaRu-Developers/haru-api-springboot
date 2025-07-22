@@ -6,7 +6,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
-@Table(name = "checkbox_answer")
+@Table(name = "checkbox_choice_answers")
 @Getter
 @DynamicUpdate
 @DynamicInsert

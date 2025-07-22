@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "subjective_answer")
+@Table(name = "subjective_answers")
 @Getter @Setter
 public class SubjectiveAnswer {
 
@@ -14,7 +14,7 @@ public class SubjectiveAnswer {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "survey_questions_id", nullable = false)
+    @JoinColumn(name = "survey_question_id", nullable = false)
     private SurveyQuestion surveyQuestion;
 
     @Column(columnDefinition = "TEXT")
