@@ -17,7 +17,10 @@ public enum SuccessStatus implements BaseCode {
     // 분위기 트래커 성공 응답
     MOOD_TRACKER_CREATED(HttpStatus.CREATED, "MOODTRACKER201", "분위기 트래커 생성 성공"),
     MOOD_TRACKER_UPDATED(HttpStatus.OK, "MOODTRACKER200", "분위기 트래커 제목 수정 성공"),
-    MOOD_TRACKER_DELETED(HttpStatus.NO_CONTENT, "MOODTRACKER204", "분위기 트래커 삭제 성공");
+    MOOD_TRACKER_DELETED(HttpStatus.NO_CONTENT, "MOODTRACKER204", "분위기 트래커 삭제 성공"),
+    MOOD_TRACKER_EMAIL_SENT(HttpStatus.OK, "MOODTRACKER200", "분위기 트래커 설문 링크 전송 성공"),
+    MOOD_TRACKER_ANSWER_SUBMIT(HttpStatus.OK, "MOODTRACKER200", "분위기 트래커 설문 답변 제출 성공")
+    ;
 
     private final HttpStatus httpStatus;
     private final String code;
