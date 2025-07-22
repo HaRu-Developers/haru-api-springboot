@@ -81,7 +81,9 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     @Override
     public void acceptInvite(String code) {
 
-        WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findByInvitationCode(code)
+        Long id = 1l;
+
+        WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findById(id)
                 .orElseThrow(() -> new WorkspaceInvitationHandler(ErrorStatus.INVITATION_NOT_FOUND));
 
         String foundEmail = foundWorkspaceInvitation.getEmail();

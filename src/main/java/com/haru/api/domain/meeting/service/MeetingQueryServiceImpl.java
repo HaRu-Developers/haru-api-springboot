@@ -35,7 +35,7 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        List<Meeting> foundMeetings = meetingRepository.findByWorkspacesOrderByUpdatedAtDesc(foundWorkspace);
+        List<Meeting> foundMeetings = meetingRepository.findByWorkspaceOrderByUpdatedAtDesc(foundWorkspace);
 
         return foundMeetings.stream()
                 .map(meeting -> MeetingConverter.toGetMeetingResponse(meeting, userId))
