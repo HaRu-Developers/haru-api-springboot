@@ -5,6 +5,7 @@ import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
+import com.haru.api.domain.workspace.converter.WorkspaceConverter;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -30,7 +31,7 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<WorkspaceResponseDTO.Document> getDocuments(Long userId, Long workspaceId, String title) {
+    public WorkspaceResponseDTO.Documents getDocuments(Long userId, Long workspaceId, String title) {
 
         // 유저 존재 확인
         userRepository.findById(userId)
@@ -46,11 +47,14 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
 
 
         // 워크스페이스에 속해있는 document 조회 후 List로 반환
-        return Stream.of(
-                meetingRepository.findDocumentsByTitleLike(title, workspaceId),
-                snsEventRepository.findDocumentsByTitleLike(title, workspaceId),
-                moodTrackerRepository.findDocumentsByTitleLike(title, workspaceId)
-        ).flatMap(List::stream)
-        .toList();
+        return WorkspaceConverter.toDocumentsDTO(
+                Stream.of(
+                    meetingRepository.findDocumentsByTitleLike(title, workspaceId),
+                    snsEventRepository.findDocumentsByTitleLike(title, workspaceId),
+                    moodTrackerRepository.findDocumentsByTitleLike(title, workspaceId)
+                )
+                .flatMap(List::stream)
+                .toList()
+        );
     }
 }

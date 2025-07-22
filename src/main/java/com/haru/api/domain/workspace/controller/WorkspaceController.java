@@ -83,13 +83,13 @@ public class WorkspaceController {
             "# 워크스페이스 문서 검색 API 입니다. jwt 토큰을 헤더에 넣고, path variable로 workspaceId, query string에 문서 제목을 넣어주세요"
     )
     @GetMapping("/{workspaceId}")
-    public ApiResponse<List<WorkspaceResponseDTO.Document>> getDocument(
+    public ApiResponse<WorkspaceResponseDTO.Documents> getDocument(
             @PathVariable Long workspaceId,
             @RequestParam String title
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
 
-        List<WorkspaceResponseDTO.Document> documents = workspaceQueryService.getDocuments(userId, workspaceId, title);
+        WorkspaceResponseDTO.Documents documents = workspaceQueryService.getDocuments(userId, workspaceId, title);
 
         return ApiResponse.onSuccess(documents);
     }
