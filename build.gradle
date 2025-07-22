@@ -75,6 +75,23 @@ dependencies {
 
 	// GSON
 	implementation 'com.google.code.gson:gson:2.11.0'
+
+	// JSON
+	implementation("org.json:json:20240303")
+
+	// websocket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	// http
+	implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+
+	implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+	// vad
+	implementation("com.orctom:vad4j:1.0")
+
+	// webflux
+	implementation("org.springframework.boot:spring-boot-starter-webflux:3.4.5")
 }
 
 dependencyManagement {

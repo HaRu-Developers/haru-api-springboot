@@ -34,7 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/users/login",
             "/swagger-ui/**",
             "/v3/**",
-            "/users/admin/**"
+            "/users/admin/**",
+            "/ws/audio"
     };
     private final JwtUtils jwtUtils;
     private final RedisTemplate<String, String> redisTemplate;
