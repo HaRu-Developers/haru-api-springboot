@@ -39,7 +39,6 @@ public class MoodTrackerRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SurveyQuestion {
-
         @NotBlank
         private String title;
 
@@ -59,5 +58,31 @@ public class MoodTrackerRequestDTO {
     public static class UpdateTitleRequest {
         @NotBlank
         private String title;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SurveyAnswerList {
+        private List<SurveyAnswer> answers;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SurveyAnswer {
+        @NotNull
+        private Long questionId;
+
+        @NotNull
+        private QuestionType type;
+
+        private Long multipleChoiceId; // MULTI_CHOICE 는 1개
+
+        private List<Long> checkboxChoiceIdList; // CHECKBOX_CHOICE 는 여러 개; id 리스트로 받음
+
+        private String subjectiveAnswer; // SUBJECTIVE
     }
 }
