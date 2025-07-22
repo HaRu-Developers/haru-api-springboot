@@ -20,6 +20,7 @@ public enum ErrorStatus implements BaseErrorCode {
     // 회원 관려 에러
     MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4001", "사용자가 없습니다."),
     REFRESH_TOKEN_NOT_EQUAL(HttpStatus.BAD_REQUEST, "MEMBER4002", "리프레시 토큰이 일치하지 않습니다."),
+    MEMBER_NO_AUTHORITY(HttpStatus.FORBIDDEN, "MEMBER4003", "수정 및 삭제할 권한이 없습니다."),
 
     // Workspace 관련 에러
     WORKSPACE_NOT_FOUND(HttpStatus.BAD_REQUEST,"WORKSPACE4001", "워크스페이스가 없습니다."),
@@ -29,7 +30,8 @@ public enum ErrorStatus implements BaseErrorCode {
     ALREADY_ACCEPTED(HttpStatus.BAD_REQUEST, "WORKSPACE4005", "이미 초대가 수락된 초대장입니다."),
 
     // AI회의 Meetings 관련 에러
-    MEETING_FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4001", "안건지가 업로드되지 않았습니다."),
+    MEETING_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4001","회의를 찾을 수 없습니다."),
+    MEETING_FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4002", "안건지가 업로드되지 않았습니다."),
 
     // 인가 관련 에러
     AUTHORIZATION_EXCEPTION(HttpStatus.UNAUTHORIZED, "AUTHORIZATION4001", "인증에 실패하였습니다."),

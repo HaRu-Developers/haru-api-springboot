@@ -2,13 +2,13 @@ package com.haru.api.domain.meeting.controller;
 
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
-import com.haru.api.domain.meeting.service.MeetingService;
+import com.haru.api.domain.meeting.service.MeetingCommandService;
+import com.haru.api.domain.meeting.service.MeetingQueryService;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.global.apiPayload.ApiResponse;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,9 +20,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MeetingController {
 
-    private final MeetingService meetingService;
+    private final MeetingCommandService meetingCommandService;
+    private final MeetingQueryService meetingQueryService;
 
-    
+
     @PostMapping(
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE },
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -37,7 +38,7 @@ public class MeetingController {
         }
         Long userId = SecurityUtil.getCurrentUserId();
 
-        MeetingResponseDTO.createMeetingResponse response = meetingService.createMeeting(userId, agendaFile, request);
+        MeetingResponseDTO.createMeetingResponse response = meetingCommandService.createMeeting(userId, agendaFile, request);
 
         return ApiResponse.onSuccess(response);
     }
@@ -48,8 +49,31 @@ public class MeetingController {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        List<MeetingResponseDTO.getMeetingResponse> response = meetingService.getMeetings(userId, workspaceId);
+        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryService.getMeetings(userId, workspaceId);
 
         return ApiResponse.onSuccess(response);
+    }
+
+    @PatchMapping("/{meetingId}/title")
+    public ApiResponse<String> updateMeetingTitle(
+            @PathVariable("meetingId")Long meetingId,
+            @RequestBody MeetingRequestDTO.updateTitle request) {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        meetingCommandService.updateMeetingTitle(userId, meetingId, request.getTitle());
+
+        return ApiResponse.onSuccess("제목수정이 완료되었습니다.");
+    }
+
+    @DeleteMapping("/{meetingId}")
+    public ApiResponse<String> deleteMeeting(
+            @PathVariable("meetingId") Long meetingId) {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        meetingCommandService.deleteMeeting(userId, meetingId);
+
+        return ApiResponse.onSuccess("회의가 삭제되었습니다.");
     }
 }
