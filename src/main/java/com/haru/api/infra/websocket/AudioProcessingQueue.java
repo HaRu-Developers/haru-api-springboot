@@ -1,4 +1,4 @@
-package com.haru.api.domain.websocket;
+package com.haru.api.infra.websocket;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.TextMessage;

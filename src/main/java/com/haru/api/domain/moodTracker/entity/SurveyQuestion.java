@@ -37,12 +37,12 @@ public class SurveyQuestion {
     private Boolean isMandatory;
 
     @OneToMany(mappedBy = "surveyQuestion", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MultipleChoice> multipleChoices = new ArrayList<>();
+    private List<MultipleChoice> multipleChoiceList = new ArrayList<>();
 
     @OneToMany(mappedBy = "surveyQuestion", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CheckboxChoice> checkboxChoices = new ArrayList<>();
+    private List<CheckboxChoice> checkboxChoiceList = new ArrayList<>();
 
     @OneToMany(mappedBy = "surveyQuestion", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SubjectiveAnswer> subjectiveAnswers = new ArrayList<>();
+    private List<SubjectiveAnswer> subjectiveAnswerList = new ArrayList<>();
 }
 
