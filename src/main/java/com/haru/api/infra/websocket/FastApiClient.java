@@ -1,4 +1,4 @@
-package com.haru.api.domain.websocket;
+package com.haru.api.infra.websocket;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;

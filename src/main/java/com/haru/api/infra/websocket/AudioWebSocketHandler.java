@@ -1,4 +1,4 @@
-package com.haru.api.domain.websocket;
+package com.haru.api.infra.websocket;
 
 import com.orctom.vad4j.VAD;
 import lombok.extern.slf4j.Slf4j;

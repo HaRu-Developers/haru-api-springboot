@@ -1,6 +1,6 @@
 package com.haru.api.global.config;
 
-import com.haru.api.domain.websocket.AudioWebSocketHandler;
+import com.haru.api.infra.websocket.AudioWebSocketHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
