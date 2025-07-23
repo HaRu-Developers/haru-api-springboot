@@ -28,6 +28,7 @@ public enum ErrorStatus implements BaseErrorCode {
     INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "WORKSPACE4003", "초대 코드에 해당하는 초대장이 존재하지 않습니다."),
     EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "WORKSPACE4004", "초대장의 이메일과 현재 유저의 이메일이 일치하지 않습니다."),
     ALREADY_ACCEPTED(HttpStatus.BAD_REQUEST, "WORKSPACE4005", "이미 초대가 수락된 초대장입니다."),
+    NOT_BELONG_TO_WORKSPACE(HttpStatus.UNAUTHORIZED, "WORKSPACE4006", "해당 워크스페이스에 속해있지 않습니다."),
 
     // UserWorkspace 관련 에러
     USER_WORKSPACE_NOT_FOUND(HttpStatus.NOT_FOUND, "USERWORKSPACE4001", "해당 유저가 해당 워크스페이스에 속해있지 않습니다."),
