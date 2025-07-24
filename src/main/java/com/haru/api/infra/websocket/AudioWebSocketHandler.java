@@ -1,6 +1,7 @@
 package com.haru.api.infra.websocket;
 
 import com.orctom.vad4j.VAD;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
@@ -13,13 +14,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     private final Map<String, AudioSessionBuffer> sessionBuffers = new ConcurrentHashMap<>();
 
     private final Map<String, AudioProcessingQueue> sessionQueues = new ConcurrentHashMap<>();
 
-    private final FastApiClient fastApiClient = new FastApiClient();
+    private final FastApiClient fastApiClient;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -84,10 +86,6 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                     // noVoiceCount 가 임계값에 도달한 경우, 음성의 끝이라고 판단
                     if (sessionBuffer.getNoVoiceCount() >= AudioSessionBuffer.NO_VOICE_COUNT_TARGET) {
 
-                        // stt api 호출
-                        //String result = sttService.transcribe(sessionBuffer.getCurrentUtteranceBuffer());
-                        //String result = fastApiClient.sendRawBytesToFastAPI(sessionBuffer.getCurrentUtteranceBuffer());
-
                         // 세션별 큐가 없으면 생성
                         sessionQueues.computeIfAbsent(sessionId, id ->
                             new AudioProcessingQueue(
@@ -99,11 +97,6 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                         // 큐에 넣기 (순서 보장)
                         sessionQueues.get(sessionId).enqueue(sessionBuffer.getCurrentUtteranceBuffer());
                         log.info("speech detected");
-
-//                        fastApiClient.sendRawBytesToFastAPI(sessionBuffer.getCurrentUtteranceBuffer())
-//                                        .subscribe(result -> {
-//                                            log.info("stt api 응답: {}", result);
-//                                        });
 
                         sessionBuffer.resetCurrentUtteranceBuffer();
                         sessionBuffer.setIsTriggered(false);
