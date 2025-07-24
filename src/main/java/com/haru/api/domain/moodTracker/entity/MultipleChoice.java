@@ -5,7 +5,6 @@ import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,8 +26,9 @@ public class MultipleChoice {
     @JoinColumn(name = "survey_question_id", nullable = false)
     private SurveyQuestion surveyQuestion;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     @OneToMany(mappedBy = "multipleChoice", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MultipleChoiceAnswer> multipleChoiceAnswers = new ArrayList<>();
+    private List<MultipleChoiceAnswer> multipleChoiceAnswerList = new ArrayList<>();
 }

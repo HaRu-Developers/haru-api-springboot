@@ -1,6 +1,5 @@
 package com.haru.api.domain.user.entity;
 
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.user.entity.enums.Status;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -9,8 +8,6 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -27,7 +24,6 @@ public class User extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, length = 20)
-    @Setter
     private String name;
 
     @Column(nullable = false, length = 50)
@@ -45,10 +41,7 @@ public class User extends BaseEntity {
 
     private LocalDateTime inactiveDate;
 
-    public void encodePassword(String password) {
-        this.password = password;
+    public void updateName(String name) {
+        this.name = name;
     }
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<SnsEvent> snsEventList = new ArrayList<>();
 }

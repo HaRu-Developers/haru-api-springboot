@@ -7,11 +7,15 @@ import com.haru.api.domain.moodTracker.entity.*;
 import com.haru.api.domain.moodTracker.repository.*;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
+import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
+import com.haru.api.domain.userWorkspace.entity.enums.Auth;
+import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
+import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +34,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     private final MoodTrackerRepository moodTrackerRepository;
     private final WorkspaceRepository workspaceRepository;
     private final UserRepository userRepository;
+    private final UserWorkspaceRepository userWorkspaceRepository;
 
     private final SurveyQuestionRepository surveyQuestionRepository;
     private final MultipleChoiceRepository multipleChoiceRepository;
@@ -50,17 +55,20 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             Long workspaceId,
             MoodTrackerRequestDTO.CreateRequest request
     ) {
-        User user = userRepository.findById(userId)
+        User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        Workspace workspace = workspaceRepository.findById(workspaceId)
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        if (userId != workspace.getCreator().getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(foundWorkspace.getId(), foundUser.getId())
+                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+
+        if (!foundUserWorkspace.getAuth().equals(Auth.ADMIN))
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
         // 분위기 트래커 생성 및 저장
-        MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, user, workspace);
+        MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, foundUser, foundWorkspace);
         moodTrackerRepository.save(moodTracker);
 
         // 선택지 생성 및 저장

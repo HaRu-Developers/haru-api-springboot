@@ -41,8 +41,8 @@ public class UserCommandServiceImpl implements UserCommandService{
 
     @Override
     public void signUp(UserRequestDTO.SignUpRequest request) {
-        User user = UserConverter.toUsers(request);
-        user.encodePassword(passwordEncoder.encode(request.getPassword()));
+        String password = passwordEncoder.encode(request.getPassword());
+        User user = UserConverter.toUsers(request, password);
         userRepository.save(user);
     }
 
@@ -103,7 +103,7 @@ public class UserCommandServiceImpl implements UserCommandService{
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        foundUser.setName(name);
+        foundUser.updateName(name);
 
         return UserConverter.toUserDTO(foundUser);
     }

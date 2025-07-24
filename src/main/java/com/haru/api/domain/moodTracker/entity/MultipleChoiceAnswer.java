@@ -6,7 +6,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
-@Table(name = "multiple_choices_answer")
+@Table(name = "multiple_choice_answers")
 @Getter
 @DynamicUpdate
 @DynamicInsert
