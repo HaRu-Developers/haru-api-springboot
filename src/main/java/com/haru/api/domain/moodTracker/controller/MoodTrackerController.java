@@ -94,4 +94,35 @@ public class MoodTrackerController {
         return ApiResponse.of(SuccessStatus.MOOD_TRACKER_DELETED, null);
     }
 
+    @PostMapping("/{mood-tracker-id}/emails")
+    @Operation(
+            summary = "분위기 트래커 설문 링크 워크 스페이스 내의 팀원 email 전송 API",
+            description = "# 해당 ID의 분위기 트래커 설문 링크를 워크 스페이스 내의 유저에게 email로 전송합니다."
+    )
+    @Parameters({
+            @Parameter(name = "mood-tracker-id", description = "분위기 트래커 ID (Path Variable)", required = true)
+    })
+    public ApiResponse<Void> sendMoodTrackerSurveyLink(
+            @PathVariable(name = "mood-tracker-id") Long moodTrackerId
+    ) {
+        moodTrackerCommandService.sendSurveyLink(moodTrackerId);
+        return ApiResponse.of(SuccessStatus.MOOD_TRACKER_EMAIL_SENT, null);
+    }
+
+    @PostMapping("/{mood-tracker-id}/answer")
+    @Operation(
+            summary = "분위기 트래커 설문 답변 제출 API",
+            description = "# 해당 ID의 분위기 트래커 설문 답변을 제출합니다."
+    )
+    @Parameters({
+            @Parameter(name = "mood-tracker-id", description = "분위기 트래커 ID (Path Variable)", required = true)
+    })
+    public  ApiResponse<Void> submitMoodTrackerSurveyAnswers(
+            @PathVariable("mood-tracker-id") Long moodTrackerId,
+            @RequestBody MoodTrackerRequestDTO.SurveyAnswerList request
+    ) {
+        moodTrackerCommandService.submitSurveyAnswers(moodTrackerId, request);
+        return ApiResponse.of(SuccessStatus.MOOD_TRACKER_ANSWER_SUBMIT, null);
+    }
+
 }

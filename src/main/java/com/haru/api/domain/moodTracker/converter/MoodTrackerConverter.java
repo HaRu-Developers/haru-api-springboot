@@ -2,10 +2,7 @@ package com.haru.api.domain.moodTracker.converter;
 
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
-import com.haru.api.domain.moodTracker.entity.CheckboxChoice;
-import com.haru.api.domain.moodTracker.entity.MoodTracker;
-import com.haru.api.domain.moodTracker.entity.MultipleChoice;
-import com.haru.api.domain.moodTracker.entity.SurveyQuestion;
+import com.haru.api.domain.moodTracker.entity.*;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 
@@ -88,5 +85,44 @@ public class MoodTrackerConverter {
         return MoodTrackerResponseDTO.CreateResult.builder()
                 .moodTrackerId(moodTracker.getId())
                 .build();
+    }
+
+    /**
+     * 주관식 답변 변환
+     */
+    public static SubjectiveAnswer toSubjectiveAnswer(
+            SurveyQuestion question,
+            String answerText
+    ) {
+        return SubjectiveAnswer.builder()
+                .surveyQuestion(question)
+                .answer(answerText)
+                .build();
+    }
+
+    /**
+     * 객관식 단답 (Multiple Choice) 변환
+     */
+    public static MultipleChoiceAnswer toMultipleChoiceAnswer(
+            MultipleChoice multipleChoice
+    ) {
+        return MultipleChoiceAnswer.builder()
+                    .multipleChoice(multipleChoice)
+                    .build();
+    }
+
+    /**
+     * 객관식 복수답 (Checkbox) 변환
+     */
+    public static List<CheckboxChoiceAnswer> toCheckboxChoiceAnswers(
+            List<CheckboxChoice> checkboxChoices
+    ) {
+        List<CheckboxChoiceAnswer> answers = new ArrayList<>();
+        for (CheckboxChoice checkboxChoice : checkboxChoices) {
+            answers.add(CheckboxChoiceAnswer.builder()
+                    .checkboxChoice(checkboxChoice)
+                    .build());
+        }
+        return answers;
     }
 }
