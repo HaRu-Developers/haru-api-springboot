@@ -1,4 +1,4 @@
-package com.haru.api.infra.api;
+package com.haru.api.infra.api.client;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;

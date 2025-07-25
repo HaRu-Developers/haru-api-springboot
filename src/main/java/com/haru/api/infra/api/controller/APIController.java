@@ -1,5 +1,6 @@
-package com.haru.api.infra.api;
+package com.haru.api.infra.api.controller;
 
+import com.haru.api.infra.api.client.ChatGPTClient;
 import com.haru.api.infra.api.dto.AIQuestionRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;

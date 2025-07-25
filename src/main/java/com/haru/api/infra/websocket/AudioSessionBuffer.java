@@ -1,5 +1,6 @@
 package com.haru.api.infra.websocket;
 
+import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.infra.api.entity.SpeechSegment;
 
 import java.io.ByteArrayOutputStream;
@@ -29,6 +30,8 @@ public class AudioSessionBuffer {
     public static final int NO_VOICE_COUNT_TARGET = 300;
 
     private LocalDateTime utterance_start_time;
+
+    private Meeting meeting;
 
     // 메서드
     public synchronized void appendFullBuffer(byte[] chunk) {
@@ -97,4 +100,11 @@ public class AudioSessionBuffer {
         return utterance_start_time;
     }
 
+    public synchronized void setMeeting(Meeting meeting) {
+        this.meeting = meeting;
+    }
+
+    public synchronized Meeting getMeeting() {
+        return meeting;
+    }
 }

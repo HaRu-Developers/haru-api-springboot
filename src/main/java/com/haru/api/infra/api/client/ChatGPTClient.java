@@ -1,4 +1,4 @@
-package com.haru.api.infra.api;
+package com.haru.api.infra.api.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

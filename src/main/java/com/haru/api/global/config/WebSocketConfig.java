@@ -16,7 +16,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(audioWebSocketHandler, "/ws/audio")
+        registry.addHandler(audioWebSocketHandler, "/ws/audio/{meetingId}")
                 .setAllowedOrigins("*");  // Cross-Origin 허용
     }
 }
