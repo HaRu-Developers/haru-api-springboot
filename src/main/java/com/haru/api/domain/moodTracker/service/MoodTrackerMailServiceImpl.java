@@ -28,16 +28,16 @@ public class MoodTrackerMailServiceImpl implements MoodTrackerMailService {
             String mailTitle,
             String mailContent
     ) {
-        MoodTracker moodTracker = moodTrackerRepository.findById(moodTrackerId)
+        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
         // 이 후에 id에 hash 처리 요구됨
         String surveyLink = surveyLinkPrefix + moodTrackerId;
 
-        Long workspaceId = moodTracker.getWorkspace().getId();
-        List<String> emails = userWorkspaceRepository.findEmailsByWorkspaceId(workspaceId);
+        Long workspaceId = foundMoodTracker.getWorkspace().getId();
+        List<String> foundEmails = userWorkspaceRepository.findEmailsByWorkspaceId(workspaceId);
 
-        for (String email : emails) {
+        for (String email : foundEmails) {
             String htmlContent = buildHtmlEmail(mailContent, surveyLink);
             emailSender.send(email, mailTitle, htmlContent);
         }

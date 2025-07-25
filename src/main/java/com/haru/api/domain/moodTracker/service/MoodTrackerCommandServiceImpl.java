@@ -96,13 +96,13 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
                             Long moodTrackerId,
                             MoodTrackerRequestDTO.UpdateTitleRequest request
     ) {
-        MoodTracker moodTracker = moodTrackerRepository.findById(moodTrackerId)
+        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
-        if (userId != moodTracker.getCreator().getId())
+        if (userId != foundMoodTracker.getCreator().getId())
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
-        moodTracker.updateTitle(request.getTitle());
+        foundMoodTracker.updateTitle(request.getTitle());
     }
 
     /**
@@ -113,13 +113,13 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             Long userId,
             Long moodTrackerId
     ) {
-        MoodTracker moodTracker = moodTrackerRepository.findById(moodTrackerId)
+        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
-        if (userId != moodTracker.getCreator().getId())
+        if (userId != foundMoodTracker.getCreator().getId())
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
-        moodTrackerRepository.delete(moodTracker);
+        moodTrackerRepository.delete(foundMoodTracker);
     }
 
     /**
@@ -129,11 +129,11 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     public void sendSurveyLink(
             Long moodTrackerId
     ) {
-        MoodTracker moodTracker = moodTrackerRepository.findById(moodTrackerId)
+        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
             .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
-        String creatorName = moodTracker.getCreator().getName();  // 작성자 이름
-        String surveyTitle = moodTracker.getTitle();              // 설문 제목
+        String creatorName = foundMoodTracker.getCreator().getName();  // 작성자 이름
+        String surveyTitle = foundMoodTracker.getTitle();              // 설문 제목
 
         String mailTitle = "%s 님이 나에게 [%s] 설문을 공유했습니다.".formatted(creatorName, surveyTitle);
         String mailContent = "%s 님의 [%s] 설문에 대한 소중한 의견을 보내주세요.".formatted(creatorName, surveyTitle);
@@ -154,8 +154,8 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         List<CheckboxChoiceAnswer> checkboxChoiceAnswers = new ArrayList<>();
 
         // 전체 질문을 미리 조회 및 맵에 캐싱
-        List<SurveyQuestion> allQuestions = surveyQuestionRepository.findAllByMoodTrackerId(moodTrackerId);
-        Map<Long, SurveyQuestion> questionMap = allQuestions.stream()
+        List<SurveyQuestion> foundQuestions = surveyQuestionRepository.findAllByMoodTrackerId(moodTrackerId);
+        Map<Long, SurveyQuestion> questionMap = foundQuestions.stream()
                 .collect(Collectors.toMap(SurveyQuestion::getId, q -> q));
 
         // 응답한 질문 ID 수집용
@@ -172,17 +172,17 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             switch (dto.getType()) {
                 case MULTIPLE_CHOICE -> {
                     // 선택지 엔티티 조회 후 추가
-                    MultipleChoice multipleChoice = multipleChoiceRepository.findById(dto.getMultipleChoiceId())
+                    MultipleChoice foundMultipleChoice = multipleChoiceRepository.findById(dto.getMultipleChoiceId())
                             .orElseThrow();
                     multipleChoiceAnswers.add(
-                            MoodTrackerConverter.toMultipleChoiceAnswer(multipleChoice)
+                            MoodTrackerConverter.toMultipleChoiceAnswer(foundMultipleChoice)
                     );
                 }
                 case CHECKBOX_CHOICE -> {
                     // 체크박스 선택지 엔티티 목록 조회 후 추가
-                    List<CheckboxChoice> checkboxChoices = checkboxChoiceRepository.findAllById(dto.getCheckboxChoiceIdList());
+                    List<CheckboxChoice> foundCheckboxChoices = checkboxChoiceRepository.findAllById(dto.getCheckboxChoiceIdList());
                     checkboxChoiceAnswers.addAll(
-                            MoodTrackerConverter.toCheckboxChoiceAnswers(checkboxChoices)
+                            MoodTrackerConverter.toCheckboxChoiceAnswers(foundCheckboxChoices)
                     );
                 }
                 case SUBJECTIVE -> {
@@ -198,7 +198,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         }
 
         // 필수 응답 누락 검사
-        for (SurveyQuestion question : allQuestions) {
+        for (SurveyQuestion question : foundQuestions) {
             if (Boolean.TRUE.equals(question.getIsMandatory())
                     && !answeredQuestionIds.contains(question.getId())) {
                 throw new MoodTrackerHandler(ErrorStatus.SURVEY_ANSWER_REQUIRED);
