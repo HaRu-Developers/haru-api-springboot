@@ -8,8 +8,36 @@ import com.haru.api.domain.workspace.entity.Workspace;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MoodTrackerConverter {
+
+    /**
+     * 단일 MoodTracker → Preview DTO 변환
+     */
+    public static MoodTrackerResponseDTO.Preview toPreviewDTO(MoodTracker moodTracker) {
+        return MoodTrackerResponseDTO.Preview.builder()
+                .moodTrackerId(moodTracker.getId())
+                .title(moodTracker.getTitle())
+                .updatedAt(moodTracker.getCreatedAt())
+                .dueDate(moodTracker.getDueDate())
+                .respondentsNum(moodTracker.getRespondentsNum())
+                .build();
+    }
+
+    /**
+     * MoodTracker 리스트 → PreviewList DTO 변환
+     */
+    public static MoodTrackerResponseDTO.PreviewList toPreviewListDTO(List<MoodTracker> moodTrackers) {
+        List<MoodTrackerResponseDTO.Preview> previewList = moodTrackers.stream()
+                .map(MoodTrackerConverter::toPreviewDTO)
+                .collect(Collectors.toList());
+
+        return MoodTrackerResponseDTO.PreviewList.builder()
+                .moodTrackerList(previewList)
+                .build();
+    }
+
     /**
      * MoodTracker 생성용 변환
      */

@@ -4,15 +4,22 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class MoodTrackerResponseDTO {
+
+    @Getter
+    @Builder
+    public static class PreviewList {
+        private List<Preview> moodTrackerList;
+    }
 
     @Getter
     @Builder
     public static class Preview {
         private Long moodTrackerId;
         private String title;
-        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
         private LocalDateTime dueDate;
         private Integer respondentsNum;
     }
