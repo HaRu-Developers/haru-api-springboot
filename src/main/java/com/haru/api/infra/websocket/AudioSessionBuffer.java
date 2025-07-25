@@ -1,7 +1,12 @@
 package com.haru.api.infra.websocket;
 
+import com.haru.api.infra.api.entity.SpeechSegment;
+
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class AudioSessionBuffer {
@@ -14,7 +19,7 @@ public class AudioSessionBuffer {
     private final ByteArrayOutputStream currentUtteranceBuffer = new ByteArrayOutputStream();
 
     // 회의를 하면서 stt로 변환된 텍스트를 담아두기 위한 queue
-    private final Queue<String> currentUtteranceQueue = new LinkedList<>();
+    private final Queue<SpeechSegment> currentUtteranceQueue = new LinkedList<>();
 
     // 상태
     private boolean isTriggered = false;
@@ -22,6 +27,8 @@ public class AudioSessionBuffer {
     private int noVoiceCount = 0;
 
     public static final int NO_VOICE_COUNT_TARGET = 300;
+
+    private LocalDateTime utterance_start_time;
 
     // 메서드
     public synchronized void appendFullBuffer(byte[] chunk) {
@@ -60,12 +67,34 @@ public class AudioSessionBuffer {
         this.noVoiceCount = noVoiceCount;
     }
 
-    public synchronized void putUtterance(String utterance) {
-        currentUtteranceQueue.offer(utterance);
+    public synchronized void putUtterance(SpeechSegment speechSegment) {
+        currentUtteranceQueue.offer(speechSegment);
     }
 
     public synchronized String getAllUtterance() {
-        return String.join("\n", currentUtteranceQueue);
+        if (currentUtteranceQueue.isEmpty()) {
+            return "No utterances recorded yet.";
+        }
+
+        List<SpeechSegment> sortedSegments = currentUtteranceQueue.stream()
+                .sorted(Comparator.comparing(SpeechSegment::getStartTime))
+                .toList();
+
+        StringBuilder sb = new StringBuilder();
+
+        for (SpeechSegment segment : sortedSegments) {
+            sb.append(segment.toString()).append("\n"); // SpeechSegment의 toString() 사용
+        }
+
+        return sb.toString();
+    }
+
+    public synchronized void setUtteranceStartTime(LocalDateTime utterance_start_time) {
+        this.utterance_start_time = utterance_start_time;
+    }
+
+    public synchronized LocalDateTime getUtteranceStartTime() {
+        return utterance_start_time;
     }
 
 }

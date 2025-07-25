@@ -1,5 +1,9 @@
 package com.haru.api.infra.websocket;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.haru.api.infra.api.converter.APIConverter;
+import com.haru.api.infra.api.dto.SttResponseDto;
+import com.haru.api.infra.api.entity.SpeechSegment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -7,7 +11,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
-import java.io.IOException;
 import java.util.function.Function;
 
 @Slf4j
@@ -26,20 +29,40 @@ public class AudioProcessingQueue {
                 .concatMap(buffer -> sttFunction.apply(buffer))
                 .subscribe(result -> {
 
-                    // todo: 텍스트 db에 저장 (Redis, MySQL)
-                    // 현재는 메모리에 저장
-                    audioSessionBuffer.putUtterance(result);
-                    log.info("utterance queue: {}", audioSessionBuffer.getAllUtterance());
+                    ObjectMapper objectMapper = new ObjectMapper();
 
-                    // todo: db 저장 형식 (텍스트 ID, 텍스트 내용, 회의 ID, 화자 구분 번호, 발언 시작 시간)
+                    try {
+                        log.info("stt result: {}", result);
+                        SttResponseDto sttResponse = objectMapper.readValue(result, SttResponseDto.class);
 
-                    // todo: 클라이언트에게 텍스트 전달
+                        // 각 화자마자 화자 구분 id, text, 발언 시작 시간 기록
+                        sttResponse.getBySpeaker().forEach((speakerId, utterance) -> {
+                            SpeechSegment segment = APIConverter.toSpeechSegment(
+                                    speakerId,
+                                    utterance,
+                                    audioSessionBuffer.getUtteranceStartTime()
+                            );
 
-//                    try {
-//                        session.sendMessage(new TextMessage(result));
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
+                            log.info("Speaker {} said: {} (start at {})", segment.getSpeakerId(), segment.getText(), segment.getStartTime());
+
+                            // todo: 텍스트 db에 저장 (Redis, MySQL)
+                            // 현재는 메모리에 저장
+                            audioSessionBuffer.putUtterance(segment);
+                            log.info("utterance queue: \n{}", audioSessionBuffer.getAllUtterance());
+
+                            // todo: db 저장 형식 (텍스트 ID, 텍스트 내용, 회의 ID, 화자 구분 번호, 발언 시작 시간)
+
+                            // todo: 클라이언트에게 텍스트 전달
+//                          try {
+//                              session.sendMessage(new TextMessage(result));
+//                          } catch (IOException e) {
+//                              e.printStackTrace();
+//                          }
+                        });
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 });
     }
 

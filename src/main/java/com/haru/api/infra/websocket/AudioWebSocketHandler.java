@@ -10,6 +10,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -66,7 +67,8 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                     sessionBuffer.setNoVoiceCount(0);
                     sessionBuffer.setIsTriggered(true);
 
-                    // todo: 음성이 시작된 시간 기록
+                    // todo: 음성이 시작된 시간 기록 (완료)
+                    sessionBuffer.setUtteranceStartTime(LocalDateTime.now());
 
                     log.info("isTriggered: {}", sessionBuffer.getIsTriggered());
                 }
