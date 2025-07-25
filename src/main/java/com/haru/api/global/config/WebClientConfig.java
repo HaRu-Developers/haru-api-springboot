@@ -8,13 +8,25 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${api-url.fast-api}")
+    @Value("${api.fast-api-url}")
     private String fastApiUrl;
+
+    @Value("${api.openai.api-key}")
+    private String openaiApiKey;
 
     @Bean
     public WebClient fastApiWebClient(WebClient.Builder builder) {
         return builder
                 .baseUrl(fastApiUrl)
+                .build();
+    }
+
+    @Bean
+    public WebClient chatGPTWebClient(WebClient.Builder builder) {
+        return builder
+                .baseUrl("https://api.openai.com/v1/chat/completions")
+                .defaultHeader("Authorization", "Bearer " + openaiApiKey)
+                .defaultHeader("Content-Type", "application/json")
                 .build();
     }
 }

@@ -16,7 +16,7 @@ public class AudioProcessingQueue {
     private final Sinks.Many<byte[]> sink;
     private final Flux<byte[]> flux;
 
-    public AudioProcessingQueue(Function<byte[], Mono<String>> sttFunction, WebSocketSession session) {
+    public AudioProcessingQueue(Function<byte[], Mono<String>> sttFunction, WebSocketSession session, AudioSessionBuffer audioSessionBuffer) {
         // 단일 소비자용 Sink 생성 (queue 기반)
         this.sink = Sinks.many().unicast().onBackpressureBuffer();
         this.flux = sink.asFlux();
@@ -25,7 +25,16 @@ public class AudioProcessingQueue {
         this.flux
                 .concatMap(buffer -> sttFunction.apply(buffer))
                 .subscribe(result -> {
-                    log.info("result: {}", result);
+
+                    // todo: 텍스트 db에 저장 (Redis, MySQL)
+                    // 현재는 메모리에 저장
+                    audioSessionBuffer.putUtterance(result);
+                    log.info("utterance queue: {}", audioSessionBuffer.getAllUtterance());
+
+                    // todo: db 저장 형식 (텍스트 ID, 텍스트 내용, 회의 ID, 화자 구분 번호, 발언 시작 시간)
+
+                    // todo: 클라이언트에게 텍스트 전달
+
 //                    try {
 //                        session.sendMessage(new TextMessage(result));
 //                    } catch (IOException e) {

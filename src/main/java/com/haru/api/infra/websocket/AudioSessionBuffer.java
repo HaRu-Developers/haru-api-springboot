@@ -6,11 +6,15 @@ import java.util.Queue;
 
 public class AudioSessionBuffer {
 
+    // 전체 음성 데이터의 byte[]를 담아두기 위한 배열
     private final ByteArrayOutputStream fullBuffer = new ByteArrayOutputStream();
 
+    // 종단점이 파악되기 전의 음성 데이터의 byte[]를 담아두기 위한 배열
+    // 종단점이 파악되면 데이터를 fastapi로 보내고, 해당 버퍼를 초기화함
     private final ByteArrayOutputStream currentUtteranceBuffer = new ByteArrayOutputStream();
 
-    private final Queue<byte[]> audioQueue = new LinkedList<>();
+    // 회의를 하면서 stt로 변환된 텍스트를 담아두기 위한 queue
+    private final Queue<String> currentUtteranceQueue = new LinkedList<>();
 
     // 상태
     private boolean isTriggered = false;
@@ -19,6 +23,7 @@ public class AudioSessionBuffer {
 
     public static final int NO_VOICE_COUNT_TARGET = 300;
 
+    // 메서드
     public synchronized void appendFullBuffer(byte[] chunk) {
         fullBuffer.write(chunk, 0, chunk.length);
     }
@@ -53,6 +58,14 @@ public class AudioSessionBuffer {
 
     public synchronized void setNoVoiceCount(int noVoiceCount) {
         this.noVoiceCount = noVoiceCount;
+    }
+
+    public synchronized void putUtterance(String utterance) {
+        currentUtteranceQueue.offer(utterance);
+    }
+
+    public synchronized String getAllUtterance() {
+        return String.join("\n", currentUtteranceQueue);
     }
 
 }

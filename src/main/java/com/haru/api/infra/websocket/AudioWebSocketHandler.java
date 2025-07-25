@@ -1,5 +1,6 @@
 package com.haru.api.infra.websocket;
 
+import com.haru.api.infra.api.FastApiClient;
 import com.orctom.vad4j.VAD;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +65,9 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                     sessionBuffer.appendCurrentUtteranceBuffer(audioChunk);
                     sessionBuffer.setNoVoiceCount(0);
                     sessionBuffer.setIsTriggered(true);
+
+                    // todo: 음성이 시작된 시간 기록
+
                     log.info("isTriggered: {}", sessionBuffer.getIsTriggered());
                 }
 
@@ -90,7 +94,8 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                         sessionQueues.computeIfAbsent(sessionId, id ->
                             new AudioProcessingQueue(
                                     fastApiClient::sendRawBytesToFastAPI,
-                                    session
+                                    session,
+                                    sessionBuffer
                             )
                         );
 

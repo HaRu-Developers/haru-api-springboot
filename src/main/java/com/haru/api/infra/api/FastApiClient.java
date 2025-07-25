@@ -1,4 +1,4 @@
-package com.haru.api.infra.websocket;
+package com.haru.api.infra.api;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -15,6 +15,11 @@ public class FastApiClient {
         this.webClient = webClient;
     }
 
+    /**
+     *
+     * @param audioBytes : 종단점이라고 파악된 문장의 byte[] 데이터
+     * @return : stt api에 의한 텍스트
+     */
     public Mono<String> sendRawBytesToFastAPI(byte[] audioBytes) {
         return webClient.post()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
