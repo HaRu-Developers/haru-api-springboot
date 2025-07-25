@@ -61,12 +61,6 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(foundWorkspace.getId(), foundUser.getId())
-                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
-
-        if (!foundUserWorkspace.getAuth().equals(Auth.ADMIN))
-            throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
-
         // 분위기 트래커 생성 및 저장
         MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, foundUser, foundWorkspace);
         moodTrackerRepository.save(moodTracker);
@@ -96,10 +90,21 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
                             Long moodTrackerId,
                             MoodTrackerRequestDTO.UpdateTitleRequest request
     ) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
         MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
-        if (userId != foundMoodTracker.getCreator().getId())
+        Workspace foundWorkspace = workspaceRepository.findByMoodTrackerId(moodTrackerId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(foundWorkspace.getId(), foundUser.getId())
+                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+
+        // 워크스페이스 생성자이거나 해당 분위기 트래커 생성자인 경우 허용
+        if (!(foundUserWorkspace.getAuth().equals(Auth.ADMIN)
+                || foundMoodTracker.getCreator().getId().equals(userId)))
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
         foundMoodTracker.updateTitle(request.getTitle());
@@ -113,10 +118,21 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             Long userId,
             Long moodTrackerId
     ) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
         MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
-        if (userId != foundMoodTracker.getCreator().getId())
+        Workspace foundWorkspace = workspaceRepository.findByMoodTrackerId(moodTrackerId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(foundWorkspace.getId(), foundUser.getId())
+                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+
+        // 워크스페이스 생성자이거나 해당 분위기 트래커 생성자인 경우 허용
+        if (!(foundUserWorkspace.getAuth().equals(Auth.ADMIN)
+                || foundMoodTracker.getCreator().getId().equals(userId)))
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
         moodTrackerRepository.delete(foundMoodTracker);

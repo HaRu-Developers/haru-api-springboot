@@ -40,7 +40,8 @@ public class MoodTrackerController {
     public ApiResponse<MoodTrackerResponseDTO.PreviewList> getMoodTrackersByWorkspace(
             @PathVariable Long workspaceId
     ) {
-        MoodTrackerResponseDTO.PreviewList result = moodTrackerQueryService.getMoodTrackerPreviewList(workspaceId);
+        Long userId = SecurityUtil.getCurrentUserId();
+        MoodTrackerResponseDTO.PreviewList result = moodTrackerQueryService.getMoodTrackerPreviewList(userId, workspaceId);
         return ApiResponse.onSuccess(result);
     }
 
