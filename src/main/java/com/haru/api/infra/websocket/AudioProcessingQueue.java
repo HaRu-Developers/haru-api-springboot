@@ -1,6 +1,7 @@
 package com.haru.api.infra.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.haru.api.infra.api.client.ChatGPTClient;
 import com.haru.api.infra.api.converter.SpeechSegmentConverter;
 import com.haru.api.infra.api.dto.SttResponseDto;
 import com.haru.api.infra.api.entity.SpeechSegment;
@@ -22,6 +23,7 @@ public class AudioProcessingQueue {
     private final Flux<byte[]> flux;
 
     public AudioProcessingQueue(Function<byte[], Mono<String>> sttFunction,
+                                ChatGPTClient chatGPTClient,
                                 WebSocketSession session,
                                 AudioSessionBuffer audioSessionBuffer,
                                 SpeechSegmentRepository speechSegmentRepository,
@@ -66,6 +68,17 @@ public class AudioProcessingQueue {
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
+
+                            // todo: 유의미하다고 판단된 문장에 대해 chatGPT API를 사용해 질문 받아오기
+                            if (isValidSpeech(segment)) {
+                                String aiQuestionsJson = chatGPTClient.getAIQuestionsRaw(audioSessionBuffer.getAllUtterance());
+
+                                try {
+                                    session.sendMessage(new TextMessage(aiQuestionsJson));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
                         });
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -79,5 +92,9 @@ public class AudioProcessingQueue {
             // 실패 처리: 큐가 닫혔거나 오류 상태일 수 있음
             System.err.println("Failed to enqueue audio buffer: " + result);
         }
+    }
+
+    private boolean isValidSpeech(SpeechSegment speechSegment) {
+        return false;
     }
 }

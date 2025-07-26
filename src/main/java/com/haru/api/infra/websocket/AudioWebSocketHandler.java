@@ -5,13 +5,13 @@ import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
+import com.haru.api.infra.api.client.ChatGPTClient;
 import com.haru.api.infra.api.client.FastApiClient;
 import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import com.orctom.vad4j.VAD;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
@@ -32,6 +32,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
     private final Map<String, AudioProcessingQueue> sessionQueues = new ConcurrentHashMap<>();
 
     private final FastApiClient fastApiClient;
+    private final ChatGPTClient chatGPTClient;
 
     private final MeetingRepository meetingRepository;
     private final SpeechSegmentRepository speechSegmentRepository;
@@ -130,6 +131,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                         sessionQueues.computeIfAbsent(sessionId, id ->
                             new AudioProcessingQueue(
                                     fastApiClient::sendRawBytesToFastAPI,
+                                    chatGPTClient,
                                     session,
                                     sessionBuffer,
                                     speechSegmentRepository,

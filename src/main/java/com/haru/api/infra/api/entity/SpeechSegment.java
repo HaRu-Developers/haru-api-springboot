@@ -32,4 +32,8 @@ public class SpeechSegment {
     @JoinColumn(name = "meeting_id", nullable = false)
     private Meeting meeting;
 
+    @Override
+    public String toString() {
+        return String.format("text_id: %d, text: %s", id, text);
+    }
 }
