@@ -1,0 +1,70 @@
+package com.haru.api.domain.moodTracker.service;
+
+import com.haru.api.domain.moodTracker.entity.MoodTracker;
+import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
+import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
+import com.haru.api.infra.mail.EmailSender;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class MoodTrackerMailServiceImpl implements MoodTrackerMailService {
+
+    private final UserWorkspaceRepository userWorkspaceRepository;
+    private final MoodTrackerRepository moodTrackerRepository;
+    private final EmailSender emailSender;
+
+    // 예시
+    private final String surveyLinkPrefix = "https://haru.it.kr/survey/";
+
+    @Override
+    public void sendSurveyLinkToEmail(
+            Long moodTrackerId,
+            String mailTitle,
+            String mailContent
+    ) {
+        MoodTracker moodTracker = moodTrackerRepository.findById(moodTrackerId)
+                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
+
+        // 이 후에 id에 hash 처리 요구됨
+        String surveyLink = surveyLinkPrefix + moodTrackerId;
+
+        Long workspaceId = moodTracker.getWorkspace().getId();
+        List<String> emails = userWorkspaceRepository.findEmailsByWorkspaceId(workspaceId);
+
+        for (String email : emails) {
+            String htmlContent = buildHtmlEmail(mailContent, surveyLink);
+            emailSender.send(email, mailTitle, htmlContent);
+        }
+    }
+
+    private String buildHtmlEmail(
+            String description,
+            String link
+    ) {
+        return """
+        <html>
+            <body style="font-family: sans-serif;">
+                <p style="color: #212121;">%s</p>
+                <a href="%s" style="
+                    display: inline-block;
+                    margin-top: 10px;
+                    padding: 10px 20px;
+                    background-color: #E65787;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-weight: bold;
+                ">
+                    설문 참여하러 가기
+                </a>
+            </body>
+        </html>
+    """.formatted(description, link);
+    }
+}

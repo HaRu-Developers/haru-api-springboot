@@ -8,6 +8,9 @@ import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.global.apiPayload.ApiResponse;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.GeneralException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +27,18 @@ public class MeetingController {
     private final MeetingQueryService meetingQueryService;
 
 
+    @Operation(summary = "회의 생성 API", description = "안건지 파일과 회의 정보를 받아 회의를 생성합니다. accesstoken을 header에 입력해주세요",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            encoding = {
+                                    @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE),
+                                    @Encoding(name = "agendaFile", contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                            }
+                    )
+            )
+    )
     @PostMapping(
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE },
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -43,6 +58,9 @@ public class MeetingController {
         return ApiResponse.onSuccess(response);
     }
 
+    @Operation(summary = "AI회의록 조회", description =
+            "# workspaceId를 받아 회의록 list를 반환합니다. access token을 header에 입력해주세요."
+    )
     @GetMapping("/workspaces/{workspaceId}")
     public ApiResponse<List<MeetingResponseDTO.getMeetingResponse>> getMeetings(
             @PathVariable("workspaceId") Long workspaceId){
@@ -54,6 +72,9 @@ public class MeetingController {
         return ApiResponse.onSuccess(response);
     }
 
+    @Operation(summary = "AI회의록 제목 수정", description =
+            "# meetingId을 pathparam, 수정할 title을 requestBody로 받아 회의록 제목을 수정핣니다. access token을 header에 입력해주세요."
+    )
     @PatchMapping("/{meetingId}/title")
     public ApiResponse<String> updateMeetingTitle(
             @PathVariable("meetingId")Long meetingId,
@@ -66,6 +87,9 @@ public class MeetingController {
         return ApiResponse.onSuccess("제목수정이 완료되었습니다.");
     }
 
+    @Operation(summary = "AI회의록 삭제", description =
+            "# meetingId를 받아 회의록을 삭제합니다. access token을 header에 입력해주세요."
+    )
     @DeleteMapping("/{meetingId}")
     public ApiResponse<String> deleteMeeting(
             @PathVariable("meetingId") Long meetingId) {
