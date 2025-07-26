@@ -3,7 +3,10 @@ package com.haru.api.infra.websocket;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.haru.api.infra.api.client.ChatGPTClient;
 import com.haru.api.infra.api.converter.SpeechSegmentConverter;
-import com.haru.api.infra.api.dto.SttResponseDto;
+import com.haru.api.infra.api.dto.AIQuestionResponse;
+import com.haru.api.infra.api.dto.SpeechSegmentResponseDTO;
+import com.haru.api.infra.api.dto.SttResponseDTO;
+import com.haru.api.infra.api.dto.WebSocketMessage;
 import com.haru.api.infra.api.entity.SpeechSegment;
 import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +17,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 @Slf4j
@@ -39,13 +43,15 @@ public class AudioProcessingQueue {
                 .subscribe(result -> {
 
                     try {
-                        SttResponseDto sttResponse = objectMapper.readValue(result, SttResponseDto.class);
+                        // FastAPI로 받은 JSON을 직렬화를 통해 SttResponseDto로 변환
+                        SttResponseDTO sttResponse = objectMapper.readValue(result, SttResponseDTO.class);
 
-                        // 각 화자마자 화자 구분 id, text, 발언 시작 시간 기록
-                        sttResponse.getBySpeaker().forEach((speakerId, utterance) -> {
+                        // SttResponseDTO에 들어있는 utterances를 순회하면서 처리
+                        sttResponse.getUtterances().forEach((utteranceDto) -> {
+
+                            // 각 발언을 SpeechSegment로 변환
                             SpeechSegment segment = SpeechSegmentConverter.toSpeechSegment(
-                                    speakerId,
-                                    utterance,
+                                    utteranceDto,
                                     audioSessionBuffer.getMeeting(),
                                     audioSessionBuffer.getUtteranceStartTime()
                             );
@@ -57,28 +63,42 @@ public class AudioProcessingQueue {
                             audioSessionBuffer.putUtterance(segment);
                             speechSegmentRepository.save(segment);
 
-                            // log.info("utterance queue: \n{}", audioSessionBuffer.getAllUtterance());
-
                             // todo: 클라이언트에게 텍스트 전달 (완료)
                             try {
-                                session.sendMessage(new TextMessage(
-                                        objectMapper.writeValueAsString(
-                                        SpeechSegmentConverter.toSpeechSegmentResponseDTO(segment)))
-                                );
+                                WebSocketMessage<SpeechSegmentResponseDTO.SpeechSegmentResponse> utteranceMsg =
+                                        WebSocketMessage.<SpeechSegmentResponseDTO.SpeechSegmentResponse>builder()
+                                                .type("utterance")
+                                                .data(SpeechSegmentConverter.toSpeechSegmentResponseDTO(segment))
+                                                .build();
+
+                                String json = objectMapper.writeValueAsString(utteranceMsg);
+                                session.sendMessage(new TextMessage(json));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
 
                             // todo: 유의미하다고 판단된 문장에 대해 chatGPT API를 사용해 질문 받아오기
                             if (isValidSpeech(segment)) {
-                                String aiQuestionsJson = chatGPTClient.getAIQuestionsRaw(audioSessionBuffer.getAllUtterance());
+                                CompletableFuture.runAsync(() -> {
+                                    String aiQuestionsJson = chatGPTClient.getAIQuestionsRaw(audioSessionBuffer.getAllUtterance());
+                                    try {
+                                        // AIQuestionResponse로 직렬화하여 유효성 검증
+                                        AIQuestionResponse aiResponse = objectMapper.readValue(aiQuestionsJson, AIQuestionResponse.class);
 
-                                try {
-                                    session.sendMessage(new TextMessage(aiQuestionsJson));
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
+                                        WebSocketMessage<AIQuestionResponse> aiMsg = WebSocketMessage.<AIQuestionResponse>builder()
+                                                .type("ai_questions")
+                                                .data(aiResponse)
+                                                .build();
+
+                                        String json = objectMapper.writeValueAsString(aiMsg);
+                                        session.sendMessage(new TextMessage(json));
+
+                                    } catch (IOException e) {
+                                        log.error("AI 질문 전송 실패", e);
+                                    }
+                                });
                             }
+
                         });
                     } catch (Exception e) {
                         e.printStackTrace();
