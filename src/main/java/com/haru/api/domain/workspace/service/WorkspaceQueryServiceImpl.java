@@ -1,13 +1,8 @@
 package com.haru.api.domain.workspace.service;
 
-import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
-import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
-import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
@@ -18,15 +13,11 @@ import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -56,58 +47,24 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
         if (!userWorkspaceRepository.existsByWorkspaceIdAndUserId(workspaceId, userId))
             throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
 
-        // last opened에서 최대 9개 조회
-        List<UserDocumentLastOpened> recentDocumentList = userDocumentLastOpenedRepository.findTop9ByUserIdOrderByLastOpenedDateDesc(foundUser.getId());
+        // 각 타입별로 최근 문서 9개를 조회
+        List<WorkspaceResponseDTO.Document> meetingList = meetingRepository.findRecentDocumentsByTitle(foundUser.getId(), title, PageRequest.of(0,9));
+        List<WorkspaceResponseDTO.Document> snsEventList = snsEventRepository.findRecentDocumentsByTitle(foundUser.getId(), title, PageRequest.of(0,9));
+        List<WorkspaceResponseDTO.Document> moodTrackerList = moodTrackerRepository.findRecentDocumentsByTitle(foundUser.getId(), title, PageRequest.of(0,9));
 
-        // DocumentType 별로 ID를 그룹화
-        Map<DocumentType, List<Long>> documentIdsByType = recentDocumentList.stream()
-                .collect(Collectors.groupingBy(
-                        UserDocumentLastOpened::getDocumentType,
-                        Collectors.mapping(UserDocumentLastOpened::getDocumentId, Collectors.toList())
-                ));
+        // 모든 문서 리스트 스트림으로 합침
+        List<WorkspaceResponseDTO.Document> allResults = new ArrayList<>();
+        allResults.addAll(meetingList);
+        allResults.addAll(snsEventList);
+        allResults.addAll(moodTrackerList);
 
-        // 각 타입별로 필요한 엔티티를 한 번에 조회하여 Map으로 변환
-        Map<Long, Meeting> meetingMap = meetingRepository.findAllById(
-                documentIdsByType.getOrDefault(DocumentType.AI_MEETING_MANAGER, Collections.emptyList())
-        ).stream().collect(Collectors.toMap(Meeting::getId, Function.identity()));
-
-        Map<Long, SnsEvent> snsEventMap = snsEventRepository.findAllById(
-                documentIdsByType.getOrDefault(DocumentType.SNS_EVENT_ASSISTANT, Collections.emptyList())
-        ).stream().collect(Collectors.toMap(SnsEvent::getId, Function.identity()));
-
-        Map<Long, MoodTracker> moodTrackerMap = moodTrackerRepository.findAllById(
-                documentIdsByType.getOrDefault(DocumentType.TEAM_MOOD_TRACKER, Collections.emptyList())
-        ).stream().collect(Collectors.toMap(MoodTracker::getId, Function.identity()));
-
-        // 메모리 상에서 DTO로 변환
-        List<WorkspaceResponseDTO.Document> documentList = recentDocumentList.stream()
-                .map(recentDocument -> {
-                    switch (recentDocument.getDocumentType()) {
-                        case AI_MEETING_MANAGER:
-                            Meeting foundMeeting = meetingMap.get(recentDocument.getDocumentId());
-                            if (foundMeeting != null) {
-                                return WorkspaceConverter.toDocument(foundMeeting, recentDocument.getLastOpened());
-                            }
-                            break;
-                        case SNS_EVENT_ASSISTANT:
-                            SnsEvent foundSnsEvent = snsEventMap.get(recentDocument.getDocumentId());
-                            if (foundSnsEvent != null) {
-                                return WorkspaceConverter.toDocument(foundSnsEvent, recentDocument.getLastOpened());
-                            }
-                            break;
-                        case TEAM_MOOD_TRACKER:
-                            MoodTracker foundMoodTracker = moodTrackerMap.get(recentDocument.getDocumentId());
-                            if (foundMoodTracker != null) {
-                                return WorkspaceConverter.toDocument(foundMoodTracker, recentDocument.getLastOpened());
-                            }
-                            break;
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
+        // lastOpened 기준으로 정렬하고 상위 9개 추출
+        List<WorkspaceResponseDTO.Document> finalResult = allResults.stream()
+                .sorted(Comparator.comparing(WorkspaceResponseDTO.Document::getLastOpened).reversed())
+                .limit(9)
                 .toList();
 
-        // 최종 DTO 반환
-        return WorkspaceConverter.toDocumentsDTO(documentList);
+        return WorkspaceConverter.toDocumentsDTO(finalResult);
+
     }
 }
