@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface UserDocumentLastOpenedRepository extends JpaRepository<UserDocumentLastOpened, Long> {
 
-    List<UserDocumentLastOpened> findTop9ByUserIdOrderByLastOpenedDateDesc(Long userId);
 }
