@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/swagger-ui/**",
             "/v3/**",
             "/users/admin/**",
-            "/ws/audio",
+            "/ws/audio/**",
             "/api/v1/workspaces/invite-accept"
     };
     private final JwtUtils jwtUtils;
