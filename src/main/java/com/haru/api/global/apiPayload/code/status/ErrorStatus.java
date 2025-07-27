@@ -52,7 +52,10 @@ public enum ErrorStatus implements BaseErrorCode {
     SURVEY_ANSWER_REQUIRED(HttpStatus.BAD_REQUEST, "MOODTRACKER4004", "분위기 트래커 설문의 필수 응답이 누락되었습니다."),
 
     // 메일 관련 에러
-    MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다.")
+    MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다."),
+
+    // SNS 이벤트 어시스턴트 고나련 에러
+    SNS_EVENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "SNSEVENT4001", "SNS 이벤트가 존재하지 않습니다."),
     ;
 
     private final HttpStatus httpStatus;
