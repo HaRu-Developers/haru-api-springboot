@@ -31,16 +31,18 @@ public class Meetings extends BaseEntity {
     private String proceeding;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User creator;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private Workspace workspaces;
+    @JoinColumn(name = "workspace_id")
+    private Workspace workspace;
 
-    private Meetings(String title, String agendaResult, User user, Workspace workspaces) {
+    private Meetings(String title, String agendaResult, User user, Workspace workspace) {
         this.title = title;
         this.agendaResult = agendaResult;
         this.creator = user;
-        this.workspaces = workspaces;
+        this.workspace = workspace;
     }
 
     public static Meetings createInitialMeeting(String title, String agendaResult, User user, Workspace workspaces) {

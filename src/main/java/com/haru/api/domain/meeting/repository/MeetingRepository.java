@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface MeetingRepository extends JpaRepository<Meetings, Long> {
-    List<Meetings> findByWorkspacesOrderByUpdatedAtDesc(Workspace workspace);
+    List<Meetings> findByWorkspaceOrderByUpdatedAtDesc(Workspace workspace);
 }

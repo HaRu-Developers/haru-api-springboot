@@ -48,7 +48,4 @@ public class User extends BaseEntity {
     public void encodePassword(String password) {
         this.password = password;
     }
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<SnsEvent> snsEventList = new ArrayList<>();
 }

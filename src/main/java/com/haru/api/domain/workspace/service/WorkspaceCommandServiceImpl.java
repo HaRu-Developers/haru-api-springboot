@@ -39,7 +39,6 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         // workspace 생성 및 저장
         Workspace workspace = workspaceRepository.save(Workspace.builder()
                 .title(request.getName())
-                        .creator(foundUser)
                 .build());
 
 
@@ -67,10 +66,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        if (foundUser.getId() != foundWorkspace.getCreator().getId())
-            throw new WorkspaceHandler(ErrorStatus.WORKSPACE_MODIFY_NOT_ALLOWED);
-
-        foundWorkspace.setTitle(request.getTitle());
+        foundWorkspace.updateTitle(request.getTitle());
 
         return WorkspaceConverter.toWorkspaceDTO(foundWorkspace);
     }

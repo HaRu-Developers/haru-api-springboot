@@ -55,9 +55,6 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        if (userId != workspace.getCreator().getId())
-            throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
-
         // 분위기 트래커 생성 및 저장
         MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, user, workspace);
         moodTrackerRepository.save(moodTracker);

@@ -7,6 +7,9 @@ import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "sns_events")
 @Getter
@@ -32,9 +35,23 @@ public class SnsEvent {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user;
+    private User creator;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_id")
     private Workspace workspace;
+
+    @OneToMany(mappedBy = "snsEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Participant> participantList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "snsEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Winner> winnerList = new ArrayList<>();
+
+    public void setWorkspace(Workspace workspace) {
+        this.workspace = workspace;
+        if (this.workspace != null) {
+            workspace.getSnsEventList().remove(this);
+        }
+        this.workspace.getSnsEventList().add(this);
+    }
 }
