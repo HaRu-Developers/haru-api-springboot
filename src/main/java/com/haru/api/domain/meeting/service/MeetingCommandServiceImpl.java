@@ -13,6 +13,7 @@ import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.infra.api.client.ChatGPTClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final MeetingRepository meetingRepository;
+    private final ChatGPTClient chatGPTClient;
 
     @Override
     @Transactional
@@ -41,7 +43,8 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         // agendaFile을 openAi 활용하여 요약 - 미구현
-        String agendaResult = "안건지 요약 - 미구현";
+        String agendaResult = chatGPTClient.summarizePdf(agendaFile)
+                .block();
 
 
         Meeting newMeeting = Meeting.createInitialMeeting(
