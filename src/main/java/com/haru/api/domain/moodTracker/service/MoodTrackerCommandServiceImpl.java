@@ -18,6 +18,7 @@ import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.global.util.HashIdUtil;
+import com.haru.api.infra.redis.RedisReportProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +47,9 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     private final MultipleChoiceAnswerRepository multipleChoiceAnswerRepository;
     private final CheckboxChoiceAnswerRepository checkboxChoiceAnswerRepository;
     private final SubjectiveAnswerRepository subjectiveAnswerRepository;
+
+    private final MoodTrackerReportService moodTrackerReportService;
+    private final RedisReportProducer redisReportProducer;
 
     private final HashIdUtil hashIdUtil;
 
@@ -81,6 +85,9 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
                 checkboxChoiceRepository.saveAll(choices);
             }
         }
+
+        // Redis Queue에 스케쥴링 추가
+        redisReportProducer.scheduleReport(moodTracker.getId(), moodTracker.getDueDate());
 
         return MoodTrackerConverter.toCreateResult(moodTracker, hashIdUtil);
     }
@@ -228,5 +235,15 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         multipleChoiceAnswerRepository.saveAll(multipleChoiceAnswers);
         checkboxChoiceAnswerRepository.saveAll(checkboxChoiceAnswers);
         subjectiveAnswerRepository.saveAll(subjectiveAnswers);
+    }
+
+    /**
+     * 분위기 트래커 리포트 생성 테스트
+     */
+    @Override
+    public void generateReportTest(
+            Long moodTrackerId
+    ) {
+        moodTrackerReportService.generateReport(moodTrackerId);
     }
 }
