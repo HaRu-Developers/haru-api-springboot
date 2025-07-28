@@ -70,4 +70,6 @@ public class MoodTracker extends BaseEntity {
     public void updateTitle(String title) {
         this.title = title;
     }
+
+    public void createReport(String report) { this.report = report; }
 }
