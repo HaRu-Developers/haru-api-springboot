@@ -1,3 +1,13 @@
+cloud:
+  aws:
+    s3:
+      enabled: false
+    stack:
+      auto: false
+    credentials:
+      accessKey: dummy-key
+      secretKey: dummy-secret
+
 spring:
   datasource:
     url: jdbc:h2:mem:testdb
