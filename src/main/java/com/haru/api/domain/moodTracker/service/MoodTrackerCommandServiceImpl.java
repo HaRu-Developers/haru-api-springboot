@@ -17,6 +17,7 @@ import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.global.util.HashIdUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,8 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     private final MultipleChoiceAnswerRepository multipleChoiceAnswerRepository;
     private final CheckboxChoiceAnswerRepository checkboxChoiceAnswerRepository;
     private final SubjectiveAnswerRepository subjectiveAnswerRepository;
+
+    private final HashIdUtil hashIdUtil;
 
     /**
      * 분위기 트래커 생성
@@ -79,7 +82,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             }
         }
 
-        return MoodTrackerConverter.toCreateResult(moodTracker);
+        return MoodTrackerConverter.toCreateResult(moodTracker, hashIdUtil);
     }
 
     /**

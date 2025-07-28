@@ -8,6 +8,10 @@ spring:
     host: dummy
     port: 1025
 
+hashid:
+  salt: dummy-salt
+  min-length: 16
+
 jwt:
   secret: "test-jwt-token"
   access-expiration: 60      # 60분

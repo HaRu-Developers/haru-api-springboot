@@ -17,6 +17,7 @@ import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.global.util.HashIdUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,8 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
+
+    private final HashIdUtil hashIdUtil;
 
     @Override
     public MoodTrackerResponseDTO.PreviewList getMoodTrackerPreviewList(Long userId, Long workspaceId) {
@@ -62,7 +65,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
                 )
                 .collect(Collectors.toList());
 
-        MoodTrackerResponseDTO.PreviewList previewList = MoodTrackerConverter.toPreviewListDTO(foundMoodTrackers);
+        MoodTrackerResponseDTO.PreviewList previewList = MoodTrackerConverter.toPreviewListDTO(foundMoodTrackers, hashIdUtil);
         return previewList;
     }
 }
