@@ -17,7 +17,7 @@ public class MoodTrackerResponseDTO {
     @Getter
     @Builder
     public static class Preview {
-        private Long moodTrackerId;
+        private String moodTrackerHashedId;
         private String title;
         private LocalDateTime updatedAt;
         private LocalDateTime dueDate;
@@ -27,6 +27,6 @@ public class MoodTrackerResponseDTO {
     @Getter
     @Builder
     public static class CreateResult {
-        private Long moodTrackerId;
+        private String moodTrackerHashedId;
     }
 }
