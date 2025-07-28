@@ -3,8 +3,6 @@ package com.haru.api.domain.moodTracker.service;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
 
-import java.util.List;
-
 public interface MoodTrackerCommandService {
     MoodTrackerResponseDTO.CreateResult create(
             Long userId,
@@ -19,5 +17,12 @@ public interface MoodTrackerCommandService {
     void delete(
             Long userId,
             Long moodTrackerId
+    );
+    void sendSurveyLink(
+            Long moodTrackerId
+    );
+    void submitSurveyAnswers(
+            Long moodTrackerId,
+            MoodTrackerRequestDTO.SurveyAnswerList request
     );
 }

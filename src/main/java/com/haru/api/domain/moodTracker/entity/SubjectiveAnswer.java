@@ -1,12 +1,14 @@
 package com.haru.api.domain.moodTracker.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
-@Table(name = "subjective_answer")
-@Getter @Setter
+@Table(name = "subjective_answers")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class SubjectiveAnswer {
 
     @Id
@@ -14,7 +16,7 @@ public class SubjectiveAnswer {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "survey_questions_id", nullable = false)
+    @JoinColumn(name = "survey_question_id", nullable = false)
     private SurveyQuestion surveyQuestion;
 
     @Column(columnDefinition = "TEXT")

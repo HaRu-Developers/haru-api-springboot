@@ -37,6 +37,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
+	// Mail
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
 	implementation 'org.springframework.ai:spring-ai-pdf-document-reader'
 
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
@@ -92,6 +95,9 @@ dependencies {
 
 	// webflux
 	implementation("org.springframework.boot:spring-boot-starter-webflux:3.4.5")
+
+	// hash
+	implementation 'org.hashids:hashids:1.0.3'
 }
 
 dependencyManagement {

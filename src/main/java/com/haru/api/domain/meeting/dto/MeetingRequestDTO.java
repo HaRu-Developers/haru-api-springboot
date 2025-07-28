@@ -11,4 +11,8 @@ public class MeetingRequestDTO {
         private Long workspaceId;
         private String title;
     }
+    @Getter
+    public static class updateTitle {
+        private String title;
+    }
 }

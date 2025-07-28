@@ -1,6 +1,7 @@
 package com.haru.api.domain.userWorkspace.entity;
 
 import com.haru.api.domain.user.entity.User;
+import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -9,7 +10,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
-@Table(name = "users_workspaces")
+@Table(name = "user_workspaces")
 @Getter
 @DynamicUpdate
 @DynamicInsert

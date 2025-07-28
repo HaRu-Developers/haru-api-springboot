@@ -2,6 +2,7 @@ package com.haru.api.domain.snsEvent.entity;
 
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
@@ -18,7 +19,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class SnsEvent {
+public class SnsEvent extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +28,7 @@ public class SnsEvent {
     @Column(nullable = false, length = 100)
     private String title;
 
-    @Column(length = 100)
+    @Column(length = 255)
     private String snsLink;
 
     @Column(length = 200)

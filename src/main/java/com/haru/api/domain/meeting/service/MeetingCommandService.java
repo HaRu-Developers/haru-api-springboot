@@ -6,10 +6,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-public interface MeetingService {
+public interface MeetingCommandService {
 
     public MeetingResponseDTO.createMeetingResponse createMeeting(Long userId, MultipartFile agendaFile, MeetingRequestDTO.createMeetingRequest request);
+    public void updateMeetingTitle(Long userId, Long meetingId, String newTitle);
+    public void deleteMeeting(Long userId, Long meetingId);
 
-    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, Long meetingId);
 
 }

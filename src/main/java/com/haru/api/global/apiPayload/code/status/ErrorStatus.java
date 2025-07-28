@@ -55,11 +55,12 @@ public enum ErrorStatus implements BaseErrorCode {
     MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다."),
 
     // SNS 이벤트 관련 에러
-    SNS_EVENT_LINK_NOT_FOUND(HttpStatus.BAD_REQUEST, "SNS_EVENT4001", "잘못된 인스타그램 게시물 링크 형식입니다."),
-    SNS_EVENT_INSTAGRAM_API_ERROR(HttpStatus.BAD_REQUEST, "SNS_EVENT4002", "인스타그램 API 호출에 실패했습니다."),
-    SNS_EVENT_INSTAGRAM_API_NO_MEDIA(HttpStatus.BAD_REQUEST, "SNS_EVENT4003", "인스타그램 게시물에 미디어가 없습니다."),
-    SNS_EVENT_INSTAGRAM_API_NO_COMMENT(HttpStatus.BAD_REQUEST, "SNS_EVENT4004", "인스타그램 게시물에 댓글이 없습니다."),
-    SNS_EVENT_NO_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "SNS_EVENT4005", "인스타그램 액세스 토큰이 없습니다."),;
+    SNS_EVENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "SNSEVENT4001", "SNS 이벤트가 존재하지 않습니다."),
+    SNS_EVENT_LINK_NOT_FOUND(HttpStatus.BAD_REQUEST, "SNS_EVENT4002", "잘못된 인스타그램 게시물 링크 형식입니다."),
+    SNS_EVENT_INSTAGRAM_API_ERROR(HttpStatus.BAD_REQUEST, "SNS_EVENT4003", "인스타그램 API 호출에 실패했습니다."),
+    SNS_EVENT_INSTAGRAM_API_NO_MEDIA(HttpStatus.BAD_REQUEST, "SNS_EVENT4004", "인스타그램 게시물에 미디어가 없습니다."),
+    SNS_EVENT_INSTAGRAM_API_NO_COMMENT(HttpStatus.BAD_REQUEST, "SNS_EVENT4005", "인스타그램 게시물에 댓글이 없습니다."),
+    SNS_EVENT_NO_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "SNS_EVENT4006", "인스타그램 액세스 토큰이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

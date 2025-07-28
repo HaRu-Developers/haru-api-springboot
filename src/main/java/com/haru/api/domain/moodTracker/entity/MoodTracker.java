@@ -50,13 +50,10 @@ public class MoodTracker extends BaseEntity {
     @Column(length = 10)
     private MoodTrackerVisibility visibility; // 공개범위 (PUBLIC, PRIVATE)
 
-    @Column(name = "survey_link", length = 100)
-    private String surveyLink; // 설문 링크
-
     @Column(columnDefinition = "TEXT")
     private String report; // 리포트
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "mood_tracker_suggestions",
             joinColumns = @JoinColumn(name = "mood_tracker_id")
@@ -68,7 +65,7 @@ public class MoodTracker extends BaseEntity {
     private Integer respondentsNum; // 답변자 수
 
     @OneToMany(mappedBy = "moodTracker", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SurveyQuestion> surveyQuestions = new ArrayList<>();
+    private List<SurveyQuestion> surveyQuestionList = new ArrayList<>();
 
     public void updateTitle(String title) {
         this.title = title;
