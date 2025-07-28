@@ -2,6 +2,7 @@ package com.haru.api.domain.moodTracker.repository;
 
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,12 +14,14 @@ public interface MoodTrackerRepository extends JpaRepository<MoodTracker, Long> 
     List<MoodTracker> findAllByWorkspaceId(Long workspaceId);
 
     @Query("SELECT new com.haru.api.domain.workspace.dto.WorkspaceResponseDTO$Document(" +
-            "mt.id, " +
+            "udlo.documentId, " +
             "mt.title, " +
-            "'TEAM_MOOD_TRACKER', " +
-            "null) " +
-            "FROM MoodTracker mt " +
-            "WHERE mt.title LIKE %:title% " +
-            "AND mt.workspace.id = :workspaceId")
-    List<WorkspaceResponseDTO.Document> findDocumentsByTitleLike(String title, Long workspaceId);
+            "udlo.documentType, " +
+            "udlo.lastOpened) " +
+            "FROM UserDocumentLastOpened  udlo " +
+            "JOIN MoodTracker mt ON udlo.documentId = mt.id " +
+            "WHERE udlo.documentType = 'TEAM_MOOD_TRACKER' AND udlo.user.id = :userId " +
+            "AND mt.title LIKE %:title% " +
+            "ORDER BY udlo.lastOpened DESC")
+    List<WorkspaceResponseDTO.Document> findRecentDocumentsByTitle(Long userId, String title, Pageable pageable);
 }
