@@ -101,6 +101,9 @@ dependencies {
 
 	// hash
 	implementation 'org.hashids:hashids:1.0.3'
+
+	// apache
+	implementation 'org.apache.pdfbox:pdfbox:2.0.27'
 }
 
 dependencyManagement {
