@@ -191,6 +191,7 @@ public class ChatGPTClient {
                         sink.error(new RuntimeException("GPT 응답 파싱 실패: " + content, e));
                     }
                 });
+    }
 
     public Mono<String> summarizePdf(MultipartFile pdfFile) {
         try (PDDocument document = PDDocument.load(pdfFile.getInputStream())) {
