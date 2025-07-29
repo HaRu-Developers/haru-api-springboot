@@ -25,8 +25,13 @@ public class WorkspaceInvitation extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_id")
-    Workspace workspace;
+    private Workspace workspace;
 
-    // 초대코드는 pk를 사용해서 해싱
+    private String token;
 
+    private boolean isAccepted = false;
+
+    public void setAccepted() {
+        isAccepted = true;
+    }
 }

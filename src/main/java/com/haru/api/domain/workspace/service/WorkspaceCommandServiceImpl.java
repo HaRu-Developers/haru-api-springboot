@@ -21,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
@@ -79,45 +81,40 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
     @Transactional
     @Override
-    public void acceptInvite(String code) {
+    public WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token) {
 
-        Long id = 1l;
-
-        WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findById(id)
+        WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findByToken(token)
                 .orElseThrow(() -> new WorkspaceInvitationHandler(ErrorStatus.INVITATION_NOT_FOUND));
 
-        String foundEmail = foundWorkspaceInvitation.getEmail();
+        Workspace foundWorkspace = workspaceRepository.findById(foundWorkspaceInvitation.getWorkspace().getId())
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        // 회원가입 유무 파악
-        // 핸들러에서 가입 안된 유저인 것을 나타내줘야함
-        User foundUser = userRepository.findByEmail(foundEmail)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+        // 이미 수락된 초대장이면 예외 발생
+        if(foundWorkspaceInvitation.isAccepted())
+            throw new WorkspaceInvitationHandler(ErrorStatus.ALREADY_ACCEPTED);
 
-        Long userId = foundUser.getId();
+        // 초대받은 이메일로 가입된 사용자가 있는지 확인
+        Optional<User> foundUser = userRepository.findByEmail(foundWorkspaceInvitation.getEmail());
 
-        Long foundWorkspaceId = foundWorkspaceInvitation.getWorkspace().getId();
+        boolean isAlreadyRegistered = foundUser.isPresent();
 
-        // 중복 수락 유무 파악
-        // 핸들러에서 중복 수락 유저인 것을 나타내줘야함
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(foundWorkspaceId, userId)
-                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+        // 이미 가입된 사용자
+        if(isAlreadyRegistered) {
+            // 초대장을 수락했다고 db에 저장
+            foundWorkspaceInvitation.setAccepted();
+        } else {
+            // 가입되지 않은 사용자면 not success
+            return WorkspaceConverter.toInvitationAcceptResult(false, false, foundWorkspace);
+        }
 
-//        if(foundWorkspaceInvitation.getIsAccepted())
-//            throw new WorkspaceInvitationHandler(ErrorStatus.ALREADY_ACCEPTED);
-
-        if(!foundWorkspaceInvitation.getEmail().equals(foundUser.getEmail()))
-            throw new WorkspaceInvitationHandler(ErrorStatus.EMAIL_MISMATCH);
-
+        // 가입된 사용자인 경우 워크스페이스에 추가
         userWorkspaceRepository.save(UserWorkspace.builder()
-                .user(foundUser)
-                .workspace(foundWorkspaceInvitation.getWorkspace())
+                .workspace(foundWorkspace)
+                .user(foundUser.get())
                 .auth(Auth.MEMBER)
                 .build());
-    }
 
-    private Long codeToInvitationId(String code) {
-        return 1l;
+        return WorkspaceConverter.toInvitationAcceptResult(true, true, foundWorkspace);
     }
-
 
 }

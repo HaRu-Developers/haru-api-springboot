@@ -31,4 +31,12 @@ public class WorkspaceResponseDTO {
     public static class DocumentList {
         private List<Document> documents;
     }
+
+    @Getter
+    @Builder
+    public static class InvitationAcceptResult {
+        private boolean isSuccess;
+        private boolean isAlreadyRegistered;
+        private Long workspaceId;
+    }
 }
