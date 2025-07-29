@@ -4,7 +4,6 @@ import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,6 +32,12 @@ public class Workspace extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
+
+    @Column(length = 200)
+    private String instagramAccessToken;
+
+    @Column(length = 50)
+    private String instagramAccountName;
 
     @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Meeting> meetingList = new ArrayList<>();
