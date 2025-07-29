@@ -36,6 +36,9 @@ public class SurveyQuestion {
     @Column(name = "is_mandatory", nullable = false)
     private Boolean isMandatory;
 
+    @Column(name = "suggestion", columnDefinition = "TEXT")
+    private String suggestion;
+
     @OneToMany(mappedBy = "surveyQuestion", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MultipleChoice> multipleChoiceList = new ArrayList<>();
 
@@ -44,5 +47,9 @@ public class SurveyQuestion {
 
     @OneToMany(mappedBy = "surveyQuestion", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubjectiveAnswer> subjectiveAnswerList = new ArrayList<>();
+
+    public void createSuggestion(String suggestion) {
+        this.suggestion = suggestion;
+    }
 }
 

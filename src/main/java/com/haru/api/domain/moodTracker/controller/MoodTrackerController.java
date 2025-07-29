@@ -133,4 +133,20 @@ public class MoodTrackerController {
         return ApiResponse.of(SuccessStatus.MOOD_TRACKER_ANSWER_SUBMIT, null);
     }
 
+    @PostMapping("/{mood-tracker-hashed-Id}/report-test")
+    @Operation(
+            summary = "분위기 트래커 설문 리포트 생성 테스트 API",
+            description = "# 해당 ID의 분위기 트래커 설문 리포트를 즉시 생성합니다."
+    )
+    @Parameters({
+            @Parameter(name = "mood-tracker-hashed-Id", description = "해시된 16자 분위기 트래커 ID (Path Variable)", required = true)
+    })
+    public  ApiResponse<Void> generateMoodTrackerReportTest (
+            @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId
+    ) {
+        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
+        moodTrackerCommandService.generateReportTest(moodTrackerId);
+        return ApiResponse.of(SuccessStatus._OK, null);
+    }
+
 }

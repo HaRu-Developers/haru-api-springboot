@@ -25,4 +25,7 @@ public interface MoodTrackerCommandService {
             Long moodTrackerId,
             MoodTrackerRequestDTO.SurveyAnswerList request
     );
+    void generateReportTest(
+            Long moodTrackerId
+    );
 }
