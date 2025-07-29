@@ -1,9 +1,9 @@
 cloud:
   aws:
     s3:
-      enabled: false
-    stack:
-      auto: false
+      bucket: haru-it-bucket
+    region:
+      static: ap-northeast-2
     credentials:
       accessKey: dummy-key
       secretKey: dummy-secret
