@@ -1,7 +1,9 @@
 package com.haru.api.domain.userWorkspace.repository;
 
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.userWorkspace.dto.UserWorkspaceResponseDTO;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
+import com.haru.api.domain.workspace.entity.Workspace;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,4 +27,6 @@ public interface UserWorkspaceRepository extends JpaRepository<UserWorkspace, Lo
     Boolean existsByWorkspaceIdAndUserId(Long workspaceId, Long userId);
 
     Optional<UserWorkspace> findByWorkspaceIdAndUserId(Long workspaceId, Long userId);
+
+    Optional<UserWorkspace> findByUserAndWorkspace(User user, Workspace workspace);
 }
