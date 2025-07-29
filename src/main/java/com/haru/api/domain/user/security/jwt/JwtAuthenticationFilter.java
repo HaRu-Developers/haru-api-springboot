@@ -1,6 +1,7 @@
 package com.haru.api.domain.user.security.jwt;
 
 import com.google.gson.Gson;
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -32,7 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/users/login",
             "/swagger-ui/**",
             "/v3/**",
-            "/users/admin/**"
+            "/users/admin/**",
+            "/ws/audio/**",
+            "/api/v1/workspaces/invite-accept"
     };
     private final JwtUtils jwtUtils;
     private final RedisTemplate<String, String> redisTemplate;
@@ -40,9 +44,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static void checkAuthorizationHeader(String header) {
         log.info("-------------------#@@@@@------------------");
         if(header == null) {
-            throw new CustomJwtException("토큰이 전달되지 않았습니다");
+            throw new CustomJwtException(ErrorStatus.JWT_TOKEN_NOT_RECEIVED);
         } else if (!header.startsWith("Bearer ")) {
-            throw new CustomJwtException("Bearer 로 시작하지 않는 올바르지 않은 토큰 형식입니다");
+            throw new CustomJwtException(ErrorStatus.JWT_TOKEN_OUT_OF_FORM);
         }
     }
 
@@ -79,9 +83,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 } catch (Exception e) {
                     Gson gson = new Gson();
                     String json = "";
-                    if (e instanceof CustomExpiredJwtException) {
-                        json = gson.toJson(Map.of("Token_Expired", e.getMessage()));
-                    } else {
+                    if (e instanceof CustomJwtException) {
+                        request.setAttribute("exceptionCode", ((CustomJwtException) e).getCode());
+                        request.setAttribute("exceptionMessage", e.getMessage());
+                        request.setAttribute("exceptionHttpStatus", ((CustomJwtException) e).getHttpStatus());
+                        throw new InsufficientAuthenticationException(e.getMessage()); // EntryPoint로 넘김
+                    }
+                    else {
                         json = gson.toJson(Map.of("error", e.getMessage()));
                     }
 
@@ -104,8 +112,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             Gson gson = new Gson();
             String json = "";
-            if (e instanceof CustomExpiredJwtException) {
-                json = gson.toJson(Map.of("Token_Expired", e.getMessage()));
+            if (e instanceof CustomJwtException) {
+                request.setAttribute("exceptionCode", ((CustomJwtException) e).getCode());
+                request.setAttribute("exceptionMessage", e.getMessage());
+                request.setAttribute("exceptionHttpStatus", ((CustomJwtException) e).getHttpStatus());
+                throw new InsufficientAuthenticationException(e.getMessage()); // EntryPoint로 넘김
             } else {
                 json = gson.toJson(Map.of("error", e.getMessage()));
             }
@@ -125,7 +136,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             checkAuthorizationHeader(authHeader);   // header 가 올바른 형식인지 체크
             String token = JwtUtils.getTokenFromHeader(authHeader);
             jwtUtils.validateToken(token); // 토큰 검증
-            jwtUtils.isExpired(token); // 토큰 만료 검증
+//            jwtUtils.isExpired(token); // 토큰 만료 검증 <- 토큰 검증에서 수행
 
             Authentication authentication = jwtUtils.getAuthentication(token); // 사용자 인증 정보 생성
             log.info("authentication = {}", authentication);
@@ -135,8 +146,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             Gson gson = new Gson();
             String json = "";
-            if (e instanceof CustomExpiredJwtException) {
-                json = gson.toJson(Map.of("Token_Expired", e.getMessage()));
+            if (e instanceof CustomJwtException) {
+                request.setAttribute("exceptionCode", ((CustomJwtException) e).getCode());
+                request.setAttribute("exceptionMessage", e.getMessage());
+                request.setAttribute("exceptionHttpStatus", ((CustomJwtException) e).getHttpStatus());
+                throw new InsufficientAuthenticationException(e.getMessage()); // EntryPoint로 넘김
             } else {
                 json = gson.toJson(Map.of("error", e.getMessage()));
             }

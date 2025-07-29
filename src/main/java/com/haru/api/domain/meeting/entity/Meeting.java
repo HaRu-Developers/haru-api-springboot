@@ -1,6 +1,6 @@
 package com.haru.api.domain.meeting.entity;
 
-import com.haru.api.domain.user.entity.Users;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -14,7 +14,7 @@ import org.hibernate.annotations.DynamicUpdate;
 @DynamicUpdate
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Meetings extends BaseEntity {
+public class Meeting extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,28 +25,34 @@ public class Meetings extends BaseEntity {
     //file을 직접 저장하면 db의 용량이 커지고 조회때마다 io가 커지므로 저장하지 않도록 함
     //private String agendaFile;
 
+    // 안건지 요약본
     private String agendaResult;
 
+    // 회의가 끝난 후에 AI 회의록 정리본
     @Column(columnDefinition="TEXT")
     private String proceeding;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private Users users;
+    @JoinColumn(name = "user_id")
+    private User creator;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private Workspace workspaces;
+    @JoinColumn(name = "workspace_id")
+    private Workspace workspace;
 
-    private Meetings(String title, String agendaResult, Users users, Workspace workspaces) {
+    private Meeting(String title, String agendaResult, User user, Workspace workspace) {
         this.title = title;
         this.agendaResult = agendaResult;
-        this.users = users;
-        this.workspaces = workspaces;
+        this.creator = user;
+        this.workspace = workspace;
     }
 
-    public static Meetings createInitialMeeting(String title, String agendaResult, Users users, Workspace workspaces) {
-        return new Meetings(title, agendaResult, users, workspaces);
+    public static Meeting createInitialMeeting(String title, String agendaResult, User user, Workspace workspaces) {
+        return new Meeting(title, agendaResult, user, workspaces);
     }
-
+    public void updateTitle(String title) {
+        this.title = title;
+    }
     public void updateProceeding(String proceeding) {
         this.proceeding = proceeding;
     }

@@ -17,14 +17,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Users extends BaseEntity {
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, length = 20)
-    @Setter
     private String name;
 
     @Column(nullable = false, length = 50)
@@ -42,8 +41,7 @@ public class Users extends BaseEntity {
 
     private LocalDateTime inactiveDate;
 
-    public void encodePassword(String password) {
-        this.password = password;
+    public void updateName(String name) {
+        this.name = name;
     }
-
 }

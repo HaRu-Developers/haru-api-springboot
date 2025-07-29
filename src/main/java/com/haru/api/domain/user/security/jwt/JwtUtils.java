@@ -1,5 +1,6 @@
 package com.haru.api.domain.user.security.jwt;
 
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -43,7 +44,7 @@ public class JwtUtils {
                 .setHeader(Map.of("typ","JWT"))
                 .setClaims(valueMap)
                 .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
-                .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(validTime).toInstant()))
+                .setExpiration(Date.from(ZonedDateTime.now().plusSeconds(validTime).toInstant()))
                 .signWith(key)
                 .compact();
     }
@@ -68,9 +69,9 @@ public class JwtUtils {
                     .parseClaimsJws(token) // 파싱 및 검증, 실패 시 에러
                     .getBody();
         } catch(ExpiredJwtException expiredJwtException){
-            throw new CustomExpiredJwtException("access token이 만료되었습니다", expiredJwtException);
+            throw new CustomJwtException(ErrorStatus.JWT_ACCESS_TOKEN_EXPIRED);
         } catch(Exception e){
-            throw new CustomJwtException("Error");
+            throw new CustomJwtException(ErrorStatus.AUTHORIZATION_EXCEPTION);
         }
         return claim;
     }
@@ -97,7 +98,7 @@ public class JwtUtils {
         } catch(ExpiredJwtException expiredJwtException){
             return expiredJwtException.getClaims(); // ✅ 만료된 토큰에서도 Claims 추출
         } catch(Exception e){
-            throw new CustomJwtException("Error access token 검증 못함");
+            throw new CustomJwtException(ErrorStatus.AUTHORIZATION_EXCEPTION);
         }
         return claims;
     }
@@ -112,20 +113,10 @@ public class JwtUtils {
                     .parseClaimsJws(token) // 파싱 및 검증, 실패 시 에러
                     .getBody();
         } catch(ExpiredJwtException expiredJwtException){
-            throw new CustomExpiredJwtException("refresh token이 만료되었습니다. 재로그인 해주세요.", expiredJwtException);
+            throw new CustomJwtException(ErrorStatus.JWT_REFRESH_TOKEN_EXPIRED);
         } catch(Exception e){
-            throw new CustomJwtException("Error");
+            throw new CustomJwtException(ErrorStatus.AUTHORIZATION_EXCEPTION);
         }
-    }
-
-    // 토큰이 만료되었는지 판단하는 메서드
-    public boolean isExpired(String token) { // static 제거
-        try {
-            validateToken(token);
-        } catch (Exception e) {
-            return (e instanceof CustomExpiredJwtException);
-        }
-        return false;
     }
 
     // 토큰의 남은 만료시간 계산
@@ -154,7 +145,7 @@ public class JwtUtils {
         for (String key : keys) {
             String value = redisTemplate.opsForValue().get(key);
             if (accessToken.equals(value)) {
-                throw new CustomJwtException("로그아웃된 유저입니다.");
+                throw new CustomJwtException(ErrorStatus.LOGOUT_USER);
             }
         }
     }
