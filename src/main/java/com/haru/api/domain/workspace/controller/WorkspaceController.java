@@ -113,4 +113,17 @@ public class WorkspaceController {
         return ApiResponse.onSuccess(documentList);
     }
 
+    @Operation(summary = "워크스페이스 초대 메일 발송", description =
+            "# 워크스페이스 초대 메일 발송 API 입니다. jwt 토큰을 헤더에 넣어주세요"
+    )
+    @PostMapping("/invite") ApiResponse<Void> sendInviteEmail(
+            @RequestBody WorkspaceRequestDTO.WorkspaceInviteEmailRequest request
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        workspaceCommandService.sendInviteEmail(userId, request);
+
+        return ApiResponse.onSuccess(null);
+    }
+
 }

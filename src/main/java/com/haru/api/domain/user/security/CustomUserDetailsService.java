@@ -2,6 +2,8 @@ package com.haru.api.domain.user.security;
 
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,7 +20,7 @@ public class CustomUserDetailsService implements CustomDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email, String password) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("해당 아이디를 가진 유저가 존재하지 않습니다: " + email));
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_USERNAME_NOT_FOUND));
 
         org.springframework.security.core.userdetails.User securityUser = new org.springframework.security.core.userdetails.User(
                 user.getEmail(),

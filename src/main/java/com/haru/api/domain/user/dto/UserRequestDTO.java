@@ -1,6 +1,7 @@
 package com.haru.api.domain.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +11,8 @@ import lombok.NoArgsConstructor;
 public class UserRequestDTO {
     @Getter
     @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class SignUpRequest {
         @NotBlank(message = "이메일은 빈값일 수 없습니다.")
         private String email;
@@ -17,6 +20,7 @@ public class UserRequestDTO {
         private String password;
         @NotBlank(message = "이름은 빈값일 수 없습니다.")
         private String name;
+        private boolean marketingAgreed;
     }
 
     @Getter
@@ -32,6 +36,8 @@ public class UserRequestDTO {
 
     @Getter
     @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class UserInfoUpdateRequest {
         @NotBlank(message = "이름은 빈 값일 수 없습니다.")
         private String name;
