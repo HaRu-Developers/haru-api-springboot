@@ -19,7 +19,7 @@ public interface MoodTrackerRepository extends JpaRepository<MoodTracker, Long> 
             "udlo.id.documentType, " +
             "udlo.lastOpened) " +
             "FROM UserDocumentLastOpened  udlo " +
-            "JOIN MoodTracker mt ON udlo.documentId = mt.id " +
+            "JOIN MoodTracker mt ON udlo.id.documentId = mt.id " +
             "WHERE udlo.id.documentType = 'TEAM_MOOD_TRACKER' AND udlo.user.id = :userId " +
             "AND mt.title LIKE %:title% " +
             "ORDER BY udlo.lastOpened DESC")

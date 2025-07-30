@@ -20,7 +20,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
             "udlo.id.documentType, " +
             "udlo.lastOpened) " +
             "FROM UserDocumentLastOpened  udlo " +
-            "JOIN Meeting mt ON udlo.documentId = mt.id " +
+            "JOIN Meeting mt ON udlo.id.documentId = mt.id " +
             "WHERE udlo.id.documentType = 'AI_MEETING_MANAGER' AND udlo.user.id = :userId " +
             "AND mt.title LIKE %:title% " +
             "ORDER BY udlo.lastOpened DESC")

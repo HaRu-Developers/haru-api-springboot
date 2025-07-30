@@ -18,7 +18,7 @@ public interface SnsEventRepository extends JpaRepository<SnsEvent, Long> {
             "udlo.id.documentType, " +
             "udlo.lastOpened) " +
             "FROM UserDocumentLastOpened  udlo " +
-            "JOIN SnsEvent se ON udlo.documentId = se.id " +
+            "JOIN SnsEvent se ON udlo.id.documentId = se.id " +
             "WHERE udlo.id.documentType = 'SNS_EVENT_ASSISTANT' AND udlo.user.id = :userId " +
             "AND se.title LIKE %:title% " +
             "ORDER BY udlo.lastOpened DESC")
