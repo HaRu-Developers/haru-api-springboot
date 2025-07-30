@@ -110,6 +110,9 @@ dependencies {
 
 	// docx4j
 	implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:8.3.3'
+	implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
+	implementation 'org.docx4j:docx4j-export-fo:8.3.3'
+
 
 }
 

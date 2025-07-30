@@ -193,40 +193,33 @@ public class ChatGPTClient {
                 });
     }
 
-    public Mono<String> summarizeDocument(List<String> base64Images) {
-        if (base64Images == null || base64Images.isEmpty()) {
-            return Mono.just("변환된 이미지가 없어 요약을 진행할 수 없습니다.");
+
+    public Mono<String> summarizeDocument(String documentText) {
+        if (documentText == null || documentText.isBlank()) {
+            return Mono.just("|||요약할 내용이 없습니다.");
         }
 
-        String prompt = "이 이미지들은 하나의 연속된 문서야. 전체 내용을 종합해서 반드시 255자 이내의 짧은 문단으로 한국어로 요약해줘. ";
+        String prompt = "다음 텍스트는 하나의 연속된 문서입니다. 다음 두 가지 작업을 수행해주세요.\n" +
+                "1. 이 안건지의 핵심 키워드(안건)를 추출해서 콤마(,)로 구분해주세요.\n" +
+                "2. 전체 내용을 255자 이내의 짧은 문단으로 한국어로 요약해주세요.\n" +
+                "반드시 '키워드1,키워드2,키워드3|||요약 내용' 형식으로 응답해주세요. 다른 설명은 붙이지 마세요." +
+                "\n\n--- 문서 내용 ---\n" + documentText;
 
-        List<Map<String, Object>> contentParts = new ArrayList<>();
-        contentParts.add(Map.of("type", "text", "text", prompt));
-
-        for (String base64Image : base64Images) {
-            contentParts.add(Map.of(
-                    "type", "image_url",
-                    "image_url", Map.of("url", "data:image/png;base64," + base64Image)
-            ));
-        }
-
-        List<Map<String, Object>> messages = List.of(
-                Map.of("role", "system", "content", "너는 이미지에 있는 텍스트를 정확하게 읽고 핵심 내용을 간결하게 요약하는 전문 AI야."),
-                Map.of("role", "user", "content", contentParts)
+        List<Map<String, String>> messages = List.of(
+                Map.of("role", "system", "content", "너는 주어진 안건지의 내용을 분석하여, 정해진 형식에 따라 키워드와 요약문을 반환하는 AI야."),
+                Map.of("role", "user", "content", prompt)
         );
 
+        Map<String, Object> requestBody = Map.of(
+                "model", "gpt-4o",
+                "messages", messages,
+                "max_tokens", 400
+        );
 
         return webClient.post()
-                .bodyValue(Map.of(
-                        "model", "gpt-4o",
-                        "messages", messages,
-                        "max_tokens", 300
-                ))
+                .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(OpenAIResponse.class)
-                .handle((response, sink) -> {
-                    String content = response.getChoices().get(0).getMessage().getContent();
-                    sink.next(content);
-                });
+                .map(response -> response.getChoices().get(0).getMessage().getContent());
     }
 }
