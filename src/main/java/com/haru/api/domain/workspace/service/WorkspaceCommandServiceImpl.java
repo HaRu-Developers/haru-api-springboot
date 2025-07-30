@@ -138,18 +138,42 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
                 .build());
 
         // 각 문서 조회
-        List<Meeting> meetingList = meetingRepository.findAllByWorkspaceId(foundWorkspace.getId());
-        List<SnsEvent> snsEventList = snsEventRepository.findAllByWorkspaceId(foundWorkspace.getId());
-        List<MoodTracker> moodTrackerList = moodTrackerRepository.findAllByWorkspaceId(foundWorkspace.getId());
-
         // 각 문서 UserDocumentLastOpened로 변환
-        List<UserDocumentLastOpened> userDocumentLastOpenedList = new ArrayList<>();
-        for(Meeting meeting : meetingList)
-            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(meeting, foundUser.get()));
-        for(SnsEvent snsEvent : snsEventList)
-            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(snsEvent, foundUser.get()));
-        for(MoodTracker moodTracker : moodTrackerList)
-            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(moodTracker, foundUser.get()));
+        List<UserDocumentLastOpened> userDocumentLastOpenedList = addDocumentsToUserLastOpened(foundWorkspace, foundUser.get());
+
+        // 워크스페이스에 속해있는 모든 문서를 user_document_last_opened에 추가
+        // last_opened는 null
+        userDocumentLastOpenedList.forEach(userDocumentLastOpened -> {
+            userDocumentLastOpenedRepository.saveAll(userDocumentLastOpenedList);
+        });
+
+        return WorkspaceConverter.toInvitationAcceptResult(true, true, foundWorkspace);
+    }
+
+    @Transactional
+    @Override
+    public  WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token, User signedUser) {
+        WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findByToken(token)
+                .orElseThrow(() -> new WorkspaceInvitationHandler(ErrorStatus.INVITATION_NOT_FOUND));
+
+        Workspace foundWorkspace = workspaceRepository.findById(foundWorkspaceInvitation.getWorkspace().getId())
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        if(foundWorkspaceInvitation.isAccepted())
+            throw new WorkspaceInvitationHandler(ErrorStatus.ALREADY_ACCEPTED);
+
+        foundWorkspaceInvitation.setAccepted();
+
+        // 가입된 사용자인 경우 워크스페이스에 추가
+        userWorkspaceRepository.save(UserWorkspace.builder()
+                .workspace(foundWorkspace)
+                .user(signedUser) // 인자로 받은 User 객체 사용
+                .auth(Auth.MEMBER)
+                .build());
+
+        // 각 문서 조회
+        // 각 문서 UserDocumentLastOpened로 변환
+        List<UserDocumentLastOpened> userDocumentLastOpenedList = addDocumentsToUserLastOpened(foundWorkspace, signedUser);
 
         // 워크스페이스에 속해있는 모든 문서를 user_document_last_opened에 추가
         // last_opened는 null
@@ -195,6 +219,24 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
             emailSender.send(email, subject, content);
         }
 
+    }
+
+    private List<UserDocumentLastOpened> addDocumentsToUserLastOpened(Workspace workspace, User user) {
+        List<Meeting> meetingList = meetingRepository.findAllByWorkspaceId(workspace.getId());
+        List<SnsEvent> snsEventList = snsEventRepository.findAllByWorkspaceId(workspace.getId());
+        List<MoodTracker> moodTrackerList = moodTrackerRepository.findAllByWorkspaceId(workspace.getId());
+
+        List<UserDocumentLastOpened> userDocumentLastOpenedList = new ArrayList<>();
+        for(Meeting meeting : meetingList)
+            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(meeting, user));
+        for(SnsEvent snsEvent : snsEventList)
+            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(snsEvent, user));
+        for(MoodTracker moodTracker : moodTrackerList)
+            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(moodTracker, user));
+
+        userDocumentLastOpenedRepository.saveAll(userDocumentLastOpenedList);
+
+        return userDocumentLastOpenedList;
     }
 
     private String generateInvitationEmailContentHtml(String invitedEmail, String inviterName, String workspaceName, String invitationLink) {
