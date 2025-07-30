@@ -18,6 +18,12 @@ public class SnsEventResponseDTO {
     }
 
     @Getter
+    @Builder
+    public static class LinkInstagramAccountResponse {
+        private String instagramAccountName;
+    }
+
+    @Getter
     public static class InstagramMediaResponse {
         private List<Media> data;
     }

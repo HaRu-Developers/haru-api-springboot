@@ -32,4 +32,10 @@ public class SnsEventConverter {
                 .nickname(nickname)
                 .build();
     }
+
+    public static SnsEventResponseDTO.LinkInstagramAccountResponse toLinkInstagramAccountResponse(String instagramAccountName) {
+        return SnsEventResponseDTO.LinkInstagramAccountResponse.builder()
+                .instagramAccountName(instagramAccountName)
+                .build();
+    }
 }

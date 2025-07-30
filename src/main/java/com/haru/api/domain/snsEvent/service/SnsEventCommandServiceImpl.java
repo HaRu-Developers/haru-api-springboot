@@ -19,8 +19,18 @@ import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.infra.api.restTemplate.InstagramOauth2RestTemplate;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -32,10 +42,17 @@ import java.util.*;
 
 import static com.haru.api.global.apiPayload.code.status.ErrorStatus.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
+    @Value("${instagram.client.id}")
+    private String instagramClientId;
+    @Value("${instagram.client.secret}")
+    private String instagramClientSecret;
+    @Value("${instagram.redirect.uri}")
+    private String instagramRedirectUri;
     private final SnsEventRepository snsEventRepository;
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
@@ -43,6 +60,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final ParticipantRepository participantRepository;
     private final WinnerRepository winnerRepository;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
 
     @Override
     public SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(Long workspaceId, SnsEventRequestDTO.CreateSnsRequest request) {
@@ -196,4 +214,35 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
         return list.subList(0, n); // 앞에서 n개만 추출
     }
+
+    @Override
+    @Transactional
+    public SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(String code, Long workspaceId) {
+        String shortLivedAccessToken;
+        String longLivedAccessToken;
+        Map<String, Object> userInfo;
+        try {
+            // 1. Access Token 요청
+            shortLivedAccessToken = instagramOauth2RestTemplate.getShortLivedAccessTokenUrl(code);
+            // 2. 단기 토큰을 장기(Long-Lived) 토큰으로 교환
+            longLivedAccessToken = instagramOauth2RestTemplate.getLongLivedAccessToken(shortLivedAccessToken);
+            // 3. 장기 토큰으로 사용자 계정 정보 요청
+            userInfo = instagramOauth2RestTemplate.getInstagramAccountInfo(longLivedAccessToken);
+        } catch (Exception e) {
+            log.error("Instagram OAuth2 처리 중 오류 발생: {}", e.getMessage());
+            throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_API_ERROR);
+        }
+        // 4. 워크스페이스에 인스타그램 계정 정보 저장
+        String instagramId = (String) userInfo.get("user_id");
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
+        if (foundWorkspace.getInstagramId() != null && foundWorkspace.getInstagramId().equals(instagramId)) {
+            throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_ALREADY_LINKED);
+        }
+        foundWorkspace.saveInstagramId(instagramId);
+        foundWorkspace.saveInstagramAccessToken(longLivedAccessToken);
+        foundWorkspace.saveInstagramAccountName((String) userInfo.get("username"));
+        return SnsEventConverter.toLinkInstagramAccountResponse((String) userInfo.get("username"));
+    }
+
 }

@@ -33,6 +33,8 @@ public class Workspace extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
+    private String instagramId;
+
     @Column(length = 200)
     private String instagramAccessToken;
 
@@ -50,5 +52,17 @@ public class Workspace extends BaseEntity {
 
     public void updateTitle(String title) {
         this.title = title;
+    }
+
+    public void saveInstagramId(String userId) {
+        this.instagramId = userId;
+    }
+
+    public void saveInstagramAccessToken(String longLivedAccessToken) {
+        this.instagramAccessToken = longLivedAccessToken;
+    }
+
+    public void saveInstagramAccountName(String username) {
+        this.instagramAccountName = username;
     }
 }
