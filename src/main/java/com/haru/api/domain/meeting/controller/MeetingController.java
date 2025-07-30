@@ -100,4 +100,22 @@ public class MeetingController {
 
         return ApiResponse.onSuccess("회의가 삭제되었습니다.");
     }
+
+
+
+
+    @Operation(summary = "AI회의록 proceeding 수정", description =
+            "# meetingId와 수정된 Proceeding을 받아 회의록을 수정합니다. access token을 header에 입력해주세요."
+    )
+    @PatchMapping("/{meetingId}")
+    public ApiResponse<String> adjustProceeding(
+            @PathVariable("meetingId") Long meetingId,
+            @RequestBody MeetingRequestDTO.meetingProceedingRequest request) {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        meetingCommandService.adjustProceeding(userId, meetingId, request);
+
+        return ApiResponse.onSuccess("회의가 수정되었습니다.");
+    }
 }

@@ -11,6 +11,6 @@ public interface MeetingCommandService {
     public MeetingResponseDTO.createMeetingResponse createMeeting(Long userId, MultipartFile agendaFile, MeetingRequestDTO.createMeetingRequest request);
     public void updateMeetingTitle(Long userId, Long meetingId, String newTitle);
     public void deleteMeeting(Long userId, Long meetingId);
-
+    public void adjustProceeding(Long userId, Long meetingId, MeetingRequestDTO.meetingProceedingRequest newProceeding);
 
 }
