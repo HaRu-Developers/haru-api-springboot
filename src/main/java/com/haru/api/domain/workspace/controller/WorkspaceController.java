@@ -70,7 +70,7 @@ public class WorkspaceController {
     }
 
     @Operation(summary = "워크스페이스 초대 수락", description =
-            "# 워크스페이스 초대 수락 API 입니다. jwt 토큰을 헤더에 넣어주세요"
+            "# 워크스페이스 초대 수락 API 입니다."
     )
     @GetMapping("/invite-accept")
     public RedirectView acceptInvite(
@@ -83,18 +83,18 @@ public class WorkspaceController {
             if (result.isSuccess()) {
                 if (result.isAlreadyRegistered()) {
                     // 이미 가입된 사용자면, 로그인 후 워크스페이스 페이지로 이동
-                    redirectUrl = "https://front-end.com/login?redirect=/workspace/" + result.getWorkspaceId(); // FE와 합의 필요
+                    redirectUrl = "https://haru.it.kr/auth/sign-in?redirect=/workspace/" + result.getWorkspaceId();
                 } else {
                     // 미가입 사용자면 회원가입 페이지로 이동 (토큰 정보 포함)
-                    redirectUrl = "https://front-end.com/signup?token=/" + token;
+                    redirectUrl = "https://haru.it.kr/auth/sign-up?token=" + token;
                 }
             } else {
-                redirectUrl = "https://front-end.com/error-page";
+                redirectUrl = "https://haru.it.kr/error-page";
             }
 
             return new RedirectView(redirectUrl);
         } catch (WorkspaceHandler e) {
-            return new RedirectView("https://front-end.com/error-page");
+            return new RedirectView("https://haru.it.kr/error-page");
         }
     }
 

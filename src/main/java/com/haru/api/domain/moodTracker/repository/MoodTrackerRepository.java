@@ -14,13 +14,13 @@ public interface MoodTrackerRepository extends JpaRepository<MoodTracker, Long> 
     List<MoodTracker> findAllByWorkspaceId(Long workspaceId);
 
     @Query("SELECT new com.haru.api.domain.workspace.dto.WorkspaceResponseDTO$Document(" +
-            "udlo.documentId, " +
+            "udlo.id.documentId, " +
             "mt.title, " +
-            "udlo.documentType, " +
+            "udlo.id.documentType, " +
             "udlo.lastOpened) " +
             "FROM UserDocumentLastOpened  udlo " +
             "JOIN MoodTracker mt ON udlo.documentId = mt.id " +
-            "WHERE udlo.documentType = 'TEAM_MOOD_TRACKER' AND udlo.user.id = :userId " +
+            "WHERE udlo.id.documentType = 'TEAM_MOOD_TRACKER' AND udlo.user.id = :userId " +
             "AND mt.title LIKE %:title% " +
             "ORDER BY udlo.lastOpened DESC")
     List<WorkspaceResponseDTO.Document> findRecentDocumentsByTitle(Long userId, String title, Pageable pageable);

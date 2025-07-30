@@ -10,4 +10,6 @@ public interface WorkspaceCommandService {
     WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceid, WorkspaceRequestDTO.WorkspaceUpdateRequest request);
 
     WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String code);
+
+    void sendInviteEmail(Long userId, WorkspaceRequestDTO.WorkspaceInviteEmailRequest request);
 }
