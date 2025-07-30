@@ -11,6 +11,7 @@ public class UserConverter {
                 .email(request.getEmail())
                 .name(request.getName())
                 .password(password)
+                .marketingAgreed(request.isMarketingAgreed())
                 .status(Status.ACTIVE)
                 .build();
     }
