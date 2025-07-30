@@ -13,7 +13,7 @@ public class WorkspaceResponseDTO {
     @Builder
     public static class Workspace {
         private Long workspaceId;
-        private String name;
+        private String title;
         private String imageUrl;
     }
 
