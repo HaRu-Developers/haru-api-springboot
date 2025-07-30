@@ -44,7 +44,7 @@ public class Meeting extends BaseEntity {
     private Workspace workspace;
 
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MeetingTag> meetingTags = new ArrayList<>();
+    private List<MeetingKeyword> meetingKeywords = new ArrayList<>();
 
 
 
@@ -67,11 +67,11 @@ public class Meeting extends BaseEntity {
 
 
     // 연관관계 편의 메서드
-    public void addTag(Tag tag) {
-        MeetingTag meetingTag = MeetingTag.builder()
+    public void addTag(Keyword keyword) {
+        MeetingKeyword meetingKeyword = MeetingKeyword.builder()
                 .meeting(this)
-                .tag(tag)
+                .keyword(keyword)
                 .build();
-        this.meetingTags.add(meetingTag);
+        this.meetingKeywords.add(meetingKeyword);
     }
 }

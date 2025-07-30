@@ -4,10 +4,10 @@ import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.meeting.entity.Meeting;
-import com.haru.api.domain.meeting.entity.Tag;
+import com.haru.api.domain.meeting.entity.Keyword;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
-import com.haru.api.domain.meeting.repository.MeetingTagRepository;
-import com.haru.api.domain.meeting.repository.TagRepository;
+import com.haru.api.domain.meeting.repository.MeetingKeywordRepository;
+import com.haru.api.domain.meeting.repository.KeywordRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
@@ -46,8 +46,8 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final MeetingRepository meetingRepository;
-    private final TagRepository tagRepository;
-    private final MeetingTagRepository meetingTagRepository;
+    private final KeywordRepository keywordRepository;
+    private final MeetingKeywordRepository meetingKeywordRepository;
     private final ChatGPTClient chatGPTClient;
 
     @Override
@@ -96,8 +96,8 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
                 String trimmedKeyword = keyword.trim();
                 if (trimmedKeyword.isEmpty()) continue;
 
-                Tag tag = tagRepository.findByName(trimmedKeyword)
-                        .orElseGet(() -> tagRepository.save(Tag.builder().name(trimmedKeyword).build()));
+                Keyword tag = keywordRepository.findByName(trimmedKeyword)
+                        .orElseGet(() -> keywordRepository.save(Keyword.builder().name(trimmedKeyword).build()));
 
                 newMeeting.addTag(tag);
             }
