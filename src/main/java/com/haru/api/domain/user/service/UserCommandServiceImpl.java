@@ -108,7 +108,8 @@ public class UserCommandServiceImpl implements UserCommandService{
         return UserConverter.toUserDTO(foundUser);
     }
 
-    private String generateAccessToken(Long userId, int accessExpTime) {
+    @Override
+    public String generateAccessToken(Long userId, int accessExpTime) {
         // 인증 완료 후 jwt토큰(accessToken) 생성
         Map<String, Object> valueMap = Map.of(
                 "userId", userId
@@ -116,7 +117,8 @@ public class UserCommandServiceImpl implements UserCommandService{
         return jwtUtils.generateToken(valueMap, accessExpTime);
     }
 
-    private String generateAndSaveRefreshToken(String key, int refreshExpTime) {
+    @Override
+    public String generateAndSaveRefreshToken(String key, int refreshExpTime) {
         // 인증 완료 후 jwt토큰(refreshToken) 생성
         String refreshToken = jwtUtils.generateToken(Collections.emptyMap(), refreshExpTime);
         redisTemplate.opsForValue().set(key, refreshToken, refreshExpTime, TimeUnit.SECONDS);

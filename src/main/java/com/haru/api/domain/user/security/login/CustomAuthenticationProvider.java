@@ -1,4 +1,4 @@
-package com.haru.api.domain.user.security;
+package com.haru.api.domain.user.security.login;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
