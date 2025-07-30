@@ -51,4 +51,12 @@ public class WorkspaceConverter {
                 .documents(documentList)
                 .build();
     }
+
+    public static WorkspaceResponseDTO.InvitationAcceptResult toInvitationAcceptResult(boolean isSuccess, boolean isAlreadyRegistered, Workspace workspace) {
+        return WorkspaceResponseDTO.InvitationAcceptResult.builder()
+                .isSuccess(isSuccess)
+                .isAlreadyRegistered(isAlreadyRegistered)
+                .workspaceId(workspace.getId())
+                .build();
+    }
 }

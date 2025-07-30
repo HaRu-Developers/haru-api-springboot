@@ -2,9 +2,12 @@ package com.haru.api.domain.user.controller;
 
 import com.haru.api.domain.user.dto.UserRequestDTO;
 import com.haru.api.domain.user.dto.UserResponseDTO;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.domain.user.service.UserCommandService;
 import com.haru.api.domain.user.service.UserQueryService;
+import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
+import com.haru.api.domain.workspace.service.WorkspaceCommandService;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -20,15 +23,25 @@ public class UserController {
 
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
+    private final WorkspaceCommandService workspaceCommandService;
 
     @Operation(summary = "회원가입", description =
-            "# 회원가입 API 입니다. 이메일과 패스워드 그리고 이름을 body에 입력해주세요."
+            "# 회원가입 API 입니다. 이메일과 패스워드 그리고 이름을 body에 입력해주세요. 워크스페이스 초대 메일을 통한 회원가입은 query string에 초대장의 token을 넣어주세요"
     )
     @PostMapping("/signup")
     public ApiResponse<Object> signUp(
-            @RequestBody @Valid UserRequestDTO.SignUpRequest request
+            @RequestBody @Valid UserRequestDTO.SignUpRequest request,
+            @RequestParam(required = false) String token
     ) {
-        userCommandService.signUp(request);
+        User user = userCommandService.signUp(request);
+
+        // 워크스페이스 초대 메일을 통하여 회원가입한 경우
+        if (token != null) {
+            WorkspaceResponseDTO.InvitationAcceptResult invitationAcceptResult = workspaceCommandService.acceptInvite(token, user);
+            return ApiResponse.onSuccess(invitationAcceptResult);
+        }
+
+        // 일반 회원가입
         return ApiResponse.onSuccess(null);
     }
 

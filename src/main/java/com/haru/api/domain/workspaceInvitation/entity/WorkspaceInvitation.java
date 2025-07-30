@@ -31,4 +31,7 @@ public class WorkspaceInvitation extends BaseEntity {
 
     private boolean isAccepted = false;
 
+    public void setAccepted() {
+        isAccepted = true;
+    }
 }
