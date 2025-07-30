@@ -42,8 +42,14 @@ public class UserCommandServiceImpl implements UserCommandService{
     @Override
     public void signUp(UserRequestDTO.SignUpRequest request) {
         String password = passwordEncoder.encode(request.getPassword());
-        User user = UserConverter.toUsers(request, password);
-        userRepository.save(user);
+        // 이메일 중복 확인
+        User foundUser = userRepository.findByEmail(request.getEmail()).orElse(null);
+        if (foundUser != null) {
+            throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
+        } else {
+            User user = UserConverter.toUsers(request, password);
+            userRepository.save(user);
+        }
     }
 
     @Override
