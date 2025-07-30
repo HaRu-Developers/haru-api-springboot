@@ -8,6 +8,9 @@ import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "meetings")
 @Getter
@@ -40,6 +43,11 @@ public class Meeting extends BaseEntity {
     @JoinColumn(name = "workspace_id")
     private Workspace workspace;
 
+    @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MeetingTag> meetingTags = new ArrayList<>();
+
+
+
     private Meeting(String title, String agendaResult, User user, Workspace workspace) {
         this.title = title;
         this.agendaResult = agendaResult;
@@ -55,5 +63,15 @@ public class Meeting extends BaseEntity {
     }
     public void updateProceeding(String proceeding) {
         this.proceeding = proceeding;
+    }
+
+
+    // 연관관계 편의 메서드
+    public void addTag(Tag tag) {
+        MeetingTag meetingTag = MeetingTag.builder()
+                .meeting(this)
+                .tag(tag)
+                .build();
+        this.meetingTags.add(meetingTag);
     }
 }
