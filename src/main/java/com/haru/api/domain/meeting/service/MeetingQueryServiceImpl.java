@@ -9,6 +9,7 @@ import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import lombok.RequiredArgsConstructor;
@@ -40,5 +41,17 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
         return foundMeetings.stream()
                 .map(meeting -> MeetingConverter.toGetMeetingResponse(meeting, userId))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, Long meetingId){
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        Meeting foundMeeting = meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+
+
+        return MeetingConverter.toGetMeetingProceedingResponse(foundUser, foundMeeting);
     }
 }

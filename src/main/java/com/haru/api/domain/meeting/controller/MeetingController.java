@@ -58,7 +58,7 @@ public class MeetingController {
         return ApiResponse.onSuccess(response);
     }
 
-    @Operation(summary = "AI회의록 조회", description =
+    @Operation(summary = "AI회의록 list 조회", description =
             "# workspaceId를 받아 회의록 list를 반환합니다. access token을 header에 입력해주세요."
     )
     @GetMapping("/workspaces/{workspaceId}")
@@ -99,5 +99,18 @@ public class MeetingController {
         meetingCommandService.deleteMeeting(userId, meetingId);
 
         return ApiResponse.onSuccess("회의가 삭제되었습니다.");
+    }
+
+    @Operation(summary = "AI회의록 단일조회", description =
+            "# meetingId를 받아 회의록을 삭제합니다. access token을 header에 입력해주세요."
+    )
+    @GetMapping("/{meetingId}/ai-proceeding")
+    public ApiResponse<MeetingResponseDTO.getMeetingProceeding> get(
+        @PathVariable("meetingId")Long meetingId) {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+        MeetingResponseDTO.getMeetingProceeding response = meetingQueryService.getMeetingProceeding(userId, meetingId);
+
+        return ApiResponse.onSuccess(response);
     }
 }
