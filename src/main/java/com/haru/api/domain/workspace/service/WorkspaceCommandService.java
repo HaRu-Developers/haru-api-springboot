@@ -1,5 +1,6 @@
 package com.haru.api.domain.workspace.service;
 
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.dto.WorkspaceRequestDTO;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 
@@ -9,5 +10,9 @@ public interface WorkspaceCommandService {
 
     WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceid, WorkspaceRequestDTO.WorkspaceUpdateRequest request);
 
-    void acceptInvite(String code);
+    WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token);
+
+    WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token, User user);
+
+    void sendInviteEmail(Long userId, WorkspaceRequestDTO.WorkspaceInviteEmailRequest request);
 }
