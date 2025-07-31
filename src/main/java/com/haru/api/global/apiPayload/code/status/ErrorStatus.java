@@ -21,6 +21,9 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4001", "사용자가 없습니다."),
     REFRESH_TOKEN_NOT_EQUAL(HttpStatus.BAD_REQUEST, "MEMBER4002", "리프레시 토큰이 일치하지 않습니다."),
     MEMBER_NO_AUTHORITY(HttpStatus.FORBIDDEN, "MEMBER4003", "수정 및 삭제할 권한이 없습니다."),
+    MEMBER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "MEMBER4004", "이미 존재하는 회원입니다."),
+    MEMBER_USERNAME_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4005", "해당 아이디를 가진 유저가 존재하지 않습니다."), //
+    MEMBER_PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "MEMBER4006", "비밀번호가 일치하지 않습니다."),
 
     // Workspace 관련 에러
     WORKSPACE_NOT_FOUND(HttpStatus.BAD_REQUEST,"WORKSPACE4001", "워크스페이스가 없습니다."),
@@ -50,6 +53,8 @@ public enum ErrorStatus implements BaseErrorCode {
     MOOD_TRACKER_MODIFY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "MOODTRACKER4002", "분위기 트래커에 권한이 없습니다."),
     SURVEY_QUESTION_NOT_FOUND(HttpStatus.BAD_REQUEST, "MOODTRACKER4003", "분위기 트래커 설문에 없는 질문입니다."),
     SURVEY_ANSWER_REQUIRED(HttpStatus.BAD_REQUEST, "MOODTRACKER4004", "분위기 트래커 설문의 필수 응답이 누락되었습니다."),
+    MOOD_TRACKER_NOT_FINISHED(HttpStatus.BAD_REQUEST, "MOODTRACKER4005", "분위기 트래커 설문 마감일 전입니다."),
+    MOOD_TRACKER_ACCESS_DENIED(HttpStatus.BAD_REQUEST, "MOODTRACKER4006", "분위기 트래커 조회 권한이 없습니다."),
 
     // 메일 관련 에러
     MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다."),

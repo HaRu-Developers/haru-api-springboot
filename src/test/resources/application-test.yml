@@ -1,13 +1,3 @@
-cloud:
-  aws:
-    s3:
-      bucket: haru-it-bucket
-    region:
-      static: ap-northeast-2
-    credentials:
-      accessKey: dummy-key
-      secretKey: dummy-secret
-
 spring:
   datasource:
     url: jdbc:h2:mem:testdb
@@ -17,6 +7,7 @@ spring:
   mail:
     host: dummy
     port: 1025
+    username: dumb
 
 hashid:
   salt: dummy-salt
@@ -33,3 +24,15 @@ api:
 
   openai:
     api-key: test_api_key
+
+cloud:
+  aws:
+    s3:
+      bucket: haru-it-bucket
+    region:
+      static: ap-northeast-2
+    credentials:
+      accessKey: dummy-key
+      secretKey: dummy-secret
+
+invite-url: invite-url

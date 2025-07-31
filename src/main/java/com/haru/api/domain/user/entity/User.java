@@ -32,6 +32,8 @@ public class User extends BaseEntity {
     @Column(length = 100)
     private String password;
 
+    private boolean marketingAgreed;
+
     @Enumerated(EnumType.STRING)
     @Column
     private Status status;
