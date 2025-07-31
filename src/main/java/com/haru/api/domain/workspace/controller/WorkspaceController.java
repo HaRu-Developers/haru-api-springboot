@@ -12,7 +12,10 @@ import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.List;
@@ -28,17 +31,18 @@ public class WorkspaceController {
 
     @Operation(
             summary = "워크스페이스 생성",
-            description = "# [v0.0 (2025-07-31)](https://www.notion.so/workspace-2265da7802c5808e9405f37866203a43)" +
+            description = "# [v1.0 (2025-07-31)](https://www.notion.so/workspace-2265da7802c5808e9405f37866203a43)" +
                     " 워크스페이스 생성 API 입니다. 워크스페이스 제목과 사진을 첨부해주세요."
     )
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<WorkspaceResponseDTO.Workspace> createWorkspace(
-            @RequestBody @Valid WorkspaceRequestDTO.WorkspaceCreateRequest request
+            @RequestPart("request") @Validated WorkspaceRequestDTO.WorkspaceCreateRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image
     ) {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        WorkspaceResponseDTO.Workspace workspace = workspaceCommandService.createWorkspace(userId, request);
+        WorkspaceResponseDTO.Workspace workspace = workspaceCommandService.createWorkspace(userId, request, image);
 
         return ApiResponse.onSuccess(workspace);
     }
