@@ -54,6 +54,8 @@ public enum ErrorStatus implements BaseErrorCode {
     MOOD_TRACKER_MODIFY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "MOODTRACKER4002", "분위기 트래커에 권한이 없습니다."),
     SURVEY_QUESTION_NOT_FOUND(HttpStatus.BAD_REQUEST, "MOODTRACKER4003", "분위기 트래커 설문에 없는 질문입니다."),
     SURVEY_ANSWER_REQUIRED(HttpStatus.BAD_REQUEST, "MOODTRACKER4004", "분위기 트래커 설문의 필수 응답이 누락되었습니다."),
+    MOOD_TRACKER_NOT_FINISHED(HttpStatus.BAD_REQUEST, "MOODTRACKER4005", "분위기 트래커 설문 마감일 전입니다."),
+    MOOD_TRACKER_ACCESS_DENIED(HttpStatus.BAD_REQUEST, "MOODTRACKER4006", "분위기 트래커 조회 권한이 없습니다."),
 
     // 메일 관련 에러
     MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다."),

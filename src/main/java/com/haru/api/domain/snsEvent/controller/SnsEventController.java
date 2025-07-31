@@ -56,4 +56,32 @@ public class SnsEventController {
         snsEventCommandService.deleteSnsEvent(userId, snsEvnetId);
         return ApiResponse.onSuccess("");
     }
+
+    @Operation(
+            summary = "SNS 이벤트 리스트 조회 API",
+            description = "SNS 이벤트 리스트 조회 API입니다. Header에 access token을 넣고 Path Variable에는 workspaceId를 넣어 요청해주세요."
+    )
+    @GetMapping("/{workspaceId}/list")
+    public ApiResponse<SnsEventResponseDTO.GetSnsEventListRequest> getSnsEventList(
+            @PathVariable Long workspaceId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.onSuccess(
+                snsEventCommandService.getSnsEventList(userId, workspaceId)
+        );
+    }
+
+    @Operation(
+            summary = "SNS 이벤트 조회 API",
+            description = "SNS 이벤트 조회 API입니다. Header에 access token을 넣고 Path Variable에는 snsEventId를 넣어 요청해주세요."
+    )
+    @GetMapping("/{snsEventId}")
+    public ApiResponse<SnsEventResponseDTO.GetSnsEventRequest> getSnsEvent(
+            @PathVariable Long snsEventId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.onSuccess(
+                snsEventCommandService.getSnsEvent(userId, snsEventId)
+        );
+    }
 }

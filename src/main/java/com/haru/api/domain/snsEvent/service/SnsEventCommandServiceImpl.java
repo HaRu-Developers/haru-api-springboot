@@ -231,4 +231,29 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         }
         snsEventRepository.delete(foundSnsEvent);
     }
+      
+    public SnsEventResponseDTO.GetSnsEventListRequest getSnsEventList(Long userId, Long workspaceId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
+        UserWorkspace foundUserWorkSapce = userWorkspaceRepository.findByUserAndWorkspace(foundUser, foundWorkspace)
+                .orElseThrow(() -> new MemberHandler(NOT_BELONG_TO_WORKSPACE));
+        List<SnsEvent> snsEventList = snsEventRepository.findAllByWorkspace(foundWorkspace);
+        return SnsEventConverter.toGetSnsEventListRequest(snsEventList);
+    }
+
+    public SnsEventResponseDTO.GetSnsEventRequest getSnsEvent(Long userId, Long snsEventId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
+                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
+        List<Participant> participantList = participantRepository.findAllBySnsEvent(foundSnsEvent);
+        List<Winner> winnerList = winnerRepository.findAllBySnsEvent(foundSnsEvent);
+        return SnsEventConverter.toGetSnsEventRequest(
+                foundSnsEvent,
+                participantList,
+                winnerList
+        );
+    }
 }

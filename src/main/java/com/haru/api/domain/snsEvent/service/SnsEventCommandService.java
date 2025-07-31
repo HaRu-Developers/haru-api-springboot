@@ -9,4 +9,8 @@ public interface SnsEventCommandService {
     void updateSnsEventTitle(Long userId, Long snsEvnetId, SnsEventRequestDTO.UpdateSnsEventRequest request);
 
     void deleteSnsEvent(Long userId, Long snsEvnetId);
+
+    SnsEventResponseDTO.GetSnsEventListRequest getSnsEventList(Long userId, Long workspaceId);
+
+    SnsEventResponseDTO.GetSnsEventRequest getSnsEvent(Long userId, Long snsEventId);
 }
