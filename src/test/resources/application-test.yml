@@ -13,8 +13,8 @@ spring:
       client:
         registration:
           google:
-            client-id: dummy-client-id
-            client-secret: dummy-client-secret
+            client-id: "dummy-client-id"
+            client-secret: "dummy-client-secret"
             scope:
               - email
               - profile
@@ -48,6 +48,6 @@ cloud:
 invite-url: invite-url
 
 instagram:
-  client-id: dummy-client-id
-  client-secret: dummy-client-secret
-  redirect-uri: dummy-redirect-uri
+  client-id: "dummy-client-id"
+  client-secret: "dummy-client-se/cret"
+  redirect-uri: "dummy-redirect-uri"
