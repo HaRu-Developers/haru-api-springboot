@@ -32,7 +32,5 @@ public interface UserWorkspaceRepository extends JpaRepository<UserWorkspace, Lo
     Optional<UserWorkspace> findByUserAndWorkspace(User user, Workspace workspace);
 
     Optional<UserWorkspace> findByUserIdAndWorkspaceId(Long userId, Long workspaceId);
-
-    @Query("SELECT uw.user.id FROM UserWorkspace uw WHERE uw.workspace.id = :workspaceId AND uw.auth = 'ADMIN'")
-    Long findAdminUserIdsByWorkspaceId(@Param("workspaceId") Long workspaceId);
+    
 }

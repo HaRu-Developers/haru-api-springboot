@@ -62,10 +62,8 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
-        Long adminUserId = userWorkspaceRepository.findAdminUserIdsByWorkspaceId(foundUserWorkspace.getId());
-        User foundAdminUser = userRepository.findById(adminUserId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+        User foundMeetingCreator = foundMeeting.getCreator();
 
-        return MeetingConverter.toGetMeetingProceedingResponse(foundAdminUser, foundMeeting);
+        return MeetingConverter.toGetMeetingProceedingResponse(foundMeetingCreator, foundMeeting);
     }
 }
