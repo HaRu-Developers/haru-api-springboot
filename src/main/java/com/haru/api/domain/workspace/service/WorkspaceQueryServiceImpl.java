@@ -13,7 +13,6 @@ import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,10 +46,10 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
         if (!userWorkspaceRepository.existsByWorkspaceIdAndUserId(workspaceId, userId))
             throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
 
-        // 각 타입별로 최근 문서 9개를 조회
-        List<WorkspaceResponseDTO.Document> meetingList = meetingRepository.findRecentDocumentsByTitle(foundUser.getId(), title, PageRequest.of(0,9));
-        List<WorkspaceResponseDTO.Document> snsEventList = snsEventRepository.findRecentDocumentsByTitle(foundUser.getId(), title, PageRequest.of(0,9));
-        List<WorkspaceResponseDTO.Document> moodTrackerList = moodTrackerRepository.findRecentDocumentsByTitle(foundUser.getId(), title, PageRequest.of(0,9));
+        // 각 문서별로 title이 일치하는 문서 검색
+        List<WorkspaceResponseDTO.Document> meetingList = meetingRepository.findRecentDocumentsByTitle(foundUser.getId(), title);
+        List<WorkspaceResponseDTO.Document> snsEventList = snsEventRepository.findRecentDocumentsByTitle(foundUser.getId(), title);
+        List<WorkspaceResponseDTO.Document> moodTrackerList = moodTrackerRepository.findRecentDocumentsByTitle(foundUser.getId(), title);
 
         // 모든 문서 리스트 스트림으로 합침
         List<WorkspaceResponseDTO.Document> allResults = new ArrayList<>();
@@ -59,9 +58,12 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
         allResults.addAll(moodTrackerList);
 
         // lastOpened 기준으로 정렬하고 상위 9개 추출
+        // last_opened가 null인 경우에는 가장 뒤로 보내기
+        // last_opened가 모두 null인 경우에도 동작하도록 구현
         List<WorkspaceResponseDTO.Document> finalResult = allResults.stream()
-                .sorted(Comparator.comparing(WorkspaceResponseDTO.Document::getLastOpened).reversed())
-                .limit(9)
+                .sorted(Comparator.comparing(WorkspaceResponseDTO.Document::getLastOpened,
+                                            Comparator.nullsLast(Comparator.naturalOrder()))
+                                    .reversed())
                 .toList();
 
         return WorkspaceConverter.toDocumentsDTO(finalResult);

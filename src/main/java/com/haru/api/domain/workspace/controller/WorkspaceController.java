@@ -26,8 +26,10 @@ public class WorkspaceController {
     private final UserWorkspaceQueryService userWorkspaceQueryService;
     private final WorkspaceQueryService workspaceQueryService;
 
-    @Operation(summary = "워크스페이스 생성", description =
-            "# 워크스페이스 생성 API 입니다. 워크스페이스 제목과 초대하고자 하는 사람의 이메일을 입력해주세요."
+    @Operation(
+            summary = "워크스페이스 생성",
+            description = "# [v0.0 (2025-07-31)](https://www.notion.so/workspace-2265da7802c5808e9405f37866203a43)" +
+                    " 워크스페이스 생성 API 입니다. 워크스페이스 제목과 사진을 첨부해주세요."
     )
     @PostMapping
     public ApiResponse<WorkspaceResponseDTO.Workspace> createWorkspace(
@@ -41,8 +43,10 @@ public class WorkspaceController {
         return ApiResponse.onSuccess(workspace);
     }
 
-    @Operation(summary = "워크스페이스 리스트 제목 조회", description =
-            "# 워크스페이스 리스트 제목 조회 API 입니다. jwt 토큰을 헤더에 넣어주세요"
+    @Operation(
+            summary = "워크스페이스 리스트 제목 조회",
+            description = "# [v1.0 (2025-07-31)](https://www.notion.so/workspace-2265da7802c5801e9c83f6675bbc9de7)" +
+                    " 워크스페이스 리스트 제목 조회 API 입니다. jwt 토큰을 헤더에 넣어주세요"
     )
     @GetMapping("/me")
     public ApiResponse<List<UserWorkspaceResponseDTO.UserWorkspaceWithTitle>> getWorkspaceWithTitleList() {
@@ -54,8 +58,10 @@ public class WorkspaceController {
         return ApiResponse.onSuccess(workspaceWithTitleList);
     }
 
-    @Operation(summary = "워크스페이스 수정", description =
-            "# 워크스페이스 수정 API 입니다. jwt 토큰을 헤더에 넣어주세요"
+    @Operation(
+            summary = "워크스페이스 수정",
+            description = "# [v1.0 (2025-07-31)](https://www.notion.so/workspace-2265da7802c580ebb332e868007671a7)" +
+                    " 워크스페이스 수정 API 입니다. jwt 토큰을 헤더에 넣어주세요"
     )
     @PatchMapping("/{workspaceId}")
     public ApiResponse<WorkspaceResponseDTO.Workspace> updateWorkspace(
@@ -69,8 +75,10 @@ public class WorkspaceController {
         return ApiResponse.onSuccess(workspace);
     }
 
-    @Operation(summary = "워크스페이스 초대 수락", description =
-            "# 워크스페이스 초대 수락 API 입니다."
+    @Operation(
+            summary = "워크스페이스 초대 수락",
+            description = "# [v1.0 (2025-07-31)](https://www.notion.so/workspace-22e5da7802c580a3baf7c52a9fd8d45e?pvs=25)" +
+                    " 워크스페이스 초대 수락 API 입니다."
     )
     @GetMapping("/invite-accept")
     public RedirectView acceptInvite(
@@ -98,8 +106,10 @@ public class WorkspaceController {
         }
     }
 
-    @Operation(summary = "워크스페이스 문서 검색", description =
-            "# 워크스페이스 문서 검색 API 입니다. jwt 토큰을 헤더에 넣고, path variable로 workspaceId, query string에 문서 제목을 넣어주세요"
+    @Operation(
+            summary = "워크스페이스 문서 검색",
+            description = "# [v1.0 (2025-07-31)](https://www.notion.so/2265da7802c580ca9a33eb9ba7ddec29?pvs=25)" +
+                    " 워크스페이스 문서 검색 API 입니다. jwt 토큰을 헤더에 넣고, path variable로 workspaceId, query string에 문서 제목을 넣어주세요"
     )
     @GetMapping("/{workspaceId}")
     public ApiResponse<WorkspaceResponseDTO.DocumentList> getDocument(
@@ -113,8 +123,10 @@ public class WorkspaceController {
         return ApiResponse.onSuccess(documentList);
     }
 
-    @Operation(summary = "워크스페이스 초대 메일 발송", description =
-            "# 워크스페이스 초대 메일 발송 API 입니다. jwt 토큰을 헤더에 넣어주세요"
+    @Operation(
+            summary = "워크스페이스 초대 메일 발송",
+            description = "# [v1.0 (2025-07-31)](https://www.notion.so/workspace-2385da7802c5804c86a5c1c7ca3b13cf?pvs=25)" +
+                    " 워크스페이스 초대 메일 발송 API 입니다. jwt 토큰을 헤더에 넣어주세요"
     )
     @PostMapping("/invite") ApiResponse<Void> sendInviteEmail(
             @RequestBody WorkspaceRequestDTO.WorkspaceInviteEmailRequest request

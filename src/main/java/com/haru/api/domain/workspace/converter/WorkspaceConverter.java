@@ -14,7 +14,7 @@ public class WorkspaceConverter {
     public static WorkspaceResponseDTO.Workspace toWorkspaceDTO(Workspace workspace) {
         return WorkspaceResponseDTO.Workspace.builder()
                 .workspaceId(workspace.getId())
-                .name(workspace.getTitle())
+                .title(workspace.getTitle())
                 .imageUrl(workspace.getImageUrl())
                 .build();
     }
