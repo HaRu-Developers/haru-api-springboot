@@ -196,4 +196,15 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
         return list.subList(0, n); // 앞에서 n개만 추출
     }
+
+    public SnsEventResponseDTO.GetSnsEventListRequest getSnsEventList(Long userId, Long workspaceId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
+        UserWorkspace foundUserWorkSapce = userWorkspaceRepository.findByUserAndWorkspace(foundUser, foundWorkspace)
+                .orElseThrow(() -> new MemberHandler(NOT_BELONG_TO_WORKSPACE));
+        List<SnsEvent> snsEventList = snsEventRepository.findAllByWorkspace(foundWorkspace);
+        return SnsEventConverter.toGetSnsEventListRequest(snsEventList);
+    }
 }
