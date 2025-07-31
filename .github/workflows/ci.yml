@@ -13,6 +13,11 @@ jobs:
     permissions:
       contents: read
 
+    env:
+      INSTAGRAM_CLIENT_ID: ${{ secrets.INSTAGRAM_CLIENT_ID }}
+      INSTAGRAM_CLIENT_SECRET: ${{ secrets.INSTAGRAM_CLIENT_SECRET }}
+      INSTARAM_REDIRECT_URI: ${{ secrets.INSTARAM_REDIRECT_URI }}
+
     steps:
       - uses: actions/checkout@v4
 
