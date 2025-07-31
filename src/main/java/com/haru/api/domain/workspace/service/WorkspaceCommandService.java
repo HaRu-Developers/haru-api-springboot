@@ -9,7 +9,7 @@ public interface WorkspaceCommandService {
 
     WorkspaceResponseDTO.Workspace createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request, MultipartFile image);
 
-    WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceid, WorkspaceRequestDTO.WorkspaceUpdateRequest request);
+    WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceId, WorkspaceRequestDTO.WorkspaceUpdateRequest request, MultipartFile image);
 
     WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token);
 

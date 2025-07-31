@@ -64,17 +64,18 @@ public class WorkspaceController {
 
     @Operation(
             summary = "워크스페이스 수정",
-            description = "# [v1.0 (2025-07-31)](https://www.notion.so/workspace-2265da7802c580ebb332e868007671a7)" +
+            description = "# [v1.1 (2025-07-31)](https://www.notion.so/workspace-2265da7802c580ebb332e868007671a7)" +
                     " 워크스페이스 수정 API 입니다. jwt 토큰을 헤더에 넣어주세요"
     )
-    @PatchMapping("/{workspaceId}")
+    @PatchMapping(value = "/{workspaceId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<WorkspaceResponseDTO.Workspace> updateWorkspace(
-            @RequestBody @Valid WorkspaceRequestDTO.WorkspaceUpdateRequest request,
+            @RequestPart("request") @Validated WorkspaceRequestDTO.WorkspaceUpdateRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image,
             @PathVariable Long workspaceId
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
 
-        WorkspaceResponseDTO.Workspace workspace = workspaceCommandService.updateWorkspace(userId, workspaceId, request);
+        WorkspaceResponseDTO.Workspace workspace = workspaceCommandService.updateWorkspace(userId, workspaceId, request, image);
 
         return ApiResponse.onSuccess(workspace);
     }
