@@ -14,7 +14,7 @@ public class WorkspaceConverter {
     public static WorkspaceResponseDTO.Workspace toWorkspaceDTO(Workspace workspace) {
         return WorkspaceResponseDTO.Workspace.builder()
                 .workspaceId(workspace.getId())
-                .name(workspace.getTitle())
+                .title(workspace.getTitle())
                 .imageUrl(workspace.getImageUrl())
                 .build();
     }
@@ -49,6 +49,14 @@ public class WorkspaceConverter {
     public static WorkspaceResponseDTO.DocumentList toDocumentsDTO(List<WorkspaceResponseDTO.Document> documentList) {
         return WorkspaceResponseDTO.DocumentList.builder()
                 .documents(documentList)
+                .build();
+    }
+
+    public static WorkspaceResponseDTO.InvitationAcceptResult toInvitationAcceptResult(boolean isSuccess, boolean isAlreadyRegistered, Workspace workspace) {
+        return WorkspaceResponseDTO.InvitationAcceptResult.builder()
+                .isSuccess(isSuccess)
+                .isAlreadyRegistered(isAlreadyRegistered)
+                .workspaceId(workspace.getId())
                 .build();
     }
 }

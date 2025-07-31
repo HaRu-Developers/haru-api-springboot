@@ -16,6 +16,7 @@ public interface UserWorkspaceRepository extends JpaRepository<UserWorkspace, Lo
     @Query("SELECT new com.haru.api.domain.userWorkspace.dto.UserWorkspaceResponseDTO$UserWorkspaceWithTitle(" +
             "uw.workspace.id, " +
             "uw.workspace.title, " +
+            "uw.workspace.imageUrl, " +
             "CASE WHEN uw.auth = 'ADMIN' THEN true ELSE false END) " +
             "FROM UserWorkspace uw " +
             "WHERE uw.user.id = :userId")
@@ -29,4 +30,6 @@ public interface UserWorkspaceRepository extends JpaRepository<UserWorkspace, Lo
     Optional<UserWorkspace> findByWorkspaceIdAndUserId(Long workspaceId, Long userId);
 
     Optional<UserWorkspace> findByUserAndWorkspace(User user, Workspace workspace);
+
+    Optional<UserWorkspace> findByUserIdAndWorkspaceId(Long userId, Long workspaceId);
 }

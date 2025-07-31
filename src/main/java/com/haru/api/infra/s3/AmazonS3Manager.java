@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -24,6 +25,11 @@ public class AmazonS3Manager{
     private final UuidRepository uuidRepository;
 
     public String uploadFile(String keyName, MultipartFile file){
+
+        if (file == null)
+            return null;
+
+
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(file.getSize());
         try {
@@ -33,6 +39,10 @@ public class AmazonS3Manager{
         }
 
         return amazonS3.getUrl(amazonConfig.getBucket(), keyName).toString();
+    }
+
+    public String generateKeyName(String path, UUID uuid) {
+        return path + '/' + uuid.toString();
     }
 
     public String generateKeyName(Uuid uuid, String path) {

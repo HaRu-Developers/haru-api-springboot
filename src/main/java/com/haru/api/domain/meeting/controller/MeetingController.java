@@ -27,7 +27,7 @@ public class MeetingController {
     private final MeetingQueryService meetingQueryService;
 
 
-    @Operation(summary = "회의 생성 API", description = "안건지 파일과 회의 정보를 받아 회의를 생성합니다. accesstoken을 header에 입력해주세요",
+    @Operation(summary = "회의 생성 API", description = "# 1.1v (2025-07-30) 안건지 파일과 회의 정보를 받아 회의를 생성합니다. accesstoken을 header에 입력해주세요",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(
@@ -59,7 +59,7 @@ public class MeetingController {
     }
 
     @Operation(summary = "AI회의록 조회", description =
-            "# workspaceId를 받아 회의록 list를 반환합니다. access token을 header에 입력해주세요."
+            "# 1.1v (2025-07-30) workspaceId를 받아 회의록 list를 반환합니다. access token을 header에 입력해주세요."
     )
     @GetMapping("/workspaces/{workspaceId}")
     public ApiResponse<List<MeetingResponseDTO.getMeetingResponse>> getMeetings(
@@ -73,7 +73,7 @@ public class MeetingController {
     }
 
     @Operation(summary = "AI회의록 제목 수정", description =
-            "# meetingId을 pathparam, 수정할 title을 requestBody로 받아 회의록 제목을 수정핣니다. access token을 header에 입력해주세요."
+            "# 1.1v (2025-07-30) meetingId을 pathparam, 수정할 title을 requestBody로 받아 회의록 제목을 수정핣니다. access token을 header에 입력해주세요."
     )
     @PatchMapping("/{meetingId}/title")
     public ApiResponse<String> updateMeetingTitle(
@@ -88,7 +88,7 @@ public class MeetingController {
     }
 
     @Operation(summary = "AI회의록 삭제", description =
-            "# meetingId를 받아 회의록을 삭제합니다. access token을 header에 입력해주세요."
+            "# 1.1v (2025-07-30) meetingId를 받아 회의록을 삭제합니다. access token을 header에 입력해주세요."
     )
     @DeleteMapping("/{meetingId}")
     public ApiResponse<String> deleteMeeting(
@@ -99,5 +99,23 @@ public class MeetingController {
         meetingCommandService.deleteMeeting(userId, meetingId);
 
         return ApiResponse.onSuccess("회의가 삭제되었습니다.");
+    }
+
+
+
+
+    @Operation(summary = "AI회의록 proceeding 수정", description =
+            "# 1.1v (2025-07-30) meetingId와 수정된 Proceeding을 받아 회의록을 수정합니다. access token을 header에 입력해주세요."
+    )
+    @PatchMapping("/{meetingId}")
+    public ApiResponse<String> adjustProceeding(
+            @PathVariable("meetingId") Long meetingId,
+            @RequestBody MeetingRequestDTO.meetingProceedingRequest request) {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        meetingCommandService.adjustProceeding(userId, meetingId, request);
+
+        return ApiResponse.onSuccess("회의가 수정되었습니다.");
     }
 }
