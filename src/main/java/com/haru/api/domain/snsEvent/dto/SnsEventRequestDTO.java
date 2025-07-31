@@ -5,6 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 public class SnsEventRequestDTO {
+
     @Getter
     @Setter
     @NoArgsConstructor
