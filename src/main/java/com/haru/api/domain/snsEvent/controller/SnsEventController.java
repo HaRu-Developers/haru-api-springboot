@@ -47,12 +47,12 @@ public class SnsEventController {
     )
     @GetMapping("/{workspaceId}/link-instagram")
     public ApiResponse<SnsEventResponseDTO.LinkInstagramAccountResponse> linkInstagramAccount(
-            @RequestHeader("AccessToken") String accessToken,
+            @RequestHeader("code") String code,
             @PathVariable Long workspaceId
     ) {
-        System.out.println("Received accessToken: " + accessToken);
+        System.out.println("Received accessToken: " + code);
         return ApiResponse.onSuccess(
-                snsEventCommandService.getInstagramAccessTokenAndAccount(accessToken, workspaceId)
+                snsEventCommandService.getInstagramAccessTokenAndAccount(code, workspaceId)
         );
     }
 }

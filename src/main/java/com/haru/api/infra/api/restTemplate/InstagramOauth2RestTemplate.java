@@ -1,5 +1,6 @@
 package com.haru.api.infra.api.restTemplate;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -14,6 +15,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.Map;
 
 @Component
+@RequiredArgsConstructor
 public class InstagramOauth2RestTemplate {
     @Value("${instagram.client.id}")
     private String instagramClientId;
@@ -22,7 +24,7 @@ public class InstagramOauth2RestTemplate {
     @Value("${instagram.redirect.uri}")
     private String instagramRedirectUri;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     public String getShortLivedAccessTokenUrl(String code) {
         // 1. Access Token 요청
