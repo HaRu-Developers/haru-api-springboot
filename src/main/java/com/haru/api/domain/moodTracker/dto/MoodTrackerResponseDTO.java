@@ -41,7 +41,8 @@ public class MoodTrackerResponseDTO {
     public static class BaseResult{
         private String moodTrackerHashedId;
         private String title;
-        private String creator;
+        private Long creatorId;
+        private String creatorName;
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime updatedAt;
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")

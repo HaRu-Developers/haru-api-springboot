@@ -72,7 +72,8 @@ public class SnsEventConverter {
 
         return SnsEventResponseDTO.GetSnsEventRequest.builder()
                 .title(snsEvent.getTitle())
-                .userName(snsEvent.getCreator().getName())
+                .creatorId(snsEvent.getCreator().getId())
+                .creatorName(snsEvent.getCreator().getName())
                 .updatedAt(snsEvent.getUpdatedAt())
                 .participantList(participantResponseList)
                 .winnerList(winnerResponseList)
