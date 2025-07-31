@@ -51,14 +51,14 @@ public class SnsEventResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class GetSnsEventListRequest {
-        private List<SnsEventList> snsEventList;
+        private List<SnsEventResponse> snsEventList;
     }
 
     @Getter
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class SnsEventList {
+    public static class SnsEventResponse {
         private Long snsEventId;
         private String title;
         private int participantCount;
@@ -66,5 +66,35 @@ public class SnsEventResponseDTO {
         private String snsLink;
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime updatedAt;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GetSnsEventRequest {
+        private String title;
+        private String userName;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+        private LocalDateTime updatedAt;
+        private List<ParticipantResponse> participantList;
+        private List<WinnerResponse> winnerList;
+        private String snsLink;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ParticipantResponse {
+        private String account;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class WinnerResponse {
+        private String account;
     }
 }

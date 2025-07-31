@@ -207,4 +207,18 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         List<SnsEvent> snsEventList = snsEventRepository.findAllByWorkspace(foundWorkspace);
         return SnsEventConverter.toGetSnsEventListRequest(snsEventList);
     }
+
+    public SnsEventResponseDTO.GetSnsEventRequest getSnsEvent(Long userId, Long snsEventId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
+                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
+        List<Participant> participantList = participantRepository.findAllBySnsEvent(foundSnsEvent);
+        List<Winner> winnerList = winnerRepository.findAllBySnsEvent(foundSnsEvent);
+        return SnsEventConverter.toGetSnsEventRequest(
+                foundSnsEvent,
+                participantList,
+                winnerList
+        );
+    }
 }

@@ -6,14 +6,16 @@ import com.haru.api.domain.snsEvent.entity.Participant;
 import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.entity.Winner;
 import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.user.entity.enums.Status;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class SnsEventConverter {
-    public static SnsEvent toSnsEvent(SnsEventRequestDTO.CreateSnsRequest request, User user) {
+    public static SnsEvent toSnsEvent(
+            SnsEventRequestDTO.CreateSnsRequest request,
+            User user
+    ) {
         return SnsEvent.builder()
                 .title(request.getTitle())
                 .snsLink(request.getSnsEventLink())
@@ -35,24 +37,58 @@ public class SnsEventConverter {
                 .build();
     }
 
-    public static SnsEventResponseDTO.GetSnsEventListRequest toGetSnsEventListRequest(List<SnsEvent> SnsEventList) {
-        List<SnsEventResponseDTO.SnsEventList> snsEventList = SnsEventList.stream()
+    public static SnsEventResponseDTO.GetSnsEventListRequest toGetSnsEventListRequest(List<SnsEvent> snsEventList) {
+        List<SnsEventResponseDTO.SnsEventResponse> snsEventResponseList = snsEventList.stream()
                 .map(SnsEventConverter::toSnsEventList)
                 .collect(Collectors.toList());
 
         return SnsEventResponseDTO.GetSnsEventListRequest.builder()
-                .snsEventList(snsEventList)
+                .snsEventList(snsEventResponseList)
                 .build();
     }
 
-    public static SnsEventResponseDTO.SnsEventList toSnsEventList(SnsEvent snsEvent) {
-        return SnsEventResponseDTO.SnsEventList.builder()
+    public static SnsEventResponseDTO.SnsEventResponse toSnsEventList(SnsEvent snsEvent) {
+        return SnsEventResponseDTO.SnsEventResponse.builder()
                 .snsEventId(snsEvent.getId())
                 .title(snsEvent.getTitle())
                 .participantCount(snsEvent.getParticipantList().size())
                 .winnerCount(snsEvent.getWinnerList().size())
                 .snsLink(snsEvent.getSnsLink())
                 .updatedAt(snsEvent.getUpdatedAt())
+                .build();
+    }
+
+    public static SnsEventResponseDTO.GetSnsEventRequest toGetSnsEventRequest(
+            SnsEvent snsEvent,
+            List<Participant> participantList,
+            List<Winner> winnerList
+    ) {
+        List<SnsEventResponseDTO.ParticipantResponse> participantResponseList = participantList.stream()
+                .map(SnsEventConverter::toParticipantResponse)
+                .collect(Collectors.toList());
+        List<SnsEventResponseDTO.WinnerResponse> winnerResponseList = winnerList.stream()
+                .map(SnsEventConverter::toWinnerResponse)
+                .collect(Collectors.toList());
+
+        return SnsEventResponseDTO.GetSnsEventRequest.builder()
+                .title(snsEvent.getTitle())
+                .userName(snsEvent.getCreator().getName())
+                .updatedAt(snsEvent.getUpdatedAt())
+                .participantList(participantResponseList)
+                .winnerList(winnerResponseList)
+                .snsLink(snsEvent.getSnsLink())
+                .build();
+    }
+
+    public static SnsEventResponseDTO.ParticipantResponse toParticipantResponse(Participant participant) {
+        return SnsEventResponseDTO.ParticipantResponse.builder()
+                .account(participant.getNickname())
+                .build();
+    }
+
+    public static SnsEventResponseDTO.WinnerResponse toWinnerResponse(Winner winner) {
+        return SnsEventResponseDTO.WinnerResponse.builder()
+                .account(winner.getNickname())
                 .build();
     }
 }
