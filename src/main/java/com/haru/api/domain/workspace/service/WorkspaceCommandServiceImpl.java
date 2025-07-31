@@ -27,10 +27,12 @@ import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceInvitationHandler;
 import com.haru.api.infra.mail.EmailSender;
+import com.haru.api.infra.s3.AmazonS3Manager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +52,8 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     private final MoodTrackerRepository moodTrackerRepository;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
 
+    private final AmazonS3Manager amazonS3Manager;
+
     private final EmailSender emailSender;
 
     @Value("${invite-url}")
@@ -57,19 +61,24 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
     @Transactional
     @Override
-    public WorkspaceResponseDTO.Workspace createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request) {
+    public WorkspaceResponseDTO.Workspace createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request, MultipartFile image) {
 
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        // workspace 생성 및 저장
+        String imageUrl = null;
+
+        if (image != null) {
+            // s3에 사진 추가하는 메서드
+            String path = amazonS3Manager.generateKeyName("/workspace/image", UUID.randomUUID());
+            imageUrl = amazonS3Manager.uploadFile(path, image);
+        }
+
+        // workspace entity 생성
         Workspace workspace = workspaceRepository.save(Workspace.builder()
-                .title(request.getName())
+                .title(request.getTitle())
+                .imageUrl(imageUrl)
                 .build());
-
-        // s3에 사진 추가하는 메서드
-
-        // request로 받은 이메일로 초대 메일 전송하는 메서드
 
         // users_workspaces 테이블에 생성자 정보 저장
         userWorkspaceRepository.save(UserWorkspace.builder()
@@ -78,12 +87,12 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
                 .auth(Auth.ADMIN)
                 .build());
 
-        return WorkspaceConverter.toWorkspaceDTO(workspaceRepository.save(workspace));
+        return WorkspaceConverter.toWorkspaceDTO(workspace);
     }
 
     @Transactional
     @Override
-    public WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceId, WorkspaceRequestDTO.WorkspaceUpdateRequest request) {
+    public WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceId, WorkspaceRequestDTO.WorkspaceUpdateRequest request, MultipartFile image) {
 
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
@@ -97,7 +106,15 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         if(userWorkspace.getAuth() != Auth.ADMIN)
             throw new WorkspaceHandler(ErrorStatus.WORKSPACE_MODIFY_NOT_ALLOWED);
 
+        // 제목 수정
         foundWorkspace.updateTitle(request.getTitle());
+
+        // 이미지 수정
+        if (image != null) {
+            String path = amazonS3Manager.generateKeyName("/workspace/image", UUID.randomUUID());
+            String imageUrl = amazonS3Manager.uploadFile(path, image);
+            foundWorkspace.updateImageUrl(imageUrl);
+        }
 
         return WorkspaceConverter.toWorkspaceDTO(foundWorkspace);
     }
