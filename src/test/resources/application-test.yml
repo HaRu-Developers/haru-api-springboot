@@ -36,3 +36,8 @@ cloud:
       secretKey: dummy-secret
 
 invite-url: invite-url
+
+instagram:
+  client-id: dummy-client-id
+  client-secret: dummy-client-secret
+  redirect-uri: dummy-redirect-uri
