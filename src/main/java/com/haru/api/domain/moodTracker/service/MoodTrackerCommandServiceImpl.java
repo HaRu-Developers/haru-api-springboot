@@ -78,10 +78,10 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             surveyQuestionRepository.save(question);
 
             if (questionDTO.getType() == MULTIPLE_CHOICE) {
-                List<MultipleChoice> choices = MoodTrackerConverter.toMultipleChoices(questionDTO.getOptions(), question);
+                List<MultipleChoice> choices = MoodTrackerConverter.toMultipleChoiceList(questionDTO.getOptions(), question);
                 multipleChoiceRepository.saveAll(choices);
             } else if (questionDTO.getType() == CHECKBOX_CHOICE) {
-                List<CheckboxChoice> choices = MoodTrackerConverter.toCheckboxChoices(questionDTO.getOptions(), question);
+                List<CheckboxChoice> choices = MoodTrackerConverter.toCheckboxChoiceList(questionDTO.getOptions(), question);
                 checkboxChoiceRepository.saveAll(choices);
             }
         }
@@ -89,7 +89,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         // Redis Queue에 스케쥴링 추가
         redisReportProducer.scheduleReport(moodTracker.getId(), moodTracker.getDueDate());
 
-        return MoodTrackerConverter.toCreateResult(moodTracker, hashIdUtil);
+        return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
     }
 
     /**
@@ -208,7 +208,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
                     // 체크박스 선택지 엔티티 목록 조회 후 추가
                     List<CheckboxChoice> foundCheckboxChoices = checkboxChoiceRepository.findAllById(dto.getCheckboxChoiceIdList());
                     checkboxChoiceAnswers.addAll(
-                            MoodTrackerConverter.toCheckboxChoiceAnswers(foundCheckboxChoices)
+                            MoodTrackerConverter.toCheckboxChoiceAnswerList(foundCheckboxChoices)
                     );
                 }
                 case SUBJECTIVE -> {

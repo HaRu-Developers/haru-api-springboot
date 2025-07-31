@@ -53,14 +53,6 @@ public class MoodTracker extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String report; // 리포트
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(
-            name = "mood_tracker_suggestions",
-            joinColumns = @JoinColumn(name = "mood_tracker_id")
-    )
-    @Column(name = "suggestion", columnDefinition = "TEXT")
-    private List<String> suggestions = new ArrayList<>();
-
     @Min(0)
     private Integer respondentsNum; // 답변자 수
 
