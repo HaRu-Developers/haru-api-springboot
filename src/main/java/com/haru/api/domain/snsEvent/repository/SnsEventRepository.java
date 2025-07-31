@@ -20,7 +20,7 @@ public interface SnsEventRepository extends JpaRepository<SnsEvent, Long> {
             "FROM UserDocumentLastOpened  udlo " +
             "JOIN SnsEvent se ON udlo.id.documentId = se.id " +
             "WHERE udlo.id.documentType = 'SNS_EVENT_ASSISTANT' AND udlo.user.id = :userId " +
-            "AND se.title LIKE %:title%")
+            "AND (:title IS NULL OR :title = '' OR se.title LIKE %:title%)")
     List<WorkspaceResponseDTO.Document> findRecentDocumentsByTitle(Long userId, String title);
 
     List<SnsEvent> findAllByWorkspaceId(Long workspaceId);

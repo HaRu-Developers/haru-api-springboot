@@ -143,4 +143,20 @@ public class WorkspaceController {
         return ApiResponse.onSuccess(null);
     }
 
+    @Operation(
+            summary = "사이드바 최근 문서 조회",
+            description = "# [v1.0 (2025-07-31)](https://www.notion.so/22a5da7802c58014b70fce5cde93e3f2?pvs=25)" +
+                    " 사이드바 최근 문서 조회 API 입니다. jwt 토큰을 헤더에 넣어주세요"
+    )
+    @GetMapping("/{workspaceId}/sidebar")
+    public ApiResponse<WorkspaceResponseDTO.DocumentWithoutLastOpenedList> getSidebar(
+            @PathVariable Long workspaceId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        WorkspaceResponseDTO.DocumentWithoutLastOpenedList documentWithoutLastOpenedList = workspaceQueryService.getDocumentWithoutLastOpenedList(userId, workspaceId);
+
+        return ApiResponse.onSuccess(documentWithoutLastOpenedList);
+    }
+
 }
