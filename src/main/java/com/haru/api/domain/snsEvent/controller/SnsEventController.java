@@ -3,6 +3,7 @@ package com.haru.api.domain.snsEvent.controller;
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
 import com.haru.api.domain.snsEvent.service.SnsEventCommandService;
+import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,61 @@ public class SnsEventController {
     ) {
         return ApiResponse.onSuccess(
                 snsEventCommandService.createSnsEvent(workspaceId, request)
+        );
+    }
+
+    @Operation(
+            summary = "SNS 이벤트명 수정 API",
+            description = "SNS 이벤트명 수정 API입니다. Header에 access token을 넣고 Path Variable에는 snsEvnetId를 Request Body에 SNS 이벤트 수정 정보(title)를 담아 요청해주세요."
+    )
+    @PatchMapping("/{snsEvnetId}")
+    public ApiResponse<?> updateSnsEventTitle(
+            @PathVariable Long snsEvnetId,
+            @RequestBody SnsEventRequestDTO.UpdateSnsEventRequest request
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        snsEventCommandService.updateSnsEventTitle(userId, snsEvnetId, request);
+        return ApiResponse.onSuccess("");
+    }
+
+    @Operation(
+            summary = "SNS 이벤트 삭제 API",
+            description = "SNS 이벤트 삭제 API입니다. Header에 access token을 넣고 Path Variable에는 삭제할 SNS Event의 snsEvnetId를 담아 요청해주세요."
+    )
+    @DeleteMapping("/{snsEvnetId}")
+    public ApiResponse<?> deleteSnsEvent(
+            @PathVariable Long snsEvnetId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        snsEventCommandService.deleteSnsEvent(userId, snsEvnetId);
+        return ApiResponse.onSuccess("");
+    }
+
+    @Operation(
+            summary = "SNS 이벤트 리스트 조회 API",
+            description = "SNS 이벤트 리스트 조회 API입니다. Header에 access token을 넣고 Path Variable에는 workspaceId를 넣어 요청해주세요."
+    )
+    @GetMapping("/{workspaceId}/list")
+    public ApiResponse<SnsEventResponseDTO.GetSnsEventListRequest> getSnsEventList(
+            @PathVariable Long workspaceId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.onSuccess(
+                snsEventCommandService.getSnsEventList(userId, workspaceId)
+        );
+    }
+
+    @Operation(
+            summary = "SNS 이벤트 조회 API",
+            description = "SNS 이벤트 조회 API입니다. Header에 access token을 넣고 Path Variable에는 snsEventId를 넣어 요청해주세요."
+    )
+    @GetMapping("/{snsEventId}")
+    public ApiResponse<SnsEventResponseDTO.GetSnsEventRequest> getSnsEvent(
+            @PathVariable Long snsEventId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.onSuccess(
+                snsEventCommandService.getSnsEvent(userId, snsEventId)
         );
     }
 }

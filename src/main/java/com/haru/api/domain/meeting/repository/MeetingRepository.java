@@ -21,10 +21,10 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
             "mt.title, " +
             "udlo.id.documentType, " +
             "udlo.lastOpened) " +
-            "FROM UserDocumentLastOpened  udlo " +
+            "FROM UserDocumentLastOpened udlo " +
             "JOIN Meeting mt ON udlo.id.documentId = mt.id " +
             "WHERE udlo.id.documentType = 'AI_MEETING_MANAGER' AND udlo.user.id = :userId " +
-            "AND mt.title LIKE %:title%")
+            "AND (:title IS NULL OR :title = '' OR mt.title LIKE %:title%)")
     List<WorkspaceResponseDTO.Document> findRecentDocumentsByTitle(Long userId, String title);
 
 

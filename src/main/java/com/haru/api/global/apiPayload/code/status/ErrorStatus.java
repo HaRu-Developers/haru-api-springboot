@@ -32,6 +32,7 @@ public enum ErrorStatus implements BaseErrorCode {
     EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "WORKSPACE4004", "초대장의 이메일과 현재 유저의 이메일이 일치하지 않습니다."),
     ALREADY_ACCEPTED(HttpStatus.BAD_REQUEST, "WORKSPACE4005", "이미 초대가 수락된 초대장입니다."),
     NOT_BELONG_TO_WORKSPACE(HttpStatus.UNAUTHORIZED, "WORKSPACE4006", "해당 워크스페이스에 속해있지 않습니다."),
+    WORKSPACE_CREATOR_NOT_FOUND(HttpStatus.BAD_REQUEST, "WORKSPACE4007", "워크스페이스 생성자를 찾을 수 없습니다."),
 
     // UserWorkspace 관련 에러
     USER_WORKSPACE_NOT_FOUND(HttpStatus.NOT_FOUND, "USERWORKSPACE4001", "해당 유저가 해당 워크스페이스에 속해있지 않습니다."),
@@ -53,6 +54,8 @@ public enum ErrorStatus implements BaseErrorCode {
     MOOD_TRACKER_MODIFY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "MOODTRACKER4002", "분위기 트래커에 권한이 없습니다."),
     SURVEY_QUESTION_NOT_FOUND(HttpStatus.BAD_REQUEST, "MOODTRACKER4003", "분위기 트래커 설문에 없는 질문입니다."),
     SURVEY_ANSWER_REQUIRED(HttpStatus.BAD_REQUEST, "MOODTRACKER4004", "분위기 트래커 설문의 필수 응답이 누락되었습니다."),
+    MOOD_TRACKER_NOT_FINISHED(HttpStatus.BAD_REQUEST, "MOODTRACKER4005", "분위기 트래커 설문 마감일 전입니다."),
+    MOOD_TRACKER_ACCESS_DENIED(HttpStatus.BAD_REQUEST, "MOODTRACKER4006", "분위기 트래커 조회 권한이 없습니다."),
 
     // 메일 관련 에러
     MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다."),
@@ -63,7 +66,8 @@ public enum ErrorStatus implements BaseErrorCode {
     SNS_EVENT_INSTAGRAM_API_ERROR(HttpStatus.BAD_REQUEST, "SNS_EVENT4003", "인스타그램 API 호출에 실패했습니다."),
     SNS_EVENT_INSTAGRAM_API_NO_MEDIA(HttpStatus.BAD_REQUEST, "SNS_EVENT4004", "인스타그램 게시물에 미디어가 없습니다."),
     SNS_EVENT_INSTAGRAM_API_NO_COMMENT(HttpStatus.BAD_REQUEST, "SNS_EVENT4005", "인스타그램 게시물에 댓글이 없습니다."),
-    SNS_EVENT_NO_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "SNS_EVENT4006", "인스타그램 액세스 토큰이 없습니다.");
+    SNS_EVENT_NO_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "SNS_EVENT4006", "인스타그램 액세스 토큰이 없습니다."),
+    SNS_EVENT_NO_AUTHORITY(HttpStatus.UNAUTHORIZED, "SNS_EVENT4007", "인스타그램 이벤트에 대한 수정 권한이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
