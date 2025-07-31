@@ -8,6 +8,16 @@ spring:
     host: dummy
     port: 1025
     username: dumb
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: dummy-client-id
+            client-secret: dummy-client-secret
+            scope:
+              - email
+              - profile
 
 hashid:
   salt: dummy-salt
