@@ -40,7 +40,7 @@ public class UserCommandServiceImpl implements UserCommandService{
     private final RedisTemplate<String, String> redisTemplate;
 
     @Override
-    public void signUp(UserRequestDTO.SignUpRequest request) {
+    public User signUp(UserRequestDTO.SignUpRequest request) {
         String password = passwordEncoder.encode(request.getPassword());
         // 이메일 중복 확인
         User foundUser = userRepository.findByEmail(request.getEmail()).orElse(null);
@@ -49,6 +49,7 @@ public class UserCommandServiceImpl implements UserCommandService{
         } else {
             User user = UserConverter.toUsers(request, password);
             userRepository.save(user);
+            return user;
         }
     }
 

@@ -22,20 +22,13 @@ public class UserDocumentLastOpened {
     @EmbeddedId
     private UserDocumentId id;
 
-    @Column(name = "document_id", nullable = false, insertable = false, updatable = false)
-    private Long documentId;
-
     @MapsId("userId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false,
         foreignKey = @ForeignKey(name = "fk_user_document_user"))
     private User user;
 
-    @Column(name = "last_opened", nullable = false)
+    @Column(name = "last_opened")
     private LocalDateTime lastOpened;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "document_type", length = 20, nullable = false)
-    private DocumentType documentType;
 
 }

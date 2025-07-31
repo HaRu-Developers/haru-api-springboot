@@ -51,4 +51,8 @@ public class Workspace extends BaseEntity {
     public void updateTitle(String title) {
         this.title = title;
     }
+
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }
