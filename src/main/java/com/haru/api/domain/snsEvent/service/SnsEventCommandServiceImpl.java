@@ -201,18 +201,34 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
     @Override
     @Transactional
-    public void updateSnsEvent(Long userId, Long snsEvnetId, SnsEventRequestDTO.UpdateSnsEventRequest request) {
+    public void updateSnsEventTitle(Long userId, Long snsEvnetId, SnsEventRequestDTO.UpdateSnsEventRequest request) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
         SnsEvent foundSnsEvent = snsEventRepository.findById(snsEvnetId)
                 .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
-                .orElseThrow(() -> new MemberHandler(NOT_BELONG_TO_WORKSPACE));
+                .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
         // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 수정 가능)
         if (!foundUserWorkspace.getUser().getId().equals(foundUser.getId()) || !foundSnsEvent.getCreator().getId().equals(foundUser.getId())) {
             throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
         }
         foundSnsEvent.updateTitle(request.getTitle());
         snsEventRepository.save(foundSnsEvent);
+    }
+
+    @Override
+    @Transactional
+    public void deleteSnsEvent(Long userId, Long snsEvnetId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEvnetId)
+                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
+                .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
+        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)
+        if (!foundUserWorkspace.getUser().getId().equals(foundUser.getId()) || !foundSnsEvent.getCreator().getId().equals(foundUser.getId())) {
+            throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
+        }
+        snsEventRepository.delete(foundSnsEvent);
     }
 }
