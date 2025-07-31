@@ -66,9 +66,13 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        // s3에 사진 추가하는 메서드
-        String path = amazonS3Manager.generateKeyName("/workspace/image", UUID.randomUUID());
-        String imageUrl = amazonS3Manager.uploadFile(path, image);
+        String imageUrl = null;
+
+        if (image != null) {
+            // s3에 사진 추가하는 메서드
+            String path = amazonS3Manager.generateKeyName("/workspace/image", UUID.randomUUID());
+            imageUrl = amazonS3Manager.uploadFile(path, image);
+        }
 
         // workspace entity 생성
         Workspace workspace = workspaceRepository.save(Workspace.builder()
@@ -88,7 +92,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
     @Transactional
     @Override
-    public WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceId, WorkspaceRequestDTO.WorkspaceUpdateRequest request) {
+    public WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceId, WorkspaceRequestDTO.WorkspaceUpdateRequest request, MultipartFile image) {
 
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
@@ -102,7 +106,15 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         if(userWorkspace.getAuth() != Auth.ADMIN)
             throw new WorkspaceHandler(ErrorStatus.WORKSPACE_MODIFY_NOT_ALLOWED);
 
+        // 제목 수정
         foundWorkspace.updateTitle(request.getTitle());
+
+        // 이미지 수정
+        if (image != null) {
+            String path = amazonS3Manager.generateKeyName("/workspace/image", UUID.randomUUID());
+            String imageUrl = amazonS3Manager.uploadFile(path, image);
+            foundWorkspace.updateImageUrl(imageUrl);
+        }
 
         return WorkspaceConverter.toWorkspaceDTO(foundWorkspace);
     }
