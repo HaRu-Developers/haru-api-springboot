@@ -49,5 +49,5 @@ invite-url: invite-url
 
 instagram:
   client-id: "dummy-client-id"
-  client-secret: "dummy-client-se/cret"
+  client-secret: "dummy-client-secret"
   redirect-uri: "dummy-redirect-uri"
