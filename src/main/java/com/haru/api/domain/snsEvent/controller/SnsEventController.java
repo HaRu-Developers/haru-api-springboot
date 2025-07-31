@@ -31,6 +31,33 @@ public class SnsEventController {
     }
 
     @Operation(
+            summary = "SNS 이벤트명 수정 API",
+            description = "SNS 이벤트명 수정 API입니다. Header에 access token을 넣고 Path Variable에는 snsEvnetId를 Request Body에 SNS 이벤트 수정 정보(title)를 담아 요청해주세요."
+    )
+    @PatchMapping("/{snsEvnetId}")
+    public ApiResponse<?> updateSnsEventTitle(
+            @PathVariable Long snsEvnetId,
+            @RequestBody SnsEventRequestDTO.UpdateSnsEventRequest request
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        snsEventCommandService.updateSnsEventTitle(userId, snsEvnetId, request);
+        return ApiResponse.onSuccess("");
+    }
+
+    @Operation(
+            summary = "SNS 이벤트 삭제 API",
+            description = "SNS 이벤트 삭제 API입니다. Header에 access token을 넣고 Path Variable에는 삭제할 SNS Event의 snsEvnetId를 담아 요청해주세요."
+    )
+    @DeleteMapping("/{snsEvnetId}")
+    public ApiResponse<?> deleteSnsEvent(
+            @PathVariable Long snsEvnetId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        snsEventCommandService.deleteSnsEvent(userId, snsEvnetId);
+        return ApiResponse.onSuccess("");
+    }
+
+    @Operation(
             summary = "SNS 이벤트 리스트 조회 API",
             description = "SNS 이벤트 리스트 조회 API입니다. Header에 access token을 넣고 Path Variable에는 workspaceId를 넣어 요청해주세요."
     )
