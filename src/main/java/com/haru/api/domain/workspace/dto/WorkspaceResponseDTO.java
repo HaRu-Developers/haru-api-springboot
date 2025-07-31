@@ -39,4 +39,18 @@ public class WorkspaceResponseDTO {
         private boolean isAlreadyRegistered;
         private Long workspaceId;
     }
+
+    @Getter
+    @Builder
+    public static class DocumentWithoutLastOpened {
+        private Long documentId;
+        private String title;
+        private DocumentType documentType;
+    }
+
+    @Getter
+    @Builder
+    public static class DocumentWithoutLastOpenedList {
+        private List<DocumentWithoutLastOpened> documents;
+    }
 }
