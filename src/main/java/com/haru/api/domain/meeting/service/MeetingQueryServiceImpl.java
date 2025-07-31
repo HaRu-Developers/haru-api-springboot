@@ -6,11 +6,15 @@ import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
+import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
+import com.haru.api.domain.userWorkspace.entity.enums.Auth;
+import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
+import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +31,7 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
     private final MeetingRepository meetingRepository;
     private final WorkspaceRepository workspaceRepository;
     private final UserRepository userRepository;
+    private final UserWorkspaceRepository userWorkspaceRepository;
 
     @Override
     public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, Long workspaceId) {
@@ -51,7 +56,16 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
         Meeting foundMeeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
+        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        return MeetingConverter.toGetMeetingProceedingResponse(foundUser, foundMeeting);
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
+                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+
+        Long adminUserId = userWorkspaceRepository.findAdminUserIdsByWorkspaceId(foundUserWorkspace.getId());
+        User foundAdminUser = userRepository.findById(adminUserId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        return MeetingConverter.toGetMeetingProceedingResponse(foundAdminUser, foundMeeting);
     }
 }
