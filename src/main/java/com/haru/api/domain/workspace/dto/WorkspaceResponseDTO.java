@@ -13,7 +13,7 @@ public class WorkspaceResponseDTO {
     @Builder
     public static class Workspace {
         private Long workspaceId;
-        private String name;
+        private String title;
         private String imageUrl;
     }
 
@@ -30,5 +30,13 @@ public class WorkspaceResponseDTO {
     @Builder
     public static class DocumentList {
         private List<Document> documents;
+    }
+
+    @Getter
+    @Builder
+    public static class InvitationAcceptResult {
+        private boolean isSuccess;
+        private boolean isAlreadyRegistered;
+        private Long workspaceId;
     }
 }

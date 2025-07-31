@@ -19,4 +19,9 @@ public class MeetingRequestDTO {
     public static class updateTitle {
         private String title;
     }
+
+    @Getter
+    public static class meetingProceedingRequest{
+        private String proceeding;
+    }
 }

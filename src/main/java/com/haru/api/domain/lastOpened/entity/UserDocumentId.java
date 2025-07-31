@@ -1,7 +1,10 @@
 package com.haru.api.domain.lastOpened.entity;
 
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -17,9 +20,15 @@ public class UserDocumentId implements Serializable {
     @Column(name = "document_id")
     private Long documentId;
 
-    public UserDocumentId(Long userId, Long documentId) {
+    @Column(name = "document_type")
+    @Enumerated(EnumType.STRING)
+    private DocumentType documentType;
+
+
+    public UserDocumentId(Long userId, Long documentId, DocumentType documentType) {
         this.userId = userId;
         this.documentId = documentId;
+        this.documentType = documentType;
     }
 
     @Override

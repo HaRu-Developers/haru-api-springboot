@@ -1,5 +1,6 @@
 package com.haru.api.domain.user.security;
 
+import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -9,6 +10,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import static com.haru.api.global.apiPayload.code.status.ErrorStatus.MEMBER_PASSWORD_NOT_MATCH;
 
 @Component
 @RequiredArgsConstructor
@@ -24,7 +27,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
         String password = authentication.getCredentials().toString();
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {
-            throw new BadCredentialsException("Password가 일치하지 않습니다.");
+            throw new MemberHandler(MEMBER_PASSWORD_NOT_MATCH);
         }
 
         return new UsernamePasswordAuthenticationToken(userDetails, authentication.getCredentials(), userDetails.getAuthorities());
