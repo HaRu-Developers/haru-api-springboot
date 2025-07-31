@@ -1,5 +1,6 @@
 package com.haru.api.domain.moodTracker.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.haru.api.domain.moodTracker.entity.enums.QuestionType;
 import lombok.Builder;
@@ -22,7 +23,9 @@ public class MoodTrackerResponseDTO {
     public static class Preview {
         private String moodTrackerHashedId;
         private String title;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime updatedAt;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime dueDate;
         private Integer respondentsNum;
     }
@@ -39,7 +42,9 @@ public class MoodTrackerResponseDTO {
         private String moodTrackerHashedId;
         private String title;
         private String creator;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime updatedAt;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime dueDate;
         private Integer respondentsNum;
     }
