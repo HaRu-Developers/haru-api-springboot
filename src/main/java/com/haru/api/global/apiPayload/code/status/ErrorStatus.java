@@ -63,7 +63,8 @@ public enum ErrorStatus implements BaseErrorCode {
     SNS_EVENT_INSTAGRAM_API_ERROR(HttpStatus.BAD_REQUEST, "SNS_EVENT4003", "인스타그램 API 호출에 실패했습니다."),
     SNS_EVENT_INSTAGRAM_API_NO_MEDIA(HttpStatus.BAD_REQUEST, "SNS_EVENT4004", "인스타그램 게시물에 미디어가 없습니다."),
     SNS_EVENT_INSTAGRAM_API_NO_COMMENT(HttpStatus.BAD_REQUEST, "SNS_EVENT4005", "인스타그램 게시물에 댓글이 없습니다."),
-    SNS_EVENT_NO_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "SNS_EVENT4006", "인스타그램 액세스 토큰이 없습니다.");
+    SNS_EVENT_NO_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "SNS_EVENT4006", "인스타그램 액세스 토큰이 없습니다."),
+    SNS_EVENT_NO_AUTHORITY(HttpStatus.UNAUTHORIZED, "SNS_EVENT4007", "인스타그램 이벤트에 대한 수정 권한이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

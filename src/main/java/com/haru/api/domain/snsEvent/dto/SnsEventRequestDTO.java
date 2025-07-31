@@ -27,4 +27,12 @@ public class SnsEventRequestDTO {
         private Boolean isTaged;
         private Integer tageCount;
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateSnsEventRequest {
+        private String title;
+    }
 }

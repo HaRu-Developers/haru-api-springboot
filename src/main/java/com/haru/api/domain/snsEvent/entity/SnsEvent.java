@@ -55,4 +55,8 @@ public class SnsEvent extends BaseEntity {
         }
         this.workspace.getSnsEventList().add(this);
     }
+
+    public void updateTitle(String title) {
+        this.title = title;
+    }
 }
