@@ -3,6 +3,7 @@ package com.haru.api.domain.snsEvent.controller;
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
 import com.haru.api.domain.snsEvent.service.SnsEventCommandService;
+import com.haru.api.domain.snsEvent.service.SnsEventQueryService;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class SnsEventController {
 
     private final SnsEventCommandService snsEventCommandService;
+    private final SnsEventQueryService snsEventQueryService;
 
     @Operation(
             summary = "SNS 이벤트 생성 API",
@@ -67,7 +69,7 @@ public class SnsEventController {
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.onSuccess(
-                snsEventCommandService.getSnsEventList(userId, workspaceId)
+                snsEventQueryService.getSnsEventList(userId, workspaceId)
         );
     }
 
@@ -81,7 +83,7 @@ public class SnsEventController {
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.onSuccess(
-                snsEventCommandService.getSnsEvent(userId, snsEventId)
+                snsEventQueryService.getSnsEvent(userId, snsEventId)
         );
     }
 }
