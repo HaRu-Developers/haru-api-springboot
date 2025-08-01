@@ -10,7 +10,6 @@ import com.haru.api.domain.workspace.service.WorkspaceQueryService;
 import com.haru.api.global.apiPayload.ApiResponse;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.view.RedirectView;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -149,14 +149,33 @@ public class WorkspaceController {
                     " 사이드바 최근 문서 조회 API 입니다. jwt 토큰을 헤더에 넣어주세요"
     )
     @GetMapping("/{workspaceId}/sidebar")
-    public ApiResponse<WorkspaceResponseDTO.DocumentWithoutLastOpenedList> getSidebar(
+    public ApiResponse<WorkspaceResponseDTO.DocumentSidebarList> getSidebar(
             @PathVariable Long workspaceId
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
 
-        WorkspaceResponseDTO.DocumentWithoutLastOpenedList documentWithoutLastOpenedList = workspaceQueryService.getDocumentWithoutLastOpenedList(userId, workspaceId);
+        WorkspaceResponseDTO.DocumentSidebarList documentSidebarList = workspaceQueryService.getDocumentWithoutLastOpenedList(userId, workspaceId);
 
-        return ApiResponse.onSuccess(documentWithoutLastOpenedList);
+        return ApiResponse.onSuccess(documentSidebarList);
     }
+
+    @Operation(
+            summary = "캘린더 조회",
+            description = "# [v1.0 (2025-08-01)](https://www.notion.so/2265da7802c58072bb65d4b17f6ef785?v=2265da7802c5816ab095000cc1ddadca&pvs=25)" +
+                    " 캘린더 조회 API 입니다. jwt 토큰을 헤더에 넣고, path variable에 workspaceid, query string으로 시작 날짜, 종료 날짜를 넘겨주세요"
+    )
+    @GetMapping("/{workspaceId}/calendar")
+    public ApiResponse<WorkspaceResponseDTO.DocumentCalendarList> getCalendar(
+            @PathVariable Long workspaceId,
+            @RequestParam("start")LocalDate startDate,
+            @RequestParam("end") LocalDate endDate
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        WorkspaceResponseDTO.DocumentCalendarList documentCalendarList = workspaceQueryService.getDocumentForCalendar(userId, workspaceId, startDate, endDate);
+
+        return ApiResponse.onSuccess(documentCalendarList);
+    }
+
 
 }
