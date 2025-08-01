@@ -28,17 +28,23 @@ public class WorkspaceConverter {
                 .build();
     }
 
-    public static WorkspaceResponseDTO.DocumentWithoutLastOpened toDocumentWithoutLastOpened(WorkspaceResponseDTO.Document document) {
-        return WorkspaceResponseDTO.DocumentWithoutLastOpened.builder()
+    public static WorkspaceResponseDTO.DocumentSidebar toDocumentWithoutLastOpened(WorkspaceResponseDTO.Document document) {
+        return WorkspaceResponseDTO.DocumentSidebar.builder()
                 .documentId(document.getDocumentId())
                 .documentType(document.getDocumentType())
                 .title(document.getTitle())
                 .build();
     }
 
-    public static WorkspaceResponseDTO.DocumentWithoutLastOpenedList toDocumentWithoutLastOpenedList(List<WorkspaceResponseDTO.DocumentWithoutLastOpened> documentList) {
-        return WorkspaceResponseDTO.DocumentWithoutLastOpenedList.builder()
+    public static WorkspaceResponseDTO.DocumentSidebarList toDocumentWithoutLastOpenedList(List<WorkspaceResponseDTO.DocumentSidebar> documentList) {
+        return WorkspaceResponseDTO.DocumentSidebarList.builder()
                 .documents(documentList)
+                .build();
+    }
+
+    public static WorkspaceResponseDTO.DocumentCalendarList toDocumentCalendarList(List<WorkspaceResponseDTO.DocumentCalendar> documentList) {
+        return WorkspaceResponseDTO.DocumentCalendarList.builder()
+                .documentList(documentList)
                 .build();
     }
 }

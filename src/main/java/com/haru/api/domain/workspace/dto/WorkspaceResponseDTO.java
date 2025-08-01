@@ -1,5 +1,6 @@
 package com.haru.api.domain.workspace.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,7 +43,7 @@ public class WorkspaceResponseDTO {
 
     @Getter
     @Builder
-    public static class DocumentWithoutLastOpened {
+    public static class DocumentSidebar {
         private Long documentId;
         private String title;
         private DocumentType documentType;
@@ -50,7 +51,23 @@ public class WorkspaceResponseDTO {
 
     @Getter
     @Builder
-    public static class DocumentWithoutLastOpenedList {
-        private List<DocumentWithoutLastOpened> documents;
+    public static class DocumentSidebarList {
+        private List<DocumentSidebar> documents;
+    }
+
+    @Getter
+    @Builder
+    public static class DocumentCalendar {
+        private Long documentId;
+        private String title;
+        private DocumentType documentType;
+        @JsonFormat(pattern = "yyyy-MM-dd")
+        private LocalDateTime createdAt;
+    }
+
+    @Getter
+    @Builder
+    public static class DocumentCalendarList {
+        private List<DocumentCalendar> documentList;
     }
 }
