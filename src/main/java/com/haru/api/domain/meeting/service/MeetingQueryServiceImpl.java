@@ -1,5 +1,6 @@
 package com.haru.api.domain.meeting.service;
 
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.meeting.entity.Meeting;
@@ -7,10 +8,10 @@ import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
-import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.global.annotation.TrackLastOpened;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
@@ -49,6 +50,7 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
     }
 
     @Override
+    @TrackLastOpened(type = DocumentType.AI_MEETING_MANAGER)
     public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, Long meetingId){
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
