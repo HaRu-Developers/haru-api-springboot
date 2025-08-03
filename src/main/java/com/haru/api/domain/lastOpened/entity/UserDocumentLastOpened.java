@@ -1,6 +1,5 @@
 package com.haru.api.domain.lastOpened.entity;
 
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,7 +9,11 @@ import org.hibernate.annotations.DynamicUpdate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_document_last_opened")
+@Table(name = "user_document_last_opened",
+    indexes = {
+        @Index(name = "idx_workspace_user_last_opened",
+               columnList = "workspace_id, user_id, last_opened DESC")
+})
 @Getter
 @DynamicUpdate
 @DynamicInsert
