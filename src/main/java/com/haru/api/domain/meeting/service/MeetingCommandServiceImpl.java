@@ -1,5 +1,9 @@
 package com.haru.api.domain.meeting.service;
 
+import com.haru.api.domain.lastOpened.entity.UserDocumentId;
+import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
@@ -16,10 +20,7 @@ import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
-import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
-import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
-import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
-import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.infra.api.client.ChatGPTClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +56,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final KeywordRepository keywordRepository;
     private final MeetingKeywordRepository meetingKeywordRepository;
     private final ChatGPTClient chatGPTClient;
+    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
 
     @Override
     @Transactional
@@ -133,6 +135,12 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         meeting.updateTitle(newTitle);
 
+        UserDocumentId userDocumentId = new UserDocumentId(userId, meetingId, DocumentType.AI_MEETING_MANAGER);
+
+        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
+                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+
+        foundUserDocumentLastOpened.updateTitle(newTitle);
     }
 
     @Override

@@ -44,4 +44,8 @@ public class UserDocumentLastOpened {
         this.lastOpened = lastOpened;
     }
 
+    public void updateTitle(String title) {
+        this.title = title;
+    }
+
 }
