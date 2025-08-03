@@ -16,16 +16,6 @@ import java.util.Optional;
 public interface MeetingRepository extends JpaRepository<Meeting, Long> {
     List<Meeting> findByWorkspaceOrderByUpdatedAtDesc(Workspace workspace);
 
-    @Query("SELECT new com.haru.api.domain.workspace.dto.WorkspaceResponseDTO$Document(" +
-            "udlo.id.documentId, " +
-            "udlo.title, " +
-            "udlo.id.documentType, " +
-            "udlo.lastOpened) " +
-            "FROM UserDocumentLastOpened udlo " +
-            "WHERE udlo.workspaceId = :workspaceId AND udlo.id.documentType = 'AI_MEETING_MANAGER' AND udlo.user.id = :userId " +
-            "AND (:title IS NULL OR :title = '' OR udlo.title LIKE %:title%)")
-    List<WorkspaceResponseDTO.Document> findRecentDocumentsByTitle(Long workspaceId, Long userId, String title);
-
     @Query("SELECT m.workspace FROM Meeting m WHERE m.id = :meetingId")
     Optional<Workspace> findWorkspaceByMeetingId(@Param("meetingId") Long meetingId);
 

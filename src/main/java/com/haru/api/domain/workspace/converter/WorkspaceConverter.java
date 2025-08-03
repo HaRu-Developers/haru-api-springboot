@@ -15,7 +15,16 @@ public class WorkspaceConverter {
                 .build();
     }
 
-    public static WorkspaceResponseDTO.DocumentList toDocumentsDTO(List<WorkspaceResponseDTO.Document> documentList) {
+    public static WorkspaceResponseDTO.Document toDocument(UserDocumentLastOpened document) {
+        return WorkspaceResponseDTO.Document.builder()
+                .documentId(document.getId().getDocumentId())
+                .title(document.getTitle())
+                .documentType(document.getId().getDocumentType())
+                .lastOpened(document.getLastOpened())
+                .build();
+    }
+
+    public static WorkspaceResponseDTO.DocumentList toDocumentList(List<WorkspaceResponseDTO.Document> documentList) {
         return WorkspaceResponseDTO.DocumentList.builder()
                 .documents(documentList)
                 .build();
