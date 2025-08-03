@@ -122,6 +122,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         foundMoodTracker.updateTitle(request.getTitle());
 
+        // last opened title 수정
         UserDocumentId userDocumentId = new UserDocumentId(userId, moodTrackerId, DocumentType.TEAM_MOOD_TRACKER);
 
         UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
@@ -156,6 +157,14 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
         moodTrackerRepository.delete(foundMoodTracker);
+
+        // last opened 테이블 튜플 삭제
+        UserDocumentId userDocumentId = new UserDocumentId(userId, moodTrackerId, DocumentType.TEAM_MOOD_TRACKER);
+
+        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
+                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+
+        userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
     }
 
     /**

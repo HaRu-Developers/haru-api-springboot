@@ -135,6 +135,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         meeting.updateTitle(newTitle);
 
+        // last opened title 수정
         UserDocumentId userDocumentId = new UserDocumentId(userId, meetingId, DocumentType.AI_MEETING_MANAGER);
 
         UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
@@ -163,6 +164,14 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         }
 
         meetingRepository.delete(foundMeeting);
+
+        // last opened 테이블 튜플 삭제
+        UserDocumentId userDocumentId = new UserDocumentId(userId, meetingId, DocumentType.AI_MEETING_MANAGER);
+
+        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
+                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+
+        userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
     }
 
     @Override

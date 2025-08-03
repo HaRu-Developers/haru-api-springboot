@@ -222,6 +222,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         foundSnsEvent.updateTitle(request.getTitle());
         snsEventRepository.save(foundSnsEvent);
 
+        // last opened title 수정
         UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
 
         UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
@@ -244,6 +245,14 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
         }
         snsEventRepository.delete(foundSnsEvent);
+
+        // last opened 테이블 튜플 삭제
+        UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
+
+        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
+                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+
+        userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
     }
 
 }
