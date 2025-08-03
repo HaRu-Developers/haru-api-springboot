@@ -16,6 +16,7 @@ import java.util.Objects;
 public class UserDocumentId implements Serializable {
 
     @Column(name = "user_id")
+    @Getter
     private Long userId;
 
     @Column(name = "document_id")
@@ -24,6 +25,7 @@ public class UserDocumentId implements Serializable {
 
     @Column(name = "document_type")
     @Enumerated(EnumType.STRING)
+    @Getter
     private DocumentType documentType;
 
 

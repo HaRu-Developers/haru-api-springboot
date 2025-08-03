@@ -28,6 +28,12 @@ public class UserDocumentLastOpened {
         foreignKey = @ForeignKey(name = "fk_user_document_user"))
     private User user;
 
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "workspace_id", nullable = false)
+    private Long workspaceId; // Workspace로 매핑하게 되면 추가적인 SELECT 쿼리 발생가능성 때문에 workspaceId만 저장하도록 설정
+
     @Column(name = "last_opened")
     private LocalDateTime lastOpened;
 

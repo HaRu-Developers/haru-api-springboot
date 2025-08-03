@@ -5,23 +5,24 @@ import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.entity.Workspace;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SnsEventRepository extends JpaRepository<SnsEvent, Long> {
 
     @Query("SELECT new com.haru.api.domain.workspace.dto.WorkspaceResponseDTO$Document(" +
             "udlo.id.documentId, " +
-            "se.title, " +
+            "udlo.title, " +
             "udlo.id.documentType, " +
             "udlo.lastOpened) " +
-            "FROM UserDocumentLastOpened  udlo " +
-            "JOIN SnsEvent se ON udlo.id.documentId = se.id " +
-            "WHERE se.workspace.id = :workspaceId AND udlo.id.documentType = 'SNS_EVENT_ASSISTANT' AND udlo.user.id = :userId " +
-            "AND (:title IS NULL OR :title = '' OR se.title LIKE %:title%)")
+            "FROM UserDocumentLastOpened udlo " +
+            "WHERE udlo.workspaceId = :workspaceId AND udlo.id.documentType = 'SNS_EVENT_ASSISTANT' AND udlo.user.id = :userId " +
+            "AND (:title IS NULL OR :title = '' OR udlo.title LIKE %:title%)")
     List<WorkspaceResponseDTO.Document> findRecentDocumentsByTitle(Long workspaceId, Long userId, String title);
 
     List<SnsEvent> findAllByWorkspaceId(Long workspaceId);
@@ -37,5 +38,6 @@ public interface SnsEventRepository extends JpaRepository<SnsEvent, Long> {
             "WHERE se.workspace.id = :workspaceId " +
             "AND se.createdAt BETWEEN :startDate AND :endDate")
     List<WorkspaceResponseDTO.DocumentCalendar> findAllDocumentForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
+
 
 }

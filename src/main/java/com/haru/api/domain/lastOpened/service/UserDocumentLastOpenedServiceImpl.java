@@ -25,7 +25,7 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
 
     @Override
     @Transactional
-    public void updateLastOpened(Long userId, DocumentType documentType, Long documentId) {
+    public void updateLastOpened(Long userId, DocumentType documentType, Long documentId, Long workspaceId, String title) {
         UserDocumentId id = new UserDocumentId(userId, documentId, documentType);
 
         UserDocumentLastOpened record = userDocumentLastOpenedRepository.findById(id)
@@ -35,13 +35,15 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
                     return UserDocumentLastOpened.builder()
                             .id(id)
                             .user(foundUser)
+                            .workspaceId(workspaceId)
+                            .title(title)
                             .build();
                 });
 
         record.updateLastOpened(LocalDateTime.now());
         userDocumentLastOpenedRepository.save(record);
 
-        log.info("userDocumentLastOpened updated for userId: {}. documentId:{}", record.getUser().getId(), record.getId().getDocumentId());
+        log.info("userDocumentLastOpened updated for userId: {}, documentId:{}, workspaceId:{}, title:{}", record.getUser().getId(), record.getId().getDocumentId(), workspaceId, title);
     }
 
 }

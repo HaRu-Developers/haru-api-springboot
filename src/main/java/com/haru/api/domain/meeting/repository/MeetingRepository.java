@@ -18,15 +18,13 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
 
     @Query("SELECT new com.haru.api.domain.workspace.dto.WorkspaceResponseDTO$Document(" +
             "udlo.id.documentId, " +
-            "mt.title, " +
+            "udlo.title, " +
             "udlo.id.documentType, " +
             "udlo.lastOpened) " +
             "FROM UserDocumentLastOpened udlo " +
-            "JOIN Meeting mt ON udlo.id.documentId = mt.id " +
-            "WHERE mt.workspace.id = :workspaceId AND udlo.id.documentType = 'AI_MEETING_MANAGER' AND udlo.user.id = :userId " +
-            "AND (:title IS NULL OR :title = '' OR mt.title LIKE %:title%)")
+            "WHERE udlo.workspaceId = :workspaceId AND udlo.id.documentType = 'AI_MEETING_MANAGER' AND udlo.user.id = :userId " +
+            "AND (:title IS NULL OR :title = '' OR udlo.title LIKE %:title%)")
     List<WorkspaceResponseDTO.Document> findRecentDocumentsByTitle(Long workspaceId, Long userId, String title);
-
 
     @Query("SELECT m.workspace FROM Meeting m WHERE m.id = :meetingId")
     Optional<Workspace> findWorkspaceByMeetingId(@Param("meetingId") Long meetingId);
