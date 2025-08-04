@@ -105,12 +105,24 @@ public class UserCommandServiceImpl implements UserCommandService{
     @Transactional
     @Override
     public UserResponseDTO.User updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request) {
-        String name = request.getName();
-
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        foundUser.updateName(name);
+        // 이름 수정 요청이 있을 경우
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            foundUser.updateName(request.getName());
+        }
+
+        // 비밀번호 수정 요청이 있을 경우
+        if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+            // 1. 새로운 비밀번호가 이전 비밀번호와 동일한지 확인
+            if (passwordEncoder.matches(request.getPassword(), foundUser.getPassword())) {
+                throw new MemberHandler(ErrorStatus.SAME_WITH_OLD_PASSWORD);
+            }
+
+            // 2. 새로운 비밀번호로 업데이트
+            foundUser.updatePassword(passwordEncoder.encode(request.getPassword()));
+        }
 
         return UserConverter.toUserDTO(foundUser);
     }
