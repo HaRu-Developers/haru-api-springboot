@@ -235,6 +235,9 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         multipleChoiceAnswerRepository.saveAll(multipleChoiceAnswers);
         checkboxChoiceAnswerRepository.saveAll(checkboxChoiceAnswers);
         subjectiveAnswerRepository.saveAll(subjectiveAnswers);
+
+        // 답변자 수 증가
+        moodTrackerRepository.addRespondentsNum(moodTrackerId);
     }
 
     /**
