@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -15,13 +16,16 @@ import java.util.Objects;
 public class UserDocumentId implements Serializable {
 
     @Column(name = "user_id")
+    @Getter
     private Long userId;
 
     @Column(name = "document_id")
+    @Getter
     private Long documentId;
 
     @Column(name = "document_type")
     @Enumerated(EnumType.STRING)
+    @Getter
     private DocumentType documentType;
 
 

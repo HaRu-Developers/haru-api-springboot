@@ -3,6 +3,7 @@ package com.haru.api.domain.snsEvent.controller;
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
 import com.haru.api.domain.snsEvent.service.SnsEventCommandService;
+import com.haru.api.domain.snsEvent.service.SnsEventQueryService;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class SnsEventController {
 
     private final SnsEventCommandService snsEventCommandService;
+    private final SnsEventQueryService snsEventQueryService;
 
     @Operation(
             summary = "SNS 이벤트 생성 API",
@@ -67,13 +69,13 @@ public class SnsEventController {
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.onSuccess(
-                snsEventCommandService.getSnsEventList(userId, workspaceId)
+                snsEventQueryService.getSnsEventList(userId, workspaceId)
         );
     }
 
     @Operation(
             summary = "SNS 이벤트 조회 API",
-            description = "SNS 이벤트 조회 API입니다. Header에 access token을 넣고 Path Variable에는 snsEventId를 넣어 요청해주세요."
+            description = "[v1.0 (2025-08-04)] SNS 이벤트 조회 API입니다. Header에 access token을 넣고 Path Variable에는 snsEventId를 넣어 요청해주세요."
     )
     @GetMapping("/{snsEventId}")
     public ApiResponse<SnsEventResponseDTO.GetSnsEventRequest> getSnsEvent(
@@ -81,7 +83,7 @@ public class SnsEventController {
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.onSuccess(
-                snsEventCommandService.getSnsEvent(userId, snsEventId)
+                snsEventQueryService.getSnsEvent(userId, snsEventId)
         );
     }
 }

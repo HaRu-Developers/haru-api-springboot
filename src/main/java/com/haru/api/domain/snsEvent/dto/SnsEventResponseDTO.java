@@ -74,12 +74,14 @@ public class SnsEventResponseDTO {
     @AllArgsConstructor
     public static class GetSnsEventRequest {
         private String title;
-        private String userName;
+        private Long creatorId;
+        private String creatorName;
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime updatedAt;
         private List<ParticipantResponse> participantList;
         private List<WinnerResponse> winnerList;
         private String snsLink;
+        private Long workspaceId;
     }
 
     @Getter

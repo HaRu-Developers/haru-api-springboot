@@ -1,5 +1,6 @@
 package com.haru.api.domain.moodTracker.service;
 
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
@@ -13,6 +14,7 @@ import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.global.annotation.TrackLastOpened;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
@@ -76,6 +78,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
 
     @Override
     @Transactional(readOnly = true)
+    @TrackLastOpened(type = DocumentType.TEAM_MOOD_TRACKER)
     public MoodTrackerResponseDTO.QuestionResult getQuestionResult(Long userId, Long moodTrackerId) {
         MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
@@ -87,6 +90,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
 
     @Override
     @Transactional(readOnly = true)
+    @TrackLastOpened(type = DocumentType.TEAM_MOOD_TRACKER)
     public MoodTrackerResponseDTO.ReportResult getReportResult(Long userId, Long moodTrackerId) {
         MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
@@ -120,6 +124,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
 
     @Override
     @Transactional(readOnly = true)
+    @TrackLastOpened(type = DocumentType.TEAM_MOOD_TRACKER)
     public MoodTrackerResponseDTO.ResponseResult getResponseResult(Long userId, Long moodTrackerId) {
         MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));

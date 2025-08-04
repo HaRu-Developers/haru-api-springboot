@@ -24,6 +24,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "MEMBER4004", "이미 존재하는 회원입니다."),
     MEMBER_USERNAME_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4005", "해당 아이디를 가진 유저가 존재하지 않습니다."), //
     MEMBER_PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "MEMBER4006", "비밀번호가 일치하지 않습니다."),
+    SAME_WITH_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER4007", "변경하고자하는 비밀번호와 이전 비밀번호가 일치합니다."),
 
     // Workspace 관련 에러
     WORKSPACE_NOT_FOUND(HttpStatus.BAD_REQUEST,"WORKSPACE4001", "워크스페이스가 없습니다."),
@@ -67,7 +68,10 @@ public enum ErrorStatus implements BaseErrorCode {
     SNS_EVENT_INSTAGRAM_API_NO_MEDIA(HttpStatus.BAD_REQUEST, "SNS_EVENT4004", "인스타그램 게시물에 미디어가 없습니다."),
     SNS_EVENT_INSTAGRAM_API_NO_COMMENT(HttpStatus.BAD_REQUEST, "SNS_EVENT4005", "인스타그램 게시물에 댓글이 없습니다."),
     SNS_EVENT_NO_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "SNS_EVENT4006", "인스타그램 액세스 토큰이 없습니다."),
-    SNS_EVENT_NO_AUTHORITY(HttpStatus.UNAUTHORIZED, "SNS_EVENT4007", "인스타그램 이벤트에 대한 수정 권한이 없습니다.");
+    SNS_EVENT_NO_AUTHORITY(HttpStatus.UNAUTHORIZED, "SNS_EVENT4007", "인스타그램 이벤트에 대한 수정 권한이 없습니다."),
+
+    // last opened 관련 에러
+    USER_DOCUMENT_LAST_OPENED_NOT_FOUND(HttpStatus.NOT_FOUND, "LASTOPENED4001", "해당 문서에 대한 마지막 조회 데이터가 존재하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

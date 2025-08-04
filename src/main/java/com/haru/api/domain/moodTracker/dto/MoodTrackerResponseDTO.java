@@ -1,5 +1,6 @@
 package com.haru.api.domain.moodTracker.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.haru.api.domain.moodTracker.entity.enums.QuestionType;
 import lombok.Builder;
@@ -22,7 +23,9 @@ public class MoodTrackerResponseDTO {
     public static class Preview {
         private String moodTrackerHashedId;
         private String title;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime updatedAt;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime dueDate;
         private Integer respondentsNum;
     }
@@ -38,8 +41,11 @@ public class MoodTrackerResponseDTO {
     public static class BaseResult{
         private String moodTrackerHashedId;
         private String title;
-        private String creator;
+        private Long creatorId;
+        private String creatorName;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime updatedAt;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime dueDate;
         private Integer respondentsNum;
     }
@@ -49,6 +55,7 @@ public class MoodTrackerResponseDTO {
     public static class QuestionResult extends BaseResult {
         private String description;
         private List<QuestionView> questionList;
+        private Long workspaceId;
     }
 
     @Getter
@@ -85,12 +92,14 @@ public class MoodTrackerResponseDTO {
     public static class ReportResult extends BaseResult {
         private List<String> suggestionList;
         private String report;
+        private Long workspaceId;
     }
 
     @Getter
     @SuperBuilder
     public static class ResponseResult extends BaseResult {
         private List<QuestionResponseView> responseList;
+        private Long workspaceId;
     }
 
     @Getter
