@@ -2,8 +2,11 @@ package com.haru.api.domain.workspace.service;
 
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
+import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
+import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
+import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
@@ -33,6 +36,7 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
     private final WorkspaceRepository workspaceRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
+    private final WorkspaceConverter workspaceConverter;
 
     @Transactional(readOnly = true)
     @Override
@@ -54,7 +58,7 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
 
         return WorkspaceConverter.toDocumentList(
                 documentList.stream()
-                        .map(WorkspaceConverter::toDocument)
+                        .map(workspaceConverter::toDocument)
                         .toList()
         );
     }
@@ -80,7 +84,7 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
 
         return WorkspaceConverter.toDocumentSidebarList(
                 documentList.stream()
-                        .map(WorkspaceConverter::toDocumentSidebar)
+                        .map(workspaceConverter::toDocumentSidebar)
                         .toList()
         );
     }
@@ -104,16 +108,11 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
         // 워크스페이스에 속하면서 생성 날짜가 startDate, endDate 사이인 문서 리스트 검색
-        List<WorkspaceResponseDTO.DocumentCalendar> meetingList = meetingRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
-        List<WorkspaceResponseDTO.DocumentCalendar> snsEventList = snsEventRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
-        List<WorkspaceResponseDTO.DocumentCalendar> moodTrackerList = moodTrackerRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
+        List<Meeting> meetingList = meetingRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
+        List<SnsEvent> snsEventList = snsEventRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
+        List<MoodTracker> moodTrackerList = moodTrackerRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
 
         // 모든 문서 합치기
-        List<WorkspaceResponseDTO.DocumentCalendar> allResults = new ArrayList<>();
-        allResults.addAll(meetingList);
-        allResults.addAll(snsEventList);
-        allResults.addAll(moodTrackerList);
-
-        return WorkspaceConverter.toDocumentCalendarList(allResults);
+        return workspaceConverter.toDocumentCalendarList(meetingList, snsEventList, moodTrackerList);
     }
 }

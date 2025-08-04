@@ -21,7 +21,7 @@ public class WorkspaceResponseDTO {
     @Getter
     @Builder
     public static class Document {
-        private Long documentId;
+        private String documentId;
         private String title;
         private DocumentType documentType;
         private LocalDateTime lastOpened;
@@ -44,7 +44,7 @@ public class WorkspaceResponseDTO {
     @Getter
     @Builder
     public static class DocumentSidebar {
-        private Long documentId;
+        private String documentId;
         private String title;
         private DocumentType documentType;
     }
@@ -58,7 +58,7 @@ public class WorkspaceResponseDTO {
     @Getter
     @Builder
     public static class DocumentCalendar {
-        private Long documentId;
+        private String documentId;
         private String title;
         private DocumentType documentType;
         @JsonFormat(pattern = "yyyy-MM-dd")
