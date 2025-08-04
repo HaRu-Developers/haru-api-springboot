@@ -33,6 +33,7 @@ public class MeetingConverter {
                 .userId(user.getId())
                 .email(user.getEmail())
                 .userName(user.getName())
+                .workspaceId(meeting.getWorkspace().getId())
                 .title(meeting.getTitle())
                 .proceeding(meeting.getProceeding())
                 .updatedAt(meeting.getUpdatedAt())

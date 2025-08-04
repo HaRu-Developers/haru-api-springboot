@@ -1,5 +1,9 @@
 package com.haru.api.domain.moodTracker.service;
 
+import com.haru.api.domain.lastOpened.entity.UserDocumentId;
+import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
@@ -13,10 +17,7 @@ import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
-import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
-import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
-import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
-import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.global.util.HashIdUtil;
 import com.haru.api.infra.redis.RedisReportProducer;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,8 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     private final RedisReportProducer redisReportProducer;
 
     private final HashIdUtil hashIdUtil;
+
+    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
 
     /**
      * 분위기 트래커 생성
@@ -118,6 +121,14 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
         foundMoodTracker.updateTitle(request.getTitle());
+
+        // last opened title 수정
+        UserDocumentId userDocumentId = new UserDocumentId(userId, moodTrackerId, DocumentType.TEAM_MOOD_TRACKER);
+
+        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
+                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+
+        foundUserDocumentLastOpened.updateTitle(request.getTitle());
     }
 
     /**
@@ -146,6 +157,14 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
         moodTrackerRepository.delete(foundMoodTracker);
+
+        // last opened 테이블 튜플 삭제
+        UserDocumentId userDocumentId = new UserDocumentId(userId, moodTrackerId, DocumentType.TEAM_MOOD_TRACKER);
+
+        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
+                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+
+        userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
     }
 
     /**

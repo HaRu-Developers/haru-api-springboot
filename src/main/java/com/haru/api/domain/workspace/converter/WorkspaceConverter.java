@@ -1,5 +1,6 @@
 package com.haru.api.domain.workspace.converter;
 
+import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.entity.Workspace;
 
@@ -14,7 +15,16 @@ public class WorkspaceConverter {
                 .build();
     }
 
-    public static WorkspaceResponseDTO.DocumentList toDocumentsDTO(List<WorkspaceResponseDTO.Document> documentList) {
+    public static WorkspaceResponseDTO.Document toDocument(UserDocumentLastOpened document) {
+        return WorkspaceResponseDTO.Document.builder()
+                .documentId(document.getId().getDocumentId())
+                .title(document.getTitle())
+                .documentType(document.getId().getDocumentType())
+                .lastOpened(document.getLastOpened())
+                .build();
+    }
+
+    public static WorkspaceResponseDTO.DocumentList toDocumentList(List<WorkspaceResponseDTO.Document> documentList) {
         return WorkspaceResponseDTO.DocumentList.builder()
                 .documents(documentList)
                 .build();
@@ -28,15 +38,15 @@ public class WorkspaceConverter {
                 .build();
     }
 
-    public static WorkspaceResponseDTO.DocumentSidebar toDocumentWithoutLastOpened(WorkspaceResponseDTO.Document document) {
+    public static WorkspaceResponseDTO.DocumentSidebar toDocumentSidebar(UserDocumentLastOpened document) {
         return WorkspaceResponseDTO.DocumentSidebar.builder()
-                .documentId(document.getDocumentId())
-                .documentType(document.getDocumentType())
+                .documentId(document.getId().getDocumentId())
+                .documentType(document.getId().getDocumentType())
                 .title(document.getTitle())
                 .build();
     }
 
-    public static WorkspaceResponseDTO.DocumentSidebarList toDocumentWithoutLastOpenedList(List<WorkspaceResponseDTO.DocumentSidebar> documentList) {
+    public static WorkspaceResponseDTO.DocumentSidebarList toDocumentSidebarList(List<WorkspaceResponseDTO.DocumentSidebar> documentList) {
         return WorkspaceResponseDTO.DocumentSidebarList.builder()
                 .documents(documentList)
                 .build();

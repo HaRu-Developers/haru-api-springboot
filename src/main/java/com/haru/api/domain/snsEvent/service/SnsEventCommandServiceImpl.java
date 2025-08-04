@@ -1,5 +1,9 @@
 package com.haru.api.domain.snsEvent.service;
 
+import com.haru.api.domain.lastOpened.entity.UserDocumentId;
+import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
@@ -17,8 +21,10 @@ import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
+import com.haru.api.global.apiPayload.exception.handler.UserDocumentLastOpenedHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +51,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final ParticipantRepository participantRepository;
     private final WinnerRepository winnerRepository;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
 
     @Override
     public SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(Long workspaceId, SnsEventRequestDTO.CreateSnsRequest request) {
@@ -201,10 +208,10 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
     @Override
     @Transactional
-    public void updateSnsEventTitle(Long userId, Long snsEvnetId, SnsEventRequestDTO.UpdateSnsEventRequest request) {
+    public void updateSnsEventTitle(Long userId, Long snsEventId, SnsEventRequestDTO.UpdateSnsEventRequest request) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEvnetId)
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
                 .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
@@ -214,14 +221,22 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         }
         foundSnsEvent.updateTitle(request.getTitle());
         snsEventRepository.save(foundSnsEvent);
+
+        // last opened title 수정
+        UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
+
+        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
+                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+
+        foundUserDocumentLastOpened.updateTitle(request.getTitle());
     }
 
     @Override
     @Transactional
-    public void deleteSnsEvent(Long userId, Long snsEvnetId) {
+    public void deleteSnsEvent(Long userId, Long snsEventId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEvnetId)
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
                 .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
@@ -230,6 +245,14 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
         }
         snsEventRepository.delete(foundSnsEvent);
+
+        // last opened 테이블 튜플 삭제
+        UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
+
+        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
+                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+
+        userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
     }
 
 }

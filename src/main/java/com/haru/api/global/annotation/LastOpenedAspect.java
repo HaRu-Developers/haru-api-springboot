@@ -2,6 +2,9 @@ package com.haru.api.global.annotation;
 
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
+import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
+import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
+import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -34,7 +37,28 @@ public class LastOpenedAspect {
         Long documentId = (Long) args[documentIdIndex];
 
         if (userId != null && documentId != null) {
-            userDocumentLastOpenedService.updateLastOpened(userId, type, documentId);
+            // document type에 따라 조회하는 repository 구분하여 workspaceId, title 추출
+            Long workspaceId = null;
+            String title = null;
+
+            if(result instanceof MeetingResponseDTO.getMeetingProceeding meetingResponseDTO) {
+                workspaceId = meetingResponseDTO.getWorkspaceId();
+                title = meetingResponseDTO.getTitle();
+            } else if(result instanceof SnsEventResponseDTO.GetSnsEventRequest snsEventResponseDTO) {
+                workspaceId = snsEventResponseDTO.getWorkspaceId();
+                title = snsEventResponseDTO.getTitle();
+            } else if(result instanceof MoodTrackerResponseDTO.QuestionResult moodTrackerResponseDTO) {
+                workspaceId = moodTrackerResponseDTO.getWorkspaceId();
+                title = moodTrackerResponseDTO.getTitle();
+            } else if(result instanceof MoodTrackerResponseDTO.ResponseResult moodTrackerResponseDTO) {
+                workspaceId = moodTrackerResponseDTO.getWorkspaceId();
+                title = moodTrackerResponseDTO.getTitle();
+            } else if(result instanceof MoodTrackerResponseDTO.ReportResult moodTrackerResponseDTO) {
+                workspaceId = moodTrackerResponseDTO.getWorkspaceId();
+                title = moodTrackerResponseDTO.getTitle();
+            }
+
+            userDocumentLastOpenedService.updateLastOpened(userId, type, documentId, workspaceId, title);
         }
 
         return result;

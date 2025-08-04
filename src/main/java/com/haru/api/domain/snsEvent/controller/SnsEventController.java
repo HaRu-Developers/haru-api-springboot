@@ -75,7 +75,7 @@ public class SnsEventController {
 
     @Operation(
             summary = "SNS 이벤트 조회 API",
-            description = "SNS 이벤트 조회 API입니다. Header에 access token을 넣고 Path Variable에는 snsEventId를 넣어 요청해주세요."
+            description = "[v1.0 (2025-08-04)] SNS 이벤트 조회 API입니다. Header에 access token을 넣고 Path Variable에는 snsEventId를 넣어 요청해주세요."
     )
     @GetMapping("/{snsEventId}")
     public ApiResponse<SnsEventResponseDTO.GetSnsEventRequest> getSnsEvent(

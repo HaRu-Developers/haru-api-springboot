@@ -1,5 +1,6 @@
 package com.haru.api.domain.workspace.service;
 
+import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
@@ -49,27 +50,13 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
         if (!userWorkspaceRepository.existsByWorkspaceIdAndUserId(workspaceId, userId))
             throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
 
-        // workspace에 속해있는 각 문서별로 title이 일치하는 문서 검색
-        List<WorkspaceResponseDTO.Document> meetingList = meetingRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), title);
-        List<WorkspaceResponseDTO.Document> snsEventList = snsEventRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), title);
-        List<WorkspaceResponseDTO.Document> moodTrackerList = moodTrackerRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), title);
+        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedRepository.findRecentDocumentsByTitle(workspaceId, userId, title);
 
-        // 모든 문서 리스트 스트림으로 합침
-        List<WorkspaceResponseDTO.Document> allResults = new ArrayList<>();
-        allResults.addAll(meetingList);
-        allResults.addAll(snsEventList);
-        allResults.addAll(moodTrackerList);
-
-        // last_opened가 null인 경우에는 가장 뒤로 보내기
-        // last_opened가 모두 null인 경우에도 동작하도록 구현
-        List<WorkspaceResponseDTO.Document> finalResult = allResults.stream()
-                .sorted(Comparator.comparing(WorkspaceResponseDTO.Document::getLastOpened,
-                                            Comparator.nullsLast(Comparator.naturalOrder()))
-                                    .reversed())
-                .toList();
-
-        return WorkspaceConverter.toDocumentsDTO(finalResult);
-
+        return WorkspaceConverter.toDocumentList(
+                documentList.stream()
+                        .map(WorkspaceConverter::toDocument)
+                        .toList()
+        );
     }
 
     @Transactional(readOnly = true)
@@ -88,28 +75,14 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
         if (!userWorkspaceRepository.existsByWorkspaceIdAndUserId(workspaceId, userId))
             throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
 
-        // workspace에 속해있는 각 문서별로 title이 일치하는 문서 검색
-        List<WorkspaceResponseDTO.Document> meetingList = meetingRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), null);
-        List<WorkspaceResponseDTO.Document> snsEventList = snsEventRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), null);
-        List<WorkspaceResponseDTO.Document> moodTrackerList = moodTrackerRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), null);
+        // 유저가 가장 최근에 조회한 문서 5개 추출
+        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedRepository.findTop5ByWorkspaceIdAndUserIdOrderByLastOpenedDesc(workspaceId, userId);
 
-        // 모든 문서 리스트 스트림으로 합침
-        List<WorkspaceResponseDTO.Document> allResults = new ArrayList<>();
-        allResults.addAll(meetingList);
-        allResults.addAll(snsEventList);
-        allResults.addAll(moodTrackerList);
-
-        // last_opened가 null인 경우에는 가장 뒤로 보내기
-        // last_opened가 모두 null인 경우에도 동작하도록 구현
-        List<WorkspaceResponseDTO.DocumentSidebar> finalResult = allResults.stream()
-                .sorted(Comparator.comparing(WorkspaceResponseDTO.Document::getLastOpened,
-                                Comparator.nullsLast(Comparator.naturalOrder()))
-                        .reversed())
-                .limit(5)
-                .map(WorkspaceConverter::toDocumentWithoutLastOpened)
-                .toList();
-
-        return WorkspaceConverter.toDocumentWithoutLastOpenedList(finalResult);
+        return WorkspaceConverter.toDocumentSidebarList(
+                documentList.stream()
+                        .map(WorkspaceConverter::toDocumentSidebar)
+                        .toList()
+        );
     }
 
     @Override

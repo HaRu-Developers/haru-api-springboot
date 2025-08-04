@@ -103,7 +103,7 @@ public class MeetingController {
     }
 
     @Operation(summary = "AI회의록 단일조회", description =
-            "# meetingId를 받아 회의내용을 조회합니다. access token을 header에 입력해주세요."
+            "# [v1.0 (2025-08-04)] meetingId를 받아 회의내용을 조회합니다. access token을 header에 입력해주세요."
     )
     @GetMapping("/{meetingId}/ai-proceeding")
     public ApiResponse<MeetingResponseDTO.getMeetingProceeding> getMeetingProceeding(

@@ -81,6 +81,7 @@ public class SnsEventResponseDTO {
         private List<ParticipantResponse> participantList;
         private List<WinnerResponse> winnerList;
         private String snsLink;
+        private Long workspaceId;
     }
 
     @Getter
