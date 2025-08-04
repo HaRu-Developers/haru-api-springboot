@@ -16,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 @Service
@@ -46,10 +49,10 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
         if (!userWorkspaceRepository.existsByWorkspaceIdAndUserId(workspaceId, userId))
             throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
 
-        // 각 문서별로 title이 일치하는 문서 검색
-        List<WorkspaceResponseDTO.Document> meetingList = meetingRepository.findRecentDocumentsByTitle(foundUser.getId(), title);
-        List<WorkspaceResponseDTO.Document> snsEventList = snsEventRepository.findRecentDocumentsByTitle(foundUser.getId(), title);
-        List<WorkspaceResponseDTO.Document> moodTrackerList = moodTrackerRepository.findRecentDocumentsByTitle(foundUser.getId(), title);
+        // workspace에 속해있는 각 문서별로 title이 일치하는 문서 검색
+        List<WorkspaceResponseDTO.Document> meetingList = meetingRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), title);
+        List<WorkspaceResponseDTO.Document> snsEventList = snsEventRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), title);
+        List<WorkspaceResponseDTO.Document> moodTrackerList = moodTrackerRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), title);
 
         // 모든 문서 리스트 스트림으로 합침
         List<WorkspaceResponseDTO.Document> allResults = new ArrayList<>();
@@ -57,7 +60,6 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
         allResults.addAll(snsEventList);
         allResults.addAll(moodTrackerList);
 
-        // lastOpened 기준으로 정렬하고 상위 9개 추출
         // last_opened가 null인 경우에는 가장 뒤로 보내기
         // last_opened가 모두 null인 경우에도 동작하도록 구현
         List<WorkspaceResponseDTO.Document> finalResult = allResults.stream()
@@ -68,5 +70,77 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
 
         return WorkspaceConverter.toDocumentsDTO(finalResult);
 
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public WorkspaceResponseDTO.DocumentSidebarList getDocumentWithoutLastOpenedList(Long userId, Long workspaceId) {
+
+        // 유저 존재 확인
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        // workspace 존재 확인
+        workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        // 유저가 워크스페이스에 속해있는지 확인
+        if (!userWorkspaceRepository.existsByWorkspaceIdAndUserId(workspaceId, userId))
+            throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
+
+        // workspace에 속해있는 각 문서별로 title이 일치하는 문서 검색
+        List<WorkspaceResponseDTO.Document> meetingList = meetingRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), null);
+        List<WorkspaceResponseDTO.Document> snsEventList = snsEventRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), null);
+        List<WorkspaceResponseDTO.Document> moodTrackerList = moodTrackerRepository.findRecentDocumentsByTitle(workspaceId, foundUser.getId(), null);
+
+        // 모든 문서 리스트 스트림으로 합침
+        List<WorkspaceResponseDTO.Document> allResults = new ArrayList<>();
+        allResults.addAll(meetingList);
+        allResults.addAll(snsEventList);
+        allResults.addAll(moodTrackerList);
+
+        // last_opened가 null인 경우에는 가장 뒤로 보내기
+        // last_opened가 모두 null인 경우에도 동작하도록 구현
+        List<WorkspaceResponseDTO.DocumentSidebar> finalResult = allResults.stream()
+                .sorted(Comparator.comparing(WorkspaceResponseDTO.Document::getLastOpened,
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                        .reversed())
+                .limit(5)
+                .map(WorkspaceConverter::toDocumentWithoutLastOpened)
+                .toList();
+
+        return WorkspaceConverter.toDocumentWithoutLastOpenedList(finalResult);
+    }
+
+    @Override
+    public WorkspaceResponseDTO.DocumentCalendarList getDocumentForCalendar(Long userId, Long workspaceId, LocalDate startDate, LocalDate endDate) {
+
+        // 유저 존재 확인
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        // workspace 존재 확인
+        workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        // 유저가 워크스페이스에 속해있는지 확인
+        if (!userWorkspaceRepository.existsByWorkspaceIdAndUserId(workspaceId, userId))
+            throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        // 워크스페이스에 속하면서 생성 날짜가 startDate, endDate 사이인 문서 리스트 검색
+        List<WorkspaceResponseDTO.DocumentCalendar> meetingList = meetingRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
+        List<WorkspaceResponseDTO.DocumentCalendar> snsEventList = snsEventRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
+        List<WorkspaceResponseDTO.DocumentCalendar> moodTrackerList = moodTrackerRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
+
+        // 모든 문서 합치기
+        List<WorkspaceResponseDTO.DocumentCalendar> allResults = new ArrayList<>();
+        allResults.addAll(meetingList);
+        allResults.addAll(snsEventList);
+        allResults.addAll(moodTrackerList);
+
+        return WorkspaceConverter.toDocumentCalendarList(allResults);
     }
 }

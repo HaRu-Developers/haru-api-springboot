@@ -13,12 +13,14 @@ import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
+import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -197,28 +199,37 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         return list.subList(0, n); // 앞에서 n개만 추출
     }
 
-    public SnsEventResponseDTO.GetSnsEventListRequest getSnsEventList(Long userId, Long workspaceId) {
+    @Override
+    @Transactional
+    public void updateSnsEventTitle(Long userId, Long snsEvnetId, SnsEventRequestDTO.UpdateSnsEventRequest request) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
-        UserWorkspace foundUserWorkSapce = userWorkspaceRepository.findByUserAndWorkspace(foundUser, foundWorkspace)
-                .orElseThrow(() -> new MemberHandler(NOT_BELONG_TO_WORKSPACE));
-        List<SnsEvent> snsEventList = snsEventRepository.findAllByWorkspace(foundWorkspace);
-        return SnsEventConverter.toGetSnsEventListRequest(snsEventList);
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEvnetId)
+                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
+                .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
+        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 수정 가능)
+        if (!foundUserWorkspace.getUser().getId().equals(foundUser.getId()) || !foundSnsEvent.getCreator().getId().equals(foundUser.getId())) {
+            throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
+        }
+        foundSnsEvent.updateTitle(request.getTitle());
+        snsEventRepository.save(foundSnsEvent);
     }
 
-    public SnsEventResponseDTO.GetSnsEventRequest getSnsEvent(Long userId, Long snsEventId) {
+    @Override
+    @Transactional
+    public void deleteSnsEvent(Long userId, Long snsEvnetId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEvnetId)
                 .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
-        List<Participant> participantList = participantRepository.findAllBySnsEvent(foundSnsEvent);
-        List<Winner> winnerList = winnerRepository.findAllBySnsEvent(foundSnsEvent);
-        return SnsEventConverter.toGetSnsEventRequest(
-                foundSnsEvent,
-                participantList,
-                winnerList
-        );
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
+                .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
+        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)
+        if (!foundUserWorkspace.getUser().getId().equals(foundUser.getId()) || !foundSnsEvent.getCreator().getId().equals(foundUser.getId())) {
+            throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
+        }
+        snsEventRepository.delete(foundSnsEvent);
     }
+
 }

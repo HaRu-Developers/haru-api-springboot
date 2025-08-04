@@ -31,4 +31,8 @@ public class UserDocumentLastOpened {
     @Column(name = "last_opened")
     private LocalDateTime lastOpened;
 
+    public void updateLastOpened(LocalDateTime lastOpened) {
+        this.lastOpened = lastOpened;
+    }
+
 }

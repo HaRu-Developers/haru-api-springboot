@@ -8,4 +8,6 @@ public interface MeetingQueryService {
 
     public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, Long meetingId);
 
+    public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, Long meetingId);
+
 }
