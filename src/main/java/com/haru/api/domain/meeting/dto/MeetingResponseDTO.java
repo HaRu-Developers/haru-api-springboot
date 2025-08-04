@@ -33,6 +33,7 @@ public class MeetingResponseDTO {
         private Long userId;
         private String email;
         private String userName;
+        private Long workspaceId;
         private String title;
         private String proceeding;
         private LocalDateTime updatedAt;

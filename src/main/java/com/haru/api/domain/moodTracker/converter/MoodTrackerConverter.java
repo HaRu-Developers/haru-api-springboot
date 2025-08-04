@@ -171,6 +171,7 @@ public class MoodTrackerConverter {
                 .respondentsNum(moodTracker.getRespondentsNum())
                 .report(moodTracker.getReport())
                 .suggestionList(suggestionList)
+                .workspaceId(moodTracker.getWorkspace().getId())
                 .build();
     }
 
@@ -214,6 +215,7 @@ public class MoodTrackerConverter {
                 .respondentsNum(moodTracker.getRespondentsNum())
                 .description(moodTracker.getDescription())
                 .questionList(questionViewList)
+                .workspaceId(moodTracker.getWorkspace().getId())
                 .build();
     }
 
@@ -278,6 +280,7 @@ public class MoodTrackerConverter {
                 .dueDate(moodTracker.getDueDate())
                 .respondentsNum(moodTracker.getRespondentsNum())
                 .responseList(responseViews)
+                .workspaceId(moodTracker.getWorkspace().getId())
                 .build();
     }
 

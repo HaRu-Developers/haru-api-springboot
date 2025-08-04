@@ -49,6 +49,7 @@ public class MoodTrackerResponseDTO {
     public static class QuestionResult extends BaseResult {
         private String description;
         private List<QuestionView> questionList;
+        private Long workspaceId;
     }
 
     @Getter
@@ -85,12 +86,14 @@ public class MoodTrackerResponseDTO {
     public static class ReportResult extends BaseResult {
         private List<String> suggestionList;
         private String report;
+        private Long workspaceId;
     }
 
     @Getter
     @SuperBuilder
     public static class ResponseResult extends BaseResult {
         private List<QuestionResponseView> responseList;
+        private Long workspaceId;
     }
 
     @Getter

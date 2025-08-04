@@ -77,6 +77,7 @@ public class SnsEventConverter {
                 .participantList(participantResponseList)
                 .winnerList(winnerResponseList)
                 .snsLink(snsEvent.getSnsLink())
+                .workspaceId(snsEvent.getWorkspace().getId())
                 .build();
     }
 
