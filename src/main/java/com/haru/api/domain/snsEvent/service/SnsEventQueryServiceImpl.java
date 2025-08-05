@@ -38,10 +38,10 @@ public class SnsEventQueryServiceImpl implements SnsEventQueryService {
     private final WinnerRepository winnerRepository;
 
     @Override
-    public SnsEventResponseDTO.GetSnsEventListRequest getSnsEventList(Long userId, String workspaceId) {
+    public SnsEventResponseDTO.GetSnsEventListRequest getSnsEventList(Long userId, Long workspaceId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        Workspace foundWorkspace = workspaceRepository.findById(Long.parseLong(workspaceId))
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
         UserWorkspace foundUserWorkSpace = userWorkspaceRepository.findByUserAndWorkspace(foundUser, foundWorkspace)
                 .orElseThrow(() -> new MemberHandler(NOT_BELONG_TO_WORKSPACE));
@@ -51,10 +51,10 @@ public class SnsEventQueryServiceImpl implements SnsEventQueryService {
 
     @Override
     @TrackLastOpened(type = DocumentType.SNS_EVENT_ASSISTANT)
-    public SnsEventResponseDTO.GetSnsEventRequest getSnsEvent(Long userId, String snsEventId) {
+    public SnsEventResponseDTO.GetSnsEventRequest getSnsEvent(Long userId, Long snsEventId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        SnsEvent foundSnsEvent = snsEventRepository.findById(Long.parseLong(snsEventId))
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
                 .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
         List<Participant> participantList = participantRepository.findAllBySnsEvent(foundSnsEvent);
         List<Winner> winnerList = winnerRepository.findAllBySnsEvent(foundSnsEvent);

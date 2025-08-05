@@ -29,7 +29,7 @@ public class SnsEventController {
             @RequestBody SnsEventRequestDTO.CreateSnsRequest request
     ) {
         return ApiResponse.onSuccess(
-                snsEventCommandService.createSnsEvent(workspaceId, request)
+                snsEventCommandService.createSnsEvent(Long.parseLong(workspaceId), request)
         );
     }
 
@@ -57,7 +57,7 @@ public class SnsEventController {
     ) {
         System.out.println("Received accessToken: " + code);
         return ApiResponse.onSuccess(
-                snsEventCommandService.getInstagramAccessTokenAndAccount(code, workspaceId)
+                snsEventCommandService.getInstagramAccessTokenAndAccount(code, Long.parseLong(workspaceId))
         );
     }
 
@@ -72,7 +72,7 @@ public class SnsEventController {
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.onSuccess(
-                snsEventQueryService.getSnsEventList(userId, workspaceId)
+                snsEventQueryService.getSnsEventList(userId, Long.parseLong(workspaceId))
         );
     }
 
@@ -87,7 +87,7 @@ public class SnsEventController {
             @RequestBody SnsEventRequestDTO.UpdateSnsEventRequest request
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        snsEventCommandService.updateSnsEventTitle(userId, snsEvnetId, request);
+        snsEventCommandService.updateSnsEventTitle(userId, Long.parseLong(snsEvnetId), request);
         return ApiResponse.onSuccess("");
     }
 
@@ -101,7 +101,7 @@ public class SnsEventController {
             @PathVariable String snsEvnetId
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        snsEventCommandService.deleteSnsEvent(userId, snsEvnetId);
+        snsEventCommandService.deleteSnsEvent(userId, Long.parseLong(snsEvnetId));
         return ApiResponse.onSuccess("");
     }
 
@@ -116,7 +116,7 @@ public class SnsEventController {
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.onSuccess(
-                snsEventQueryService.getSnsEvent(userId, snsEventId)
+                snsEventQueryService.getSnsEvent(userId, Long.parseLong(snsEventId))
         );
     }
 }

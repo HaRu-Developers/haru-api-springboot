@@ -1,6 +1,8 @@
 package com.haru.api.domain.snsEvent.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,7 +13,8 @@ public class SnsEventResponseDTO {
     @Getter
     @Builder
     public static class CreateSnsEventResponse {
-        private String snsEventId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long snsEventId;
     }
 
     @Getter
@@ -63,7 +66,8 @@ public class SnsEventResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SnsEventResponse {
-        private String snsEventId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long snsEventId;
         private String title;
         private int participantCount;
         private int winnerCount;
@@ -78,14 +82,16 @@ public class SnsEventResponseDTO {
     @AllArgsConstructor
     public static class GetSnsEventRequest {
         private String title;
-        private String creatorId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long creatorId;
         private String creatorName;
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime updatedAt;
         private List<ParticipantResponse> participantList;
         private List<WinnerResponse> winnerList;
         private String snsLink;
-        private String workspaceId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long workspaceId;
     }
 
     @Getter

@@ -4,11 +4,11 @@ import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
 
 public interface SnsEventCommandService {
-    SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(String workspaceId, SnsEventRequestDTO.CreateSnsRequest request);
+    SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(Long workspaceId, SnsEventRequestDTO.CreateSnsRequest request);
 
-    SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(String code, String workspaceId);
+    SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(String code, Long workspaceId);
 
-    void updateSnsEventTitle(Long userId, String snsEventId, SnsEventRequestDTO.UpdateSnsEventRequest request);
+    void updateSnsEventTitle(Long userId, Long snsEventId, SnsEventRequestDTO.UpdateSnsEventRequest request);
 
-    void deleteSnsEvent(Long userId, String snsEventId);
+    void deleteSnsEvent(Long userId, Long snsEventId);
 }

@@ -34,7 +34,7 @@ public class LastOpenedAspect {
 
         // 인덱스를 사용하여 userId와 documentId 추출
         Long userId = (Long) args[userIdIndex];
-        Long documentId = Long.parseLong((String) args[documentIdIndex]);
+        Long documentId = (Long) args[documentIdIndex];
 
         if (userId != null && documentId != null) {
             // document type에 따라 조회하는 repository 구분하여 workspaceId, title 추출
@@ -45,7 +45,7 @@ public class LastOpenedAspect {
                 workspaceId = meetingResponseDTO.getWorkspaceId();
                 title = meetingResponseDTO.getTitle();
             } else if(result instanceof SnsEventResponseDTO.GetSnsEventRequest snsEventResponseDTO) {
-                workspaceId = Long.parseLong(snsEventResponseDTO.getWorkspaceId());
+                workspaceId = snsEventResponseDTO.getWorkspaceId();
                 title = snsEventResponseDTO.getTitle();
             } else if(result instanceof MoodTrackerResponseDTO.QuestionResult moodTrackerResponseDTO) {
                 workspaceId = moodTrackerResponseDTO.getWorkspaceId();

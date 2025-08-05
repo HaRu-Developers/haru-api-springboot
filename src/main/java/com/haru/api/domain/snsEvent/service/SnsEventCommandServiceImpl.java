@@ -71,12 +71,12 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
 
     @Override
-    public SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(String workspaceId, SnsEventRequestDTO.CreateSnsRequest request) {
+    public SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(Long workspaceId, SnsEventRequestDTO.CreateSnsRequest request) {
         // SNS 이벤트 생성 및 저장
         Long userId = SecurityUtil.getCurrentUserId();
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        Workspace foundWorkspace = workspaceRepository.findById(Long.parseLong(workspaceId))
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
         UserWorkspace foundUserWorkSapce = userWorkspaceRepository.findByUserAndWorkspace(foundUser, foundWorkspace)
                 .orElseThrow(() -> new MemberHandler(NOT_BELONG_TO_WORKSPACE));
@@ -147,7 +147,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         }
         winnerRepository.saveAll(winnerList);
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
-                .snsEventId(createdSnsEvent.getId().toString())
+                .snsEventId(createdSnsEvent.getId())
                 .build();
     }
 
@@ -227,7 +227,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
     @Override
     @Transactional
-    public SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(String code, String workspaceId) {
+    public SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(String code, Long workspaceId) {
         String shortLivedAccessToken;
         String longLivedAccessToken;
         Map<String, Object> userInfo;
@@ -244,7 +244,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         }
         // 4. 워크스페이스에 인스타그램 계정 정보 저장
         String instagramId = (String) userInfo.get("user_id");
-        Workspace foundWorkspace = workspaceRepository.findById(Long.parseLong(workspaceId))
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
         if (foundWorkspace.getInstagramId() != null && foundWorkspace.getInstagramId().equals(instagramId)) {
             throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_ALREADY_LINKED);
@@ -257,10 +257,10 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
   
     @Override
     @Transactional
-    public void updateSnsEventTitle(Long userId, String snsEventId, SnsEventRequestDTO.UpdateSnsEventRequest request) {
+    public void updateSnsEventTitle(Long userId, Long snsEventId, SnsEventRequestDTO.UpdateSnsEventRequest request) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        SnsEvent foundSnsEvent = snsEventRepository.findById(Long.parseLong(snsEventId))
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
                 .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
@@ -272,7 +272,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         snsEventRepository.save(foundSnsEvent);
 
         // last opened title 수정
-        UserDocumentId userDocumentId = new UserDocumentId(userId, Long.parseLong(snsEventId), DocumentType.SNS_EVENT_ASSISTANT);
+        UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
 
         UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
                 .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
@@ -282,10 +282,10 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
     @Override
     @Transactional
-    public void deleteSnsEvent(Long userId, String snsEventId) {
+    public void deleteSnsEvent(Long userId, Long snsEventId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        SnsEvent foundSnsEvent = snsEventRepository.findById(Long.parseLong(snsEventId))
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
                 .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
@@ -296,7 +296,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         snsEventRepository.delete(foundSnsEvent);
 
         // last opened 테이블 튜플 삭제
-        UserDocumentId userDocumentId = new UserDocumentId(userId, Long.parseLong(snsEventId), DocumentType.SNS_EVENT_ASSISTANT);
+        UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
 
         UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
                 .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
