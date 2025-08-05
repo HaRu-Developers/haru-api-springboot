@@ -152,7 +152,7 @@ public class MoodTrackerController {
     @GetMapping("/{mood-tracker-hashed-Id}/questions")
     @Operation(
             summary = "분위기 트래커 설문 문항 조회 API",
-            description = "# v1.0 (2025-07-29) 분위기 트래커(moodTrackerId)에 해당하는 설문 문항들을 조회합니다."
+            description = "# [v1.1 (2025-08-04)] 분위기 트래커(moodTrackerId)에 해당하는 설문 문항들을 조회합니다."
     )
     @Parameters({
             @Parameter(name = "mood-tracker-hashed-Id", description = "분위기 트래커 ID (Hashed, Path Variable)", required = true)
@@ -169,7 +169,7 @@ public class MoodTrackerController {
     @GetMapping("/{mood-tracker-hashed-Id}/reports")
     @Operation(
             summary = "분위기 트래커 설문 팀분위기 리포트 조회 API",
-            description = "# v1.0 (2025-07-29) 분위기 트래커(moodTrackerId)에 대한 팀 전체 리포트를 조회합니다."
+            description = "# [v1.1 (2025-08-04)] 분위기 트래커(moodTrackerId)에 대한 팀 전체 리포트를 조회합니다."
     )
     @Parameters({
             @Parameter(name = "mood-tracker-hashed-Id", description = "분위기 트래커 ID (Hashed, Path Variable)", required = true)
@@ -186,7 +186,7 @@ public class MoodTrackerController {
     @GetMapping("/{mood-tracker-hashed-Id}/responses")
     @Operation(
             summary = "분위기 트래커 설문 응답 조회 API",
-            description = "# v1.0 (2025-07-29) 분위기 트래커(moodTrackerId)에 대한 개별 응답 데이터를 조회합니다."
+            description = "# [v1.1 (2025-08-04)] 분위기 트래커(moodTrackerId)에 대한 개별 응답 데이터를 조회합니다."
     )
     @Parameters({
             @Parameter(name = "mood-tracker-hashed-Id", description = "분위기 트래커 ID (Hashed, Path Variable)", required = true)

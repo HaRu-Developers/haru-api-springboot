@@ -39,7 +39,7 @@ public class UserRequestDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class UserInfoUpdateRequest {
-        @NotBlank(message = "이름은 빈 값일 수 없습니다.")
         private String name;
+        private String password;
     }
 }

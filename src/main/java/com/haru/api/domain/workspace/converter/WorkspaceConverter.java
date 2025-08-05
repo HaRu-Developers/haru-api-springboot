@@ -1,13 +1,9 @@
 package com.haru.api.domain.workspace.converter;
 
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
-import com.haru.api.domain.meeting.entity.Meeting;
-import com.haru.api.domain.moodTracker.entity.MoodTracker;
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
+import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.entity.Workspace;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class WorkspaceConverter {
@@ -19,34 +15,16 @@ public class WorkspaceConverter {
                 .build();
     }
 
-    public static WorkspaceResponseDTO.Document toDocument(Meeting meeting, LocalDateTime lastOpened) {
+    public static WorkspaceResponseDTO.Document toDocument(UserDocumentLastOpened document) {
         return WorkspaceResponseDTO.Document.builder()
-                .documentId(meeting.getId())
-                .documentType(DocumentType.AI_MEETING_MANAGER)
-                .title(meeting.getTitle())
-                .lastOpened(lastOpened)
+                .documentId(document.getId().getDocumentId())
+                .title(document.getTitle())
+                .documentType(document.getId().getDocumentType())
+                .lastOpened(document.getLastOpened())
                 .build();
     }
 
-    public static WorkspaceResponseDTO.Document toDocument(SnsEvent snsEvent, LocalDateTime lastOpened) {
-        return WorkspaceResponseDTO.Document.builder()
-                .documentId(snsEvent.getId())
-                .documentType(DocumentType.SNS_EVENT_ASSISTANT)
-                .title(snsEvent.getTitle())
-                .lastOpened(lastOpened)
-                .build();
-    }
-
-    public static WorkspaceResponseDTO.Document toDocument(MoodTracker moodTracker, LocalDateTime lastOpened) {
-        return WorkspaceResponseDTO.Document.builder()
-                .documentId(moodTracker.getId())
-                .documentType(DocumentType.TEAM_MOOD_TRACKER)
-                .title(moodTracker.getTitle())
-                .lastOpened(lastOpened)
-                .build();
-    }
-
-    public static WorkspaceResponseDTO.DocumentList toDocumentsDTO(List<WorkspaceResponseDTO.Document> documentList) {
+    public static WorkspaceResponseDTO.DocumentList toDocumentList(List<WorkspaceResponseDTO.Document> documentList) {
         return WorkspaceResponseDTO.DocumentList.builder()
                 .documents(documentList)
                 .build();
@@ -57,6 +35,26 @@ public class WorkspaceConverter {
                 .isSuccess(isSuccess)
                 .isAlreadyRegistered(isAlreadyRegistered)
                 .workspaceId(workspace.getId())
+                .build();
+    }
+
+    public static WorkspaceResponseDTO.DocumentSidebar toDocumentSidebar(UserDocumentLastOpened document) {
+        return WorkspaceResponseDTO.DocumentSidebar.builder()
+                .documentId(document.getId().getDocumentId())
+                .documentType(document.getId().getDocumentType())
+                .title(document.getTitle())
+                .build();
+    }
+
+    public static WorkspaceResponseDTO.DocumentSidebarList toDocumentSidebarList(List<WorkspaceResponseDTO.DocumentSidebar> documentList) {
+        return WorkspaceResponseDTO.DocumentSidebarList.builder()
+                .documents(documentList)
+                .build();
+    }
+
+    public static WorkspaceResponseDTO.DocumentCalendarList toDocumentCalendarList(List<WorkspaceResponseDTO.DocumentCalendar> documentList) {
+        return WorkspaceResponseDTO.DocumentCalendarList.builder()
+                .documentList(documentList)
                 .build();
     }
 }

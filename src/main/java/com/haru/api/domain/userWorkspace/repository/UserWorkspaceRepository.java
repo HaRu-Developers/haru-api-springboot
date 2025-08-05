@@ -3,6 +3,7 @@ package com.haru.api.domain.userWorkspace.repository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.userWorkspace.dto.UserWorkspaceResponseDTO;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
+import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.workspace.entity.Workspace;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -32,4 +33,6 @@ public interface UserWorkspaceRepository extends JpaRepository<UserWorkspace, Lo
     Optional<UserWorkspace> findByUserAndWorkspace(User user, Workspace workspace);
 
     Optional<UserWorkspace> findByUserIdAndWorkspaceId(Long userId, Long workspaceId);
+  
+    Optional<UserWorkspace> findByWorkspaceAndAuth(Workspace workspace, Auth auth);
 }

@@ -165,12 +165,14 @@ public class MoodTrackerConverter {
         return MoodTrackerResponseDTO.ReportResult.builder()
                 .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
                 .title(moodTracker.getTitle())
-                .creator(moodTracker.getCreator().getName())
+                .creatorId(moodTracker.getCreator().getId())
+                .creatorName(moodTracker.getCreator().getName())
                 .updatedAt(moodTracker.getUpdatedAt())
                 .dueDate(moodTracker.getDueDate())
                 .respondentsNum(moodTracker.getRespondentsNum())
                 .report(moodTracker.getReport())
                 .suggestionList(suggestionList)
+                .workspaceId(moodTracker.getWorkspace().getId())
                 .build();
     }
 
@@ -208,12 +210,14 @@ public class MoodTrackerConverter {
         return MoodTrackerResponseDTO.QuestionResult.builder()
                 .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
                 .title(moodTracker.getTitle())
-                .creator(moodTracker.getCreator().getName())
+                .creatorId(moodTracker.getCreator().getId())
+                .creatorName(moodTracker.getCreator().getName())
                 .updatedAt(moodTracker.getUpdatedAt())
                 .dueDate(moodTracker.getDueDate())
                 .respondentsNum(moodTracker.getRespondentsNum())
                 .description(moodTracker.getDescription())
                 .questionList(questionViewList)
+                .workspaceId(moodTracker.getWorkspace().getId())
                 .build();
     }
 
@@ -273,11 +277,13 @@ public class MoodTrackerConverter {
         return MoodTrackerResponseDTO.ResponseResult.builder()
                 .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
                 .title(moodTracker.getTitle())
-                .creator(moodTracker.getCreator().getName())
+                .creatorId(moodTracker.getCreator().getId())
+                .creatorName(moodTracker.getCreator().getName())
                 .updatedAt(moodTracker.getUpdatedAt())
                 .dueDate(moodTracker.getDueDate())
                 .respondentsNum(moodTracker.getRespondentsNum())
                 .responseList(responseViews)
+                .workspaceId(moodTracker.getWorkspace().getId())
                 .build();
     }
 

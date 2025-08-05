@@ -5,6 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 public class SnsEventRequestDTO {
+
     @Getter
     @Setter
     @NoArgsConstructor
@@ -26,5 +27,13 @@ public class SnsEventRequestDTO {
         private String keyword;
         private Boolean isTaged;
         private Integer tageCount;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateSnsEventRequest {
+        private String title;
     }
 }

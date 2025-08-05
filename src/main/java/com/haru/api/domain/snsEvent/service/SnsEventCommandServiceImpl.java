@@ -1,5 +1,9 @@
 package com.haru.api.domain.snsEvent.service;
 
+import com.haru.api.domain.lastOpened.entity.UserDocumentId;
+import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
@@ -13,11 +17,14 @@ import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
+import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
+import com.haru.api.global.apiPayload.exception.handler.UserDocumentLastOpenedHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.infra.api.restTemplate.InstagramOauth2RestTemplate;
 import jakarta.transaction.Transactional;
@@ -60,6 +67,8 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final ParticipantRepository participantRepository;
     private final WinnerRepository winnerRepository;
     private final RestTemplate restTemplate;
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
 
     @Override
@@ -243,6 +252,55 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         foundWorkspace.saveInstagramAccessToken(longLivedAccessToken);
         foundWorkspace.saveInstagramAccountName((String) userInfo.get("username"));
         return SnsEventConverter.toLinkInstagramAccountResponse((String) userInfo.get("username"));
+    }
+  
+    @Override
+    @Transactional
+    public void updateSnsEventTitle(Long userId, Long snsEventId, SnsEventRequestDTO.UpdateSnsEventRequest request) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
+                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
+                .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
+        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 수정 가능)
+        if (!foundUserWorkspace.getUser().getId().equals(foundUser.getId()) || !foundSnsEvent.getCreator().getId().equals(foundUser.getId())) {
+            throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
+        }
+        foundSnsEvent.updateTitle(request.getTitle());
+        snsEventRepository.save(foundSnsEvent);
+
+        // last opened title 수정
+        UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
+
+        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
+                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+
+        foundUserDocumentLastOpened.updateTitle(request.getTitle());
+    }
+
+    @Override
+    @Transactional
+    public void deleteSnsEvent(Long userId, Long snsEventId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
+                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
+                .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
+        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)
+        if (!foundUserWorkspace.getUser().getId().equals(foundUser.getId()) || !foundSnsEvent.getCreator().getId().equals(foundUser.getId())) {
+            throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
+        }
+        snsEventRepository.delete(foundSnsEvent);
+
+        // last opened 테이블 튜플 삭제
+        UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
+
+        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
+                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+
+        userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
     }
 
 }

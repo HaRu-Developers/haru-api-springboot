@@ -1,8 +1,7 @@
 package com.haru.api.domain.snsEvent.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -51,5 +50,59 @@ public class SnsEventResponseDTO {
     public static class From {
         private String id;
         private String username;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GetSnsEventListRequest {
+        private List<SnsEventResponse> snsEventList;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SnsEventResponse {
+        private Long snsEventId;
+        private String title;
+        private int participantCount;
+        private int winnerCount;
+        private String snsLink;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+        private LocalDateTime updatedAt;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GetSnsEventRequest {
+        private String title;
+        private Long creatorId;
+        private String creatorName;
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+        private LocalDateTime updatedAt;
+        private List<ParticipantResponse> participantList;
+        private List<WinnerResponse> winnerList;
+        private String snsLink;
+        private Long workspaceId;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ParticipantResponse {
+        private String account;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class WinnerResponse {
+        private String account;
     }
 }
