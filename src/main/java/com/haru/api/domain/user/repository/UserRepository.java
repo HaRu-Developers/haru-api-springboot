@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findTop4UsersByEmailContainingIgnoreCase(String email); // <<< 이 부분은 내 브랜치에서 추가된 메서드
     Optional<User> findByEmail(String email);
+    Optional<User> findByProviderId(String providerId);
 }

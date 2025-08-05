@@ -37,6 +37,12 @@ public class SnsEventConverter {
                 .build();
     }
 
+    public static SnsEventResponseDTO.LinkInstagramAccountResponse toLinkInstagramAccountResponse(String instagramAccountName) {
+        return SnsEventResponseDTO.LinkInstagramAccountResponse.builder()
+                .instagramAccountName(instagramAccountName)
+                .build();
+    }
+          
     public static SnsEventResponseDTO.GetSnsEventListRequest toGetSnsEventListRequest(List<SnsEvent> snsEventList) {
         List<SnsEventResponseDTO.SnsEventResponse> snsEventResponseList = snsEventList.stream()
                 .map(SnsEventConverter::toSnsEventList)
