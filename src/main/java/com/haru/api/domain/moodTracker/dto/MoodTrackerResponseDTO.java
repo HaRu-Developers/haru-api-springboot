@@ -2,6 +2,8 @@ package com.haru.api.domain.moodTracker.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.haru.api.domain.moodTracker.entity.enums.QuestionType;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,6 +43,7 @@ public class MoodTrackerResponseDTO {
     public static class BaseResult{
         private String moodTrackerHashedId;
         private String title;
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long creatorId;
         private String creatorName;
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -55,12 +58,14 @@ public class MoodTrackerResponseDTO {
     public static class QuestionResult extends BaseResult {
         private String description;
         private List<QuestionView> questionList;
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
     }
 
     @Getter
     @Builder
     public static class QuestionView {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long questionId;
         private String questionTitle;
         private QuestionType type;
@@ -76,6 +81,7 @@ public class MoodTrackerResponseDTO {
     @Getter
     @Builder
     public static class MultipleChoice {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long multipleChoiceId;
         private String content;
     }
@@ -83,6 +89,7 @@ public class MoodTrackerResponseDTO {
     @Getter
     @Builder
     public static class CheckboxChoice {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long checkboxChoiceId;
         private String content;
     }
@@ -92,6 +99,7 @@ public class MoodTrackerResponseDTO {
     public static class ReportResult extends BaseResult {
         private List<String> suggestionList;
         private String report;
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
     }
 
@@ -99,12 +107,14 @@ public class MoodTrackerResponseDTO {
     @SuperBuilder
     public static class ResponseResult extends BaseResult {
         private List<QuestionResponseView> responseList;
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
     }
 
     @Getter
     @Builder
     public static class QuestionResponseView {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long questionId;
         private String questionTitle;
         private QuestionType type;
@@ -122,6 +132,7 @@ public class MoodTrackerResponseDTO {
     @Getter
     @Builder
     public static class MultipleChoiceResponse {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long multipleChoiceId;
         private String content;
         private Integer selectedNum;
@@ -130,6 +141,7 @@ public class MoodTrackerResponseDTO {
     @Getter
     @Builder
     public static class CheckboxChoiceResponse {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long checkboxChoiceId;
         private String content;
         private Integer selectedNum;

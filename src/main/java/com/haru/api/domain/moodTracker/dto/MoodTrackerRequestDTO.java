@@ -1,7 +1,11 @@
 package com.haru.api.domain.moodTracker.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
 import com.haru.api.domain.moodTracker.entity.enums.QuestionType;
+import com.haru.api.global.util.json.ToLongDeserializer;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -47,7 +51,7 @@ public class MoodTrackerRequestDTO {
 
         private Boolean isMandatory;
 
-        // MULTIPLE_CHOICE 또는 CHECKBOX일 경우에만 사용
+        // MULTIPLE_CHOICE 또는 CHECKBOX_CHOICE 일 경우에만 사용
         private List<String> options;
     }
 
@@ -74,13 +78,21 @@ public class MoodTrackerRequestDTO {
     @AllArgsConstructor
     public static class SurveyAnswer {
         @NotNull
+        @Schema(type = "string")
+        @JsonDeserialize(using = ToLongDeserializer.class)
         private Long questionId;
 
         @NotNull
         private QuestionType type;
 
+        @Schema(type = "string")
+        @JsonDeserialize(using = ToLongDeserializer.class)
         private Long multipleChoiceId; // MULTI_CHOICE 는 1개
 
+        @ArraySchema(
+                schema = @Schema(type = "string")
+        )
+        @JsonDeserialize(using = ToLongDeserializer.class)
         private List<Long> checkboxChoiceIdList; // CHECKBOX_CHOICE 는 여러 개; id 리스트로 받음
 
         private String subjectiveAnswer; // SUBJECTIVE
