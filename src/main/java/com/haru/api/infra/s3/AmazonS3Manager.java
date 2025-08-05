@@ -1,6 +1,7 @@
 package com.haru.api.infra.s3;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.haru.api.global.common.entity.Uuid;
@@ -25,17 +26,25 @@ public class AmazonS3Manager{
     private final UuidRepository uuidRepository;
 
     public String uploadFile(String keyName, MultipartFile file){
-
-        if (file == null)
+        if (file == null || file.isEmpty()) {
             return null;
-
+        }
 
         ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType(file.getContentType());
         metadata.setContentLength(file.getSize());
+
         try {
-            amazonS3.putObject(new PutObjectRequest(amazonConfig.getBucket(), keyName, file.getInputStream(), metadata));
-        } catch (IOException e){
-            log.error("error at AmazonS3Manager uploadFile : {}", (Object) e.getStackTrace());
+            // ACL 설정 부분을 제거합니다.
+            PutObjectRequest putObjectRequest = new PutObjectRequest(
+                    amazonConfig.getBucket(), keyName, file.getInputStream(), metadata
+            );
+
+            amazonS3.putObject(putObjectRequest);
+
+        } catch (Exception e) {
+            log.error("S3 파일 업로드에 실패했습니다. key: {}", keyName, e);
+            throw new RuntimeException("S3 upload failed", e);
         }
 
         return amazonS3.getUrl(amazonConfig.getBucket(), keyName).toString();
