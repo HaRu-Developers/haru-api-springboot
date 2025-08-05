@@ -35,7 +35,7 @@ public class MoodTrackerController {
     @GetMapping("/workspaces/{workspaceId}")
     @Operation(
             summary = "워크스페이스별 분위기 트래커 리스트 조회 API",
-            description = "# [v1.0 (2025-07-26)](https://www.notion.so/2265da7802c580048e63f104d98d7637) 해당 워크스페이스(workspaceId)에 소속된 분위기 트래커 설문들을 모두 조회합니다."
+            description = "# [v1.1 (2025-08-05)](https://www.notion.so/2265da7802c580048e63f104d98d7637) 해당 워크스페이스(workspaceId)에 소속된 분위기 트래커 설문들을 모두 조회합니다."
     )
     @Parameters({
             @Parameter(name = "workspaceId", description = "워크스페이스 ID (Path Variable)", required = true)
@@ -51,7 +51,7 @@ public class MoodTrackerController {
     @PostMapping("/workspaces/{workspaceId}")
     @Operation(
             summary = "분위기 트래커 설문 생성 API",
-            description = "# [v1.0 (2025-07-26)](https://www.notion.so/2265da7802c580429bd5ed5067cbe5ba) 워크스페이스 ID, 설문 제목, 마감일 등을 입력받아 새로운 분위기 트래커 설문을 생성합니다."
+            description = "# [v1.1 (2025-08-05)](https://www.notion.so/2265da7802c580429bd5ed5067cbe5ba) 워크스페이스 ID, 설문 제목, 마감일 등을 입력받아 새로운 분위기 트래커 설문을 생성합니다."
     )
     @Parameters({
             @Parameter(name = "workspaceId", description = "워크스페이스 ID (Path Variable)", required = true)
