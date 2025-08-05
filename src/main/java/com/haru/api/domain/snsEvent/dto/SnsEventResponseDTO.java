@@ -11,9 +11,7 @@ public class SnsEventResponseDTO {
     @Getter
     @Builder
     public static class CreateSnsEventResponse {
-        private Long userId;
-        private String accessToken;
-        private String refreshToken;
+        private String snsEventId;
     }
 
     @Getter
@@ -65,7 +63,7 @@ public class SnsEventResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SnsEventResponse {
-        private Long snsEventId;
+        private String snsEventId;
         private String title;
         private int participantCount;
         private int winnerCount;
@@ -80,14 +78,14 @@ public class SnsEventResponseDTO {
     @AllArgsConstructor
     public static class GetSnsEventRequest {
         private String title;
-        private Long creatorId;
+        private String creatorId;
         private String creatorName;
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime updatedAt;
         private List<ParticipantResponse> participantList;
         private List<WinnerResponse> winnerList;
         private String snsLink;
-        private Long workspaceId;
+        private String workspaceId;
     }
 
     @Getter

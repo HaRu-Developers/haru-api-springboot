@@ -55,7 +55,7 @@ public class SnsEventConverter {
 
     public static SnsEventResponseDTO.SnsEventResponse toSnsEventList(SnsEvent snsEvent) {
         return SnsEventResponseDTO.SnsEventResponse.builder()
-                .snsEventId(snsEvent.getId())
+                .snsEventId(snsEvent.getId().toString())
                 .title(snsEvent.getTitle())
                 .participantCount(snsEvent.getParticipantList().size())
                 .winnerCount(snsEvent.getWinnerList().size())
@@ -78,13 +78,13 @@ public class SnsEventConverter {
 
         return SnsEventResponseDTO.GetSnsEventRequest.builder()
                 .title(snsEvent.getTitle())
-                .creatorId(snsEvent.getCreator().getId())
+                .creatorId(snsEvent.getCreator().getId().toString())
                 .creatorName(snsEvent.getCreator().getName())
                 .updatedAt(snsEvent.getUpdatedAt())
                 .participantList(participantResponseList)
                 .winnerList(winnerResponseList)
                 .snsLink(snsEvent.getSnsLink())
-                .workspaceId(snsEvent.getWorkspace().getId())
+                .workspaceId(snsEvent.getWorkspace().getId().toString())
                 .build();
     }
 
