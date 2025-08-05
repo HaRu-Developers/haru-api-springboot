@@ -44,6 +44,7 @@ public class AmazonS3Manager{
         return keyName;
     }
 
+    // 썸네일을 위한 uploadFile
     public String uploadFile(String keyName, byte[] fileBytes, String contentType) {
         if (fileBytes == null || fileBytes.length == 0) {
             throw new IllegalArgumentException("업로드할 파일이 비어있습니다.");
