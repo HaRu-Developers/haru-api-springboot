@@ -1,7 +1,12 @@
 package com.haru.api.domain.workspace.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.global.util.ToLongDeserializer;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,6 +18,7 @@ public class WorkspaceResponseDTO {
     @Getter
     @Builder
     public static class Workspace {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
         private String title;
         private String imageUrl;
@@ -38,6 +44,7 @@ public class WorkspaceResponseDTO {
     public static class InvitationAcceptResult {
         private boolean isSuccess;
         private boolean isAlreadyRegistered;
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
     }
 
