@@ -17,7 +17,7 @@ public class UserResponseDTO {
     @Getter
     @Builder
     public static class LoginResponse {
-        private Long userid;
+        private String userId;
         private String accessToken;
         private String refreshToken;
     }
@@ -25,7 +25,7 @@ public class UserResponseDTO {
     @Getter
     @Builder
     public static class RefreshResponse {
-        private Long userId;
+        private String userId;
         private String accessToken;
         private String refreshToken;
     }

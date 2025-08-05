@@ -29,14 +29,14 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     ) throws IOException {
         String successGoogleLoginUrl = "";
         CustomOauth2UserDetails userDetails = (CustomOauth2UserDetails) authentication.getPrincipal();
-        if (userDetails.getIsNewUser()) { // 회원가입인지 로그인인지 판단
+        if (!userDetails.getIsNewUser()) { // 회원가입인지 로그인인지 판단, 로그인이면 토큰 반환
             Long userId = userDetails.getUser().getId();
             String key = "users:" + userId.toString();
             String accessToken = userCommandService.generateAccessToken(userId, accessExpTime);
             String refreshToken = userCommandService.generateAndSaveRefreshToken(key, refreshExpTime);
             // 프론트엔드 URL로 리다이렉트 (query param 전달)
             response.sendRedirect("http://localhost:3000" + successGoogleLoginUrl + "?accessToken=" + accessToken + "&refreshToken=" + refreshToken);
-        } else {
+        } else { // 회원가입
             response.sendRedirect("http://localhost:3000" + successGoogleLoginUrl);
         }
 
