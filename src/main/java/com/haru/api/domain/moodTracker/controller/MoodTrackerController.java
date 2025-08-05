@@ -41,10 +41,10 @@ public class MoodTrackerController {
             @Parameter(name = "workspaceId", description = "워크스페이스 ID (Path Variable)", required = true)
     })
     public ApiResponse<MoodTrackerResponseDTO.PreviewList> getMoodTrackerPreviewListByWorkspace(
-            @PathVariable Long workspaceId
+            @PathVariable String workspaceId
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        MoodTrackerResponseDTO.PreviewList result = moodTrackerQueryService.getMoodTrackerPreviewList(userId, workspaceId);
+        MoodTrackerResponseDTO.PreviewList result = moodTrackerQueryService.getMoodTrackerPreviewList(userId, Long.parseLong(workspaceId));
         return ApiResponse.onSuccess(result);
     }
 
@@ -57,11 +57,11 @@ public class MoodTrackerController {
             @Parameter(name = "workspaceId", description = "워크스페이스 ID (Path Variable)", required = true)
     })
     public ApiResponse<MoodTrackerResponseDTO.CreateResult> createMoodTracker(
-            @PathVariable Long workspaceId,
+            @PathVariable String workspaceId,
             @RequestBody @Valid MoodTrackerRequestDTO.CreateRequest request
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        MoodTrackerResponseDTO.CreateResult result = moodTrackerCommandService.create(userId, workspaceId,request);
+        MoodTrackerResponseDTO.CreateResult result = moodTrackerCommandService.create(userId, Long.parseLong(workspaceId),request);
         return ApiResponse.of(SuccessStatus.MOOD_TRACKER_CREATED, result);
     }
 
