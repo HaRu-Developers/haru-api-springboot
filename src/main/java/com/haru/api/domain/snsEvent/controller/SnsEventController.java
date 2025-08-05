@@ -70,6 +70,7 @@ public class SnsEventController {
         System.out.println("Received accessToken: " + code);
         return ApiResponse.onSuccess(
                 snsEventCommandService.getInstagramAccessTokenAndAccount(code, workspaceId)
+        );
     }
           
     @Operation(

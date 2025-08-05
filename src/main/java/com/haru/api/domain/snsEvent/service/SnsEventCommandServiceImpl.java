@@ -67,7 +67,6 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final ParticipantRepository participantRepository;
     private final WinnerRepository winnerRepository;
     private final RestTemplate restTemplate;
-    private final RestTemplate restTemplate = new RestTemplate();
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
 
