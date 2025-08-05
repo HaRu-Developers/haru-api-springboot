@@ -146,7 +146,9 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             winnerList.add(winner);
         }
         winnerRepository.saveAll(winnerList);
-        return null;
+        return SnsEventResponseDTO.CreateSnsEventResponse.builder()
+                .snsEventId(createdSnsEvent.getId())
+                .build();
     }
 
     private SnsEventResponseDTO.InstagramMediaResponse fetchInstagramMedia(String accessToken) {

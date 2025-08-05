@@ -64,5 +64,4 @@ public class SnsEventQueryServiceImpl implements SnsEventQueryService {
                 winnerList
         );
     }
-
 }
