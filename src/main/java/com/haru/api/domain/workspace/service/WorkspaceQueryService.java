@@ -11,4 +11,6 @@ public interface WorkspaceQueryService {
     WorkspaceResponseDTO.DocumentSidebarList getDocumentWithoutLastOpenedList(Long userId, Long workspaceId);
 
     WorkspaceResponseDTO.DocumentCalendarList getDocumentForCalendar(Long userId, Long workspaceId, LocalDate startDate, LocalDate endDate);
+
+    WorkspaceResponseDTO.WorkspaceEditPage getEditPage(Long userId, String workspaceId);
 }

@@ -113,7 +113,7 @@ public class WorkspaceController {
 
     @Operation(
             summary = "워크스페이스 문서 검색",
-            description = "# [v1.0 (2025-07-31)](https://www.notion.so/2265da7802c580ca9a33eb9ba7ddec29?pvs=25)" +
+            description = "# [v1.0 (2025-07-31)](https://www.notion.so/2265da7802c580ca9a33eb9ba7ddec29)" +
                     " 워크스페이스 문서 검색 API 입니다. jwt 토큰을 헤더에 넣고, path variable로 workspaceId, query string에 문서 제목을 넣어주세요"
     )
     @GetMapping("/{workspaceId}")
@@ -162,7 +162,7 @@ public class WorkspaceController {
     @Operation(
             summary = "캘린더 조회",
             description = "# [v1.0 (2025-08-01)](https://www.notion.so/2265da7802c58072bb65d4b17f6ef785?v=2265da7802c5816ab095000cc1ddadca&pvs=25)" +
-                    " 캘린더 조회 API 입니다. jwt 토큰을 헤더에 넣고, path variable에 workspaceid, query string으로 시작 날짜, 종료 날짜를 넘겨주세요"
+                    " 캘린더 조회 API 입니다. jwt 토큰을 헤더에 넣고, path variable에 workspaceId, query string으로 시작 날짜, 종료 날짜를 넘겨주세요"
     )
     @GetMapping("/{workspaceId}/calendar")
     public ApiResponse<WorkspaceResponseDTO.DocumentCalendarList> getCalendar(
@@ -175,6 +175,22 @@ public class WorkspaceController {
         WorkspaceResponseDTO.DocumentCalendarList documentCalendarList = workspaceQueryService.getDocumentForCalendar(userId, workspaceId, startDate, endDate);
 
         return ApiResponse.onSuccess(documentCalendarList);
+    }
+
+    @Operation(
+            summary = "workspace 수정 페이지 조회",
+            description = "# [v1.0 (2025-08-05)](https://www.notion.so/workspace-2465da7802c580ff853dd590d3672246)" +
+                    " 워크스페이스 수정 페이지 조회 API 입니다. jwt 토큰을 헤더에 넣고, path variable에 workspaceId를 넘겨주세요"
+    )
+    @GetMapping("/{workspaceId}/edit")
+    public ApiResponse<WorkspaceResponseDTO.WorkspaceEditPage> modifyWorkspace(
+            @PathVariable String workspaceId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        WorkspaceResponseDTO.WorkspaceEditPage workspaceEditPage = workspaceQueryService.getEditPage(userId, workspaceId);
+
+        return ApiResponse.onSuccess(workspaceEditPage);
     }
 
 

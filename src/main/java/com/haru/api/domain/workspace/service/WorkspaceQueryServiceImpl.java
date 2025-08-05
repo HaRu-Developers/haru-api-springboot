@@ -8,11 +8,14 @@ import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
 import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
+import com.haru.api.domain.user.converter.UserConverter;
+import com.haru.api.domain.user.dto.UserResponseDTO;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.converter.WorkspaceConverter;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
+import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
@@ -114,5 +117,29 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
 
         // 모든 문서 합치기
         return workspaceConverter.toDocumentCalendarList(meetingList, snsEventList, moodTrackerList);
+    }
+
+    @Override
+    public WorkspaceResponseDTO.WorkspaceEditPage getEditPage(Long userId, String strWorkspaceId) {
+
+        Long workspaceId = Long.parseLong(strWorkspaceId);
+
+        // 유저 존재 확인
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        // workspace 존재 확인
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        // 유저가 워크스페이스에 속해있는지 확인
+        if (!userWorkspaceRepository.existsByWorkspaceIdAndUserId(workspaceId, userId))
+            throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
+
+        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspaceRepository.findUsersByWorkspace(foundWorkspace).stream()
+                .map(UserConverter::toMemberInfo)
+                .toList();
+
+        return workspaceConverter.toWorkspaceEditPage(foundWorkspace, memberInfoList);
     }
 }

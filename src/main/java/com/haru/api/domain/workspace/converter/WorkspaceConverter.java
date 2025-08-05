@@ -5,6 +5,7 @@ import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.snsEvent.entity.SnsEvent;
+import com.haru.api.domain.user.dto.UserResponseDTO;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.util.HashIdUtil;
@@ -135,6 +136,14 @@ public class WorkspaceConverter {
 
         return WorkspaceResponseDTO.DocumentCalendarList.builder()
                 .documentList(allResults)
+                .build();
+    }
+
+    public WorkspaceResponseDTO.WorkspaceEditPage toWorkspaceEditPage(Workspace workspace, List<UserResponseDTO.MemberInfo> memberInfoList) {
+        return WorkspaceResponseDTO.WorkspaceEditPage.builder()
+                .title(workspace.getTitle())
+                .imageUrl(workspace.getImageUrl())
+                .members(memberInfoList)
                 .build();
     }
 }
