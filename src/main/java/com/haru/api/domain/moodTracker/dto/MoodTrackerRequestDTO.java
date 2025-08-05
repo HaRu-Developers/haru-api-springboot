@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
 import com.haru.api.domain.moodTracker.entity.enums.QuestionType;
 import com.haru.api.global.util.json.ToLongDeserializer;
+import com.haru.api.global.util.json.ToLongListDeserializer;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -92,7 +93,7 @@ public class MoodTrackerRequestDTO {
         @ArraySchema(
                 schema = @Schema(type = "string")
         )
-        @JsonDeserialize(using = ToLongDeserializer.class)
+        @JsonDeserialize(using = ToLongListDeserializer.class)
         private List<Long> checkboxChoiceIdList; // CHECKBOX_CHOICE 는 여러 개; id 리스트로 받음
 
         private String subjectiveAnswer; // SUBJECTIVE
