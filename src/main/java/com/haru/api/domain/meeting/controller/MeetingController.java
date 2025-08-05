@@ -27,7 +27,7 @@ public class MeetingController {
     private final MeetingQueryService meetingQueryService;
 
 
-    @Operation(summary = "회의 생성 API", description = "# 1.1v (2025-07-30) 안건지 파일과 회의 정보를 받아 회의를 생성합니다. accesstoken을 header에 입력해주세요",
+    @Operation(summary = "회의 생성 API", description = "# [v1.1 (2025-08-05)](https://www.notion.so/2265da7802c580e8bf25c99cc81998bb)" +" 안건지 파일과 회의 정보를 받아 회의를 생성합니다. accesstoken을 header에 입력해주세요",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(
@@ -60,11 +60,11 @@ public class MeetingController {
 
 
     @Operation(summary = "AI회의록 list 조회", description =
-            "# 1.1v (2025-07-30) workspaceId를 받아 회의록 list를 반환합니다. access token을 header에 입력해주세요."
+            "# [v1.1 (2025-08-05)](https://www.notion.so/2265da7802c580de8b79d0b2b5061ddf)"+" workspaceId를 받아 회의록 list를 반환합니다. access token을 header에 입력해주세요."
     )
     @GetMapping("/workspaces/{workspaceId}")
     public ApiResponse<List<MeetingResponseDTO.getMeetingResponse>> getMeetings(
-            @PathVariable("workspaceId") Long workspaceId){
+            @PathVariable("workspaceId") String workspaceId){
 
         Long userId = SecurityUtil.getCurrentUserId();
 
@@ -74,11 +74,11 @@ public class MeetingController {
     }
 
     @Operation(summary = "AI회의록 제목 수정", description =
-            "# 1.1v (2025-07-30) meetingId을 pathparam, 수정할 title을 requestBody로 받아 회의록 제목을 수정핣니다. access token을 header에 입력해주세요."
+            "# [v1.1 (2025-08-05)](https://www.notion.so/22a5da7802c5807c8f1cef8f65a61bca)"+" meetingId을 pathparam, 수정할 title을 requestBody로 받아 회의록 제목을 수정핣니다. access token을 header에 입력해주세요."
     )
     @PatchMapping("/{meetingId}/title")
     public ApiResponse<String> updateMeetingTitle(
-            @PathVariable("meetingId")Long meetingId,
+            @PathVariable("meetingId")String meetingId,
             @RequestBody MeetingRequestDTO.updateTitle request) {
 
         Long userId = SecurityUtil.getCurrentUserId();
@@ -89,11 +89,11 @@ public class MeetingController {
     }
 
     @Operation(summary = "AI회의록 삭제", description =
-            "# 1.1v (2025-07-30) meetingId를 받아 회의록을 삭제합니다. access token을 header에 입력해주세요."
+            "# [v1.1 (2025-08-05)](https://www.notion.so/2265da7802c5800a97e4d66f8bf9626d)"+" meetingId를 받아 회의록을 삭제합니다. access token을 header에 입력해주세요."
     )
     @DeleteMapping("/{meetingId}")
     public ApiResponse<String> deleteMeeting(
-            @PathVariable("meetingId") Long meetingId) {
+            @PathVariable("meetingId") String meetingId) {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
@@ -103,11 +103,11 @@ public class MeetingController {
     }
 
     @Operation(summary = "AI회의록 단일조회", description =
-            "# [v1.0 (2025-08-04)] meetingId를 받아 회의내용을 조회합니다. access token을 header에 입력해주세요."
+            "# [v1.1 (2025-08-05)](https://www.notion.so/AI-2265da7802c580d1973ceb252bc9f1a5)"+" meetingId를 받아 회의내용을 조회합니다. access token을 header에 입력해주세요."
     )
     @GetMapping("/{meetingId}/ai-proceeding")
     public ApiResponse<MeetingResponseDTO.getMeetingProceeding> getMeetingProceeding(
-        @PathVariable("meetingId")Long meetingId) {
+        @PathVariable("meetingId")String meetingId) {
 
         Long userId = SecurityUtil.getCurrentUserId();
         MeetingResponseDTO.getMeetingProceeding response = meetingQueryService.getMeetingProceeding(userId, meetingId);
@@ -119,11 +119,11 @@ public class MeetingController {
 
 
     @Operation(summary = "AI회의록 proceeding 수정", description =
-            "# 1.1v (2025-07-30) meetingId와 수정된 Proceeding을 받아 회의록을 수정합니다. access token을 header에 입력해주세요."
+            "# [v1.1 (2025-08-05)](https://www.notion.so/AI-2265da7802c580e6b3aef0763bff0cf3)"+" meetingId와 수정된 Proceeding을 받아 회의록을 수정합니다. access token을 header에 입력해주세요."
     )
     @PatchMapping("/{meetingId}")
     public ApiResponse<String> adjustProceeding(
-            @PathVariable("meetingId") Long meetingId,
+            @PathVariable("meetingId") String meetingId,
             @RequestBody MeetingRequestDTO.meetingProceedingRequest request) {
 
         Long userId = SecurityUtil.getCurrentUserId();

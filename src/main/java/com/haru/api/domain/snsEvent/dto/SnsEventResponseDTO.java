@@ -1,6 +1,8 @@
 package com.haru.api.domain.snsEvent.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,9 +13,14 @@ public class SnsEventResponseDTO {
     @Getter
     @Builder
     public static class CreateSnsEventResponse {
-        private Long userId;
-        private String accessToken;
-        private String refreshToken;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long snsEventId;
+    }
+
+    @Getter
+    @Builder
+    public static class LinkInstagramAccountResponse {
+        private String instagramAccountName;
     }
 
     @Getter
@@ -59,6 +66,7 @@ public class SnsEventResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SnsEventResponse {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long snsEventId;
         private String title;
         private int participantCount;
@@ -74,6 +82,7 @@ public class SnsEventResponseDTO {
     @AllArgsConstructor
     public static class GetSnsEventRequest {
         private String title;
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long creatorId;
         private String creatorName;
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -81,6 +90,7 @@ public class SnsEventResponseDTO {
         private List<ParticipantResponse> participantList;
         private List<WinnerResponse> winnerList;
         private String snsLink;
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
     }
 

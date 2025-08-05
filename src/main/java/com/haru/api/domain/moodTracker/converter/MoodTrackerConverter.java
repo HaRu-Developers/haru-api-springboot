@@ -163,6 +163,7 @@ public class MoodTrackerConverter {
      */
     public static MoodTrackerResponseDTO.ReportResult toReportResultDTO(MoodTracker moodTracker, List<String> suggestionList, HashIdUtil hashIdUtil) {
         return MoodTrackerResponseDTO.ReportResult.builder()
+                .workspaceId(moodTracker.getWorkspace().getId())
                 .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
                 .title(moodTracker.getTitle())
                 .creatorId(moodTracker.getCreator().getId())
@@ -172,7 +173,6 @@ public class MoodTrackerConverter {
                 .respondentsNum(moodTracker.getRespondentsNum())
                 .report(moodTracker.getReport())
                 .suggestionList(suggestionList)
-                .workspaceId(moodTracker.getWorkspace().getId())
                 .build();
     }
 
@@ -208,6 +208,7 @@ public class MoodTrackerConverter {
                 .collect(Collectors.toList());
 
         return MoodTrackerResponseDTO.QuestionResult.builder()
+                .workspaceId(moodTracker.getWorkspace().getId())
                 .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
                 .title(moodTracker.getTitle())
                 .creatorId(moodTracker.getCreator().getId())
@@ -217,7 +218,6 @@ public class MoodTrackerConverter {
                 .respondentsNum(moodTracker.getRespondentsNum())
                 .description(moodTracker.getDescription())
                 .questionList(questionViewList)
-                .workspaceId(moodTracker.getWorkspace().getId())
                 .build();
     }
 
@@ -275,6 +275,7 @@ public class MoodTrackerConverter {
                 .collect(Collectors.toList());
 
         return MoodTrackerResponseDTO.ResponseResult.builder()
+                .workspaceId(moodTracker.getWorkspace().getId())
                 .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
                 .title(moodTracker.getTitle())
                 .creatorId(moodTracker.getCreator().getId())
@@ -283,7 +284,6 @@ public class MoodTrackerConverter {
                 .dueDate(moodTracker.getDueDate())
                 .respondentsNum(moodTracker.getRespondentsNum())
                 .responseList(responseViews)
-                .workspaceId(moodTracker.getWorkspace().getId())
                 .build();
     }
 

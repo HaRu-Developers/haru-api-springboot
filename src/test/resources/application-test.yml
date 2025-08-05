@@ -8,6 +8,13 @@ spring:
     host: dummy
     port: 1025
     username: dumb
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: "dummy-client-id"
+            client-secret: "dummy-client-secret"
 
 hashid:
   salt: dummy-salt
@@ -36,3 +43,10 @@ cloud:
       secretKey: dummy-secret
 
 invite-url: invite-url
+
+instagram:
+  client:
+    id: "dummy-client-id"
+    secret: "dummy-client-secret"
+  redirect:
+    uri: "dummy-redirect-uri"

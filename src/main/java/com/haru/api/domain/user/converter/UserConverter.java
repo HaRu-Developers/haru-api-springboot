@@ -26,7 +26,7 @@ public class UserConverter {
 
     public static UserResponseDTO.LoginResponse toLoginResponse(User user, String accessToken, String refreshToken) {
         return UserResponseDTO.LoginResponse.builder()
-                .userid(user.getId())
+                .userId(user.getId())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -37,6 +37,13 @@ public class UserConverter {
                 .userId(userId)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .build();
+    }
+
+    public static UserResponseDTO.MemberInfo toMemberInfo(User user) {
+        return UserResponseDTO.MemberInfo.builder()
+                .email(user.getEmail())
+                .name(user.getName())
                 .build();
     }
 }

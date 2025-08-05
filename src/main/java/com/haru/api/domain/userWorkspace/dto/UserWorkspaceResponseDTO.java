@@ -1,5 +1,7 @@
 package com.haru.api.domain.userWorkspace.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,6 +10,7 @@ public class UserWorkspaceResponseDTO {
     @Getter
     @Builder
     public static class UserWorkspaceWithTitle {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
         private String title;
         private String imageUrl;

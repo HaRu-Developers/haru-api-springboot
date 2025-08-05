@@ -69,9 +69,13 @@ public enum ErrorStatus implements BaseErrorCode {
     SNS_EVENT_INSTAGRAM_API_NO_COMMENT(HttpStatus.BAD_REQUEST, "SNS_EVENT4005", "인스타그램 게시물에 댓글이 없습니다."),
     SNS_EVENT_NO_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "SNS_EVENT4006", "인스타그램 액세스 토큰이 없습니다."),
     SNS_EVENT_NO_AUTHORITY(HttpStatus.UNAUTHORIZED, "SNS_EVENT4007", "인스타그램 이벤트에 대한 수정 권한이 없습니다."),
-
+    SNS_EVENT_INSTAGRAM_ALREADY_LINKED(HttpStatus.BAD_REQUEST, "SNS_EVENT4008", "이미 연동된 인스타그램 계정입니다."),
+  
     // last opened 관련 에러
-    USER_DOCUMENT_LAST_OPENED_NOT_FOUND(HttpStatus.NOT_FOUND, "LASTOPENED4001", "해당 문서에 대한 마지막 조회 데이터가 존재하지 않습니다.");
+    USER_DOCUMENT_LAST_OPENED_NOT_FOUND(HttpStatus.NOT_FOUND, "LASTOPENED4001", "해당 문서에 대한 마지막 조회 데이터가 존재하지 않습니다."),
+
+    // 약관 관련 에러
+    TERM_NOT_FOUND(HttpStatus.NOT_FOUND, "TERM4004", "요청한 약관이 존재하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

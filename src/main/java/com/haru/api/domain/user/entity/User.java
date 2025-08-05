@@ -29,7 +29,7 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 50)
     private String email;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String password;
 
     private boolean marketingAgreed;
@@ -42,6 +42,9 @@ public class User extends BaseEntity {
     private String profileImage;
 
     private LocalDateTime inactiveDate;
+
+    @Column(length = 50, unique = true)
+    private String providerId;
 
     public void updateName(String name) {
         this.name = name;

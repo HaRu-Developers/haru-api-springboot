@@ -1,4 +1,4 @@
-package com.haru.api.domain.user.security;
+package com.haru.api.domain.user.security.login;
 
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
