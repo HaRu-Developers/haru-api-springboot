@@ -43,7 +43,23 @@ public class SnsEventController {
         System.out.println("Received code: " + code);
         return ApiResponse.onSuccess("");
     }
-  
+
+    @Operation(
+            summary = "인스타그램 연동 API [v1.0 (2025-08-05)]",
+            description = "# [v1.0 (2025-08-05)](https://www.notion.so/API-21e5da7802c581cca23dff937ac3f155?p=23f5da7802c5803b98abe74d511c2cf4&pm=s)" +
+                    " 인스타그램 로그인 후 인증 서버로부터 받은 code를 header에 넣어주시고, workspaceId를 Path Variable로 넣어주세요."
+    )
+    @GetMapping("/{workspaceId}/link-instagram")
+    public ApiResponse<SnsEventResponseDTO.LinkInstagramAccountResponse> linkInstagramAccount(
+            @RequestHeader("code") String code,
+            @PathVariable Long workspaceId
+    ) {
+        System.out.println("Received accessToken: " + code);
+        return ApiResponse.onSuccess(
+                snsEventCommandService.getInstagramAccessTokenAndAccount(code, workspaceId)
+        );
+    }
+
     @Operation(
             summary = "SNS 이벤트명 수정 API",
             description = "SNS 이벤트명 수정 API입니다. Header에 access token을 넣고 Path Variable에는 snsEvnetId를 Request Body에 SNS 이벤트 수정 정보(title)를 담아 요청해주세요."
@@ -56,21 +72,6 @@ public class SnsEventController {
         Long userId = SecurityUtil.getCurrentUserId();
         snsEventCommandService.updateSnsEventTitle(userId, snsEvnetId, request);
         return ApiResponse.onSuccess("");
-    }
-
-    @Operation(
-            summary = "인스타그램 연동 API",
-            description = "인스타그램 로그인 후 인증 서버로부터 받은 code를 header에 넣어주시고, workspaceId를 Path Variable로 넣어주세요."
-    )
-    @GetMapping("/{workspaceId}/link-instagram")
-    public ApiResponse<SnsEventResponseDTO.LinkInstagramAccountResponse> linkInstagramAccount(
-            @RequestHeader("code") String code,
-            @PathVariable Long workspaceId
-    ) {
-        System.out.println("Received accessToken: " + code);
-        return ApiResponse.onSuccess(
-                snsEventCommandService.getInstagramAccessTokenAndAccount(code, workspaceId)
-        );
     }
           
     @Operation(
