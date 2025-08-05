@@ -64,7 +64,7 @@ public class MeetingController {
     )
     @GetMapping("/workspaces/{workspaceId}")
     public ApiResponse<List<MeetingResponseDTO.getMeetingResponse>> getMeetings(
-            @PathVariable("workspaceId") Long workspaceId){
+            @PathVariable("workspaceId") String workspaceId){
 
         Long userId = SecurityUtil.getCurrentUserId();
 
@@ -78,7 +78,7 @@ public class MeetingController {
     )
     @PatchMapping("/{meetingId}/title")
     public ApiResponse<String> updateMeetingTitle(
-            @PathVariable("meetingId")Long meetingId,
+            @PathVariable("meetingId")String meetingId,
             @RequestBody MeetingRequestDTO.updateTitle request) {
 
         Long userId = SecurityUtil.getCurrentUserId();
@@ -93,7 +93,7 @@ public class MeetingController {
     )
     @DeleteMapping("/{meetingId}")
     public ApiResponse<String> deleteMeeting(
-            @PathVariable("meetingId") Long meetingId) {
+            @PathVariable("meetingId") String meetingId) {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
@@ -107,7 +107,7 @@ public class MeetingController {
     )
     @GetMapping("/{meetingId}/ai-proceeding")
     public ApiResponse<MeetingResponseDTO.getMeetingProceeding> getMeetingProceeding(
-        @PathVariable("meetingId")Long meetingId) {
+        @PathVariable("meetingId")String meetingId) {
 
         Long userId = SecurityUtil.getCurrentUserId();
         MeetingResponseDTO.getMeetingProceeding response = meetingQueryService.getMeetingProceeding(userId, meetingId);
@@ -123,7 +123,7 @@ public class MeetingController {
     )
     @PatchMapping("/{meetingId}")
     public ApiResponse<String> adjustProceeding(
-            @PathVariable("meetingId") Long meetingId,
+            @PathVariable("meetingId") String meetingId,
             @RequestBody MeetingRequestDTO.meetingProceedingRequest request) {
 
         Long userId = SecurityUtil.getCurrentUserId();
