@@ -26,16 +26,16 @@ public interface UserWorkspaceRepository extends JpaRepository<UserWorkspace, Lo
     @Query("SELECT uw.user.email FROM UserWorkspace uw WHERE uw.workspace.id = :workspaceId")
     List<String> findEmailsByWorkspaceId(@Param("workspaceId") Long workspaceId);
 
-    Boolean existsByWorkspaceIdAndUserId(Long workspaceId, Long userId);
+    Boolean existsByUserIdAndWorkspaceId(Long userId, Long workspaceId);
 
     Optional<UserWorkspace> findByWorkspaceIdAndUserId(Long workspaceId, Long userId);
 
     Optional<UserWorkspace> findByUserAndWorkspace(User user, Workspace workspace);
 
     Optional<UserWorkspace> findByUserIdAndWorkspaceId(Long userId, Long workspaceId);
-  
+
     Optional<UserWorkspace> findByWorkspaceAndAuth(Workspace workspace, Auth auth);
 
-    @Query("SELECT uw.user FROM UserWorkspace uw WHERE uw.workspace = :workspace")
-    List<User> findUsersByWorkspace(Workspace workspace);
+    @Query("SELECT uw.user FROM UserWorkspace uw WHERE uw.workspace.id = :workspaceId")
+    List<User> findUsersByWorkspaceId(Long workspaceId);
 }
