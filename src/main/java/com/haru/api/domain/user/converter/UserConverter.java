@@ -39,4 +39,11 @@ public class UserConverter {
                 .refreshToken(refreshToken)
                 .build();
     }
+
+    public static UserResponseDTO.MemberInfo toMemberInfo(User user) {
+        return UserResponseDTO.MemberInfo.builder()
+                .email(user.getEmail())
+                .name(user.getName())
+                .build();
+    }
 }

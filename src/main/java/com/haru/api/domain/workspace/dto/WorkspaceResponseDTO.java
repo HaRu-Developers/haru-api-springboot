@@ -1,12 +1,10 @@
 package com.haru.api.domain.workspace.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
-import com.haru.api.global.util.ToLongDeserializer;
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.haru.api.domain.user.dto.UserResponseDTO;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -77,4 +75,13 @@ public class WorkspaceResponseDTO {
     public static class DocumentCalendarList {
         private List<DocumentCalendar> documentList;
     }
+
+    @Getter
+    @Builder
+    public static class WorkspaceEditPage {
+        private String title;
+        private String imageUrl;
+        private List<UserResponseDTO.MemberInfo> members;
+    }
+
 }
