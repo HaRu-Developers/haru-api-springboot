@@ -1,4 +1,4 @@
-package com.haru.api.domain.user.security;
+package com.haru.api.domain.user.security.login;
 
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import lombok.RequiredArgsConstructor;

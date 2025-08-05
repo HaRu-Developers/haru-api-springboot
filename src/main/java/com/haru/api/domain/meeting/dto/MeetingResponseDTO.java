@@ -33,6 +33,7 @@ public class MeetingResponseDTO {
         private Long userId;
         private String email;
         private String userName;
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
         private String title;
         private String proceeding;

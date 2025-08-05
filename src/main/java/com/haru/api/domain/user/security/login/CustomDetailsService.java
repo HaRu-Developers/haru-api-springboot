@@ -1,4 +1,4 @@
-package com.haru.api.domain.user.security;
+package com.haru.api.domain.user.security.login;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
