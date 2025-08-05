@@ -41,6 +41,8 @@ public class MoodTrackerResponseDTO {
     @Getter
     @SuperBuilder
     public static class BaseResult{
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long workspaceId;
         private String moodTrackerHashedId;
         private String title;
         @JsonSerialize(using = ToStringSerializer.class)
@@ -58,8 +60,6 @@ public class MoodTrackerResponseDTO {
     public static class QuestionResult extends BaseResult {
         private String description;
         private List<QuestionView> questionList;
-        @JsonSerialize(using = ToStringSerializer.class)
-        private Long workspaceId;
     }
 
     @Getter
@@ -99,16 +99,12 @@ public class MoodTrackerResponseDTO {
     public static class ReportResult extends BaseResult {
         private List<String> suggestionList;
         private String report;
-        @JsonSerialize(using = ToStringSerializer.class)
-        private Long workspaceId;
     }
 
     @Getter
     @SuperBuilder
     public static class ResponseResult extends BaseResult {
         private List<QuestionResponseView> responseList;
-        @JsonSerialize(using = ToStringSerializer.class)
-        private Long workspaceId;
     }
 
     @Getter
