@@ -26,7 +26,7 @@ public class UserConverter {
 
     public static UserResponseDTO.LoginResponse toLoginResponse(User user, String accessToken, String refreshToken) {
         return UserResponseDTO.LoginResponse.builder()
-                .userId(user.getId().toString())
+                .userId(user.getId())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -34,7 +34,7 @@ public class UserConverter {
 
     public static UserResponseDTO.RefreshResponse toRefreshResponse(Long userId, String accessToken, String refreshToken) {
         return UserResponseDTO.RefreshResponse.builder()
-                .userId(userId.toString())
+                .userId(userId)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
