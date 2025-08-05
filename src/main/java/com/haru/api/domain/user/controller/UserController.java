@@ -25,8 +25,9 @@ public class UserController {
     private final UserQueryService userQueryService;
     private final WorkspaceCommandService workspaceCommandService;
 
-    @Operation(summary = "회원가입", description =
-            "# 회원가입 API 입니다. 이메일과 패스워드 그리고 이름을 body에 입력해주세요. 워크스페이스 초대 메일을 통한 회원가입은 query string에 초대장의 token을 넣어주세요"
+    @Operation(summary = "회원가입 [v1.0 (2025-08-05)]", description =
+            "# [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=2265da7802c5819ca025d31fe9167842&pm=s)" +
+                    " 회원가입 API 입니다. 이메일과 패스워드 그리고 이름을 body에 입력해주세요. 워크스페이스 초대 메일을 통한 회원가입은 query string에 초대장의 token을 넣어주세요"
     )
     @PostMapping("/signup")
     public ApiResponse<Object> signUp(
@@ -45,8 +46,9 @@ public class UserController {
         return ApiResponse.onSuccess(null);
     }
 
-    @Operation(summary = "로그인", description =
-            "# 로그인 API 입니다. 이메일과 패스워드를 body에 입력해주세요."
+    @Operation(summary = "로그인 [v1.0 (2025-08-05)]", description =
+            "# [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=2265da7802c58194963acb7f32017fc8&pm=s)" +
+                    " 로그인 API 입니다. 이메일과 패스워드를 body에 입력해주세요."
     )
     @PostMapping("/login")
     public ApiResponse<UserResponseDTO.LoginResponse> login(
@@ -57,8 +59,9 @@ public class UserController {
         );
     }
 
-    @Operation(summary = "토큰 갱신", description =
-            "# access token 갱신 API 입니다. access token과 refresh token을 header에 입력해주세요."
+    @Operation(summary = "Access Token 갱신 [v1.0 (2025-08-05)]", description =
+            "# [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=2265da7802c581939506e2e295eb29a0&pm=s)" +
+                    " Access Token 갱신 API 입니다. Access Token과 Refresh Token을 header에 입력해주세요."
     )
     @PostMapping("/refresh")
     public ApiResponse<UserResponseDTO.RefreshResponse> refreshToken(
@@ -69,8 +72,9 @@ public class UserController {
         );
     }
 
-    @Operation(summary = "로그아웃 API", description =
-            "# 로그아웃 API 입니다. 로그아웃하고자 하는 유저의 access token을 header에 입력해주세요."
+    @Operation(summary = "로그아웃 API [v1.0 (2025-08-05)]", description =
+            "# [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=2265da7802c581da88d1faf700b112de&pm=s)" +
+                    "로그아웃 API 입니다. 로그아웃하고자 하는 유저의 Access Token을 header에 입력해주세요."
     )
     @DeleteMapping("/logout")
     public ApiResponse<?> logout(
