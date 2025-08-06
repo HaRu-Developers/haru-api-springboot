@@ -22,6 +22,8 @@ public class AudioSessionBuffer {
     // 회의를 하면서 stt로 변환된 텍스트를 담아두기 위한 queue
     private final Queue<SpeechSegment> currentUtteranceQueue = new LinkedList<>();
 
+    private String agendaText;
+
     // 상태
     private boolean isTriggered = false;
 
@@ -74,6 +76,10 @@ public class AudioSessionBuffer {
         currentUtteranceQueue.offer(speechSegment);
     }
 
+    public synchronized Queue<SpeechSegment> getCurrentUtteranceQueue() {
+        return currentUtteranceQueue;
+    }
+
     public synchronized String getAllUtterance() {
         if (currentUtteranceQueue.isEmpty()) {
             return "No utterances recorded yet.";
@@ -106,5 +112,13 @@ public class AudioSessionBuffer {
 
     public synchronized Meeting getMeeting() {
         return meeting;
+    }
+
+    public synchronized void setAgendaText(String agendaText) {
+        this.agendaText = agendaText;
+    }
+
+    public synchronized String getAgendaText() {
+        return agendaText;
     }
 }
