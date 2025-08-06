@@ -157,8 +157,4 @@ public class AudioProcessingQueue {
             System.err.println("Failed to enqueue audio buffer: " + result);
         }
     }
-
-    private boolean isValidSpeech(SpeechSegment speechSegment) {
-        return false;
-    }
 }
