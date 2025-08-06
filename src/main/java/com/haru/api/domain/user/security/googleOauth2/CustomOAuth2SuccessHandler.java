@@ -27,7 +27,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             HttpServletResponse response,
             Authentication authentication
     ) throws IOException {
-        String successGoogleLoginUrl = "";
+        String successGoogleLoginUrl = "/auth/login/google/callback";
         CustomOauth2UserDetails userDetails = (CustomOauth2UserDetails) authentication.getPrincipal();
         if (!userDetails.getIsNewUser()) { // 회원가입인지 로그인인지 판단, 로그인이면 토큰 반환
             Long userId = userDetails.getUser().getId();
@@ -35,10 +35,9 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             String accessToken = userCommandService.generateAccessToken(userId, accessExpTime);
             String refreshToken = userCommandService.generateAndSaveRefreshToken(key, refreshExpTime);
             // 프론트엔드 URL로 리다이렉트 (query param 전달)
-            response.sendRedirect("http://localhost:3000" + successGoogleLoginUrl + "?accessToken=" + accessToken + "&refreshToken=" + refreshToken);
+            response.sendRedirect("http://localhost:3000" + successGoogleLoginUrl + "?status=success" + "&accessToken=" + accessToken + "&refreshToken=" + refreshToken);
         } else { // 회원가입
-            response.sendRedirect("http://localhost:3000" + successGoogleLoginUrl);
+            response.sendRedirect("http://localhost:3000" + successGoogleLoginUrl + "?status=success");
         }
-
     }
 }
