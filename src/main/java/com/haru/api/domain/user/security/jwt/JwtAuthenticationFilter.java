@@ -40,7 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/terms",
             "/api/v1/sns/oauth/callback",
             "/api/v1/users/signup/same",
-            "login/oauth2/code/google"
+            "/favicon.ico"
     };
     private final JwtUtils jwtUtils;
     private final RedisTemplate<String, String> redisTemplate;
