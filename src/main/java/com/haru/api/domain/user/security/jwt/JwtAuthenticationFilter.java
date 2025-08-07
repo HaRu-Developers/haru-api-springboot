@@ -38,7 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/ws/audio/**",
             "/api/v1/workspaces/invite-accept",
             "/api/v1/terms",
-            "/api/v1/sns/oauth/callback"
+            "/api/v1/sns/oauth/callback",
+            "/api/v1/users/signup/same"
     };
     private final JwtUtils jwtUtils;
     private final RedisTemplate<String, String> redisTemplate;

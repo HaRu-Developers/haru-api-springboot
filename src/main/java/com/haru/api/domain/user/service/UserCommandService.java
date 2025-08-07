@@ -17,4 +17,6 @@ public interface UserCommandService {
     String generateAccessToken(Long userId, int accessExpTime);
 
     String generateAndSaveRefreshToken(String key, int refreshExpTime);
+
+    UserResponseDTO.CheckEmailDuplicationResponse checkEmailDuplication(UserRequestDTO.CheckEmailDuplicationRequest request);
 }

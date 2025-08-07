@@ -129,4 +129,18 @@ public class UserController {
         return ApiResponse.onSuccess(users);
     }
 
+    @Operation(summary = "이메일 중복 검사 [v1.0 (2025-08-05)]", description =
+            "# [v1.0 (2025-08-05)](https://www.notion.so/API-21e5da7802c581cca23dff937ac3f155?p=22a5da7802c580c0b553c6223d3efe53&pm=s)" +
+                    " 회원가입 시 이미 가입된 회원의 이메일인지 중복 검사하는 API입니다."
+    )
+    @PostMapping("/signup/same")
+    public ApiResponse<UserResponseDTO.CheckEmailDuplicationResponse> checkEmailDuplication(
+            @RequestBody UserRequestDTO.CheckEmailDuplicationRequest request
+    ) {
+        return ApiResponse.onSuccess(
+                userCommandService.checkEmailDuplication(
+                        request
+                )
+        );
+    }
 }
