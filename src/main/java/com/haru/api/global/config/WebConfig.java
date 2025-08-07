@@ -11,7 +11,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("http://localhost:3000", "https://haru.it.kr", "https://api.haru.it.kr") // 프론트엔드 주소 추가
+                .allowedOriginPatterns("http://localhost:3000", "https://haru.it.kr", "https://api.haru.it.kr", "*") // 프론트엔드 주소 추가
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .allowCredentials(true);
