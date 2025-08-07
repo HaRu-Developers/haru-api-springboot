@@ -2,6 +2,7 @@ package com.haru.api.domain.user.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.haru.api.domain.user.entity.enums.EmailStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -39,5 +40,11 @@ public class UserResponseDTO {
     public static class MemberInfo {
         private String email;
         private String name;
+    }
+
+    @Getter
+    @Builder
+    public static class CheckEmailDuplicationResponse {
+        private EmailStatus emailStatus;
     }
 }

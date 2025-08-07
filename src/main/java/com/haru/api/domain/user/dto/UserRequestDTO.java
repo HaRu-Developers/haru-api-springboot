@@ -42,4 +42,13 @@ public class UserRequestDTO {
         private String name;
         private String password;
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CheckEmailDuplicationRequest {
+        @NotBlank(message = "이메일은 빈값일 수 없습니다.")
+        private String email;
+    }
 }

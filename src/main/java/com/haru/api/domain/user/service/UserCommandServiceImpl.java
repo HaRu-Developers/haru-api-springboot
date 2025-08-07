@@ -4,6 +4,7 @@ import com.haru.api.domain.user.converter.UserConverter;
 import com.haru.api.domain.user.dto.UserRequestDTO;
 import com.haru.api.domain.user.dto.UserResponseDTO;
 import com.haru.api.domain.user.entity.User;
+import com.haru.api.domain.user.entity.enums.EmailStatus;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.user.security.jwt.JwtUtils;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
@@ -142,5 +143,20 @@ public class UserCommandServiceImpl implements UserCommandService{
         String refreshToken = jwtUtils.generateToken(Collections.emptyMap(), refreshExpTime);
         redisTemplate.opsForValue().set(key, refreshToken, refreshExpTime, TimeUnit.SECONDS);
         return refreshToken;
+    }
+
+    @Override
+    public UserResponseDTO.CheckEmailDuplicationResponse checkEmailDuplication(UserRequestDTO.CheckEmailDuplicationRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElse(null);
+        if (user == null) {
+            return UserResponseDTO.CheckEmailDuplicationResponse.builder()
+                    .emailStatus(EmailStatus.AVAILABLE)
+                    .build();
+        } else {
+            return UserResponseDTO.CheckEmailDuplicationResponse.builder()
+                    .emailStatus(EmailStatus.UNAVAILABLE)
+                    .build();
+        }
     }
 }
