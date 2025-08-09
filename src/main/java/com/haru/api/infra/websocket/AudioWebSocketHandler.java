@@ -7,6 +7,8 @@ import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.infra.api.client.ChatGPTClient;
 import com.haru.api.infra.api.client.FastApiClient;
+import com.haru.api.infra.api.client.ScoringApiClient;
+import com.haru.api.infra.api.repository.AIQuestionRepository;
 import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import com.orctom.vad4j.VAD;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +35,11 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     private final FastApiClient fastApiClient;
     private final ChatGPTClient chatGPTClient;
+    private final ScoringApiClient scoringApiClient;
 
     private final MeetingRepository meetingRepository;
     private final SpeechSegmentRepository speechSegmentRepository;
+    private final AIQuestionRepository aiQuestionRepository;
 
     private final ObjectMapper objectMapper;
 
@@ -131,10 +135,12 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                         sessionQueues.computeIfAbsent(sessionId, id ->
                             new AudioProcessingQueue(
                                     fastApiClient::sendRawBytesToFastAPI,
+                                    scoringApiClient::sendScoringRequstToFastAPI,
                                     chatGPTClient,
                                     session,
                                     sessionBuffer,
                                     speechSegmentRepository,
+                                    aiQuestionRepository,
                                     objectMapper
                             )
                         );
