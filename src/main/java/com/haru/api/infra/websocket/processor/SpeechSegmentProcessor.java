@@ -7,10 +7,8 @@ import com.haru.api.infra.api.entity.SpeechSegment;
 import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import com.haru.api.infra.websocket.AudioSessionBuffer;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class SpeechSegmentProcessor {
@@ -29,14 +27,12 @@ public class SpeechSegmentProcessor {
         this.objectMapper = objectMapper;
     }
 
-    public Mono<List<SpeechSegment>> processSttResult(String sttResult) {
-        return Mono.fromCallable(() -> {
-            SttResponseDTO sttResponse = objectMapper.readValue(sttResult, SttResponseDTO.class);
-
-            return sttResponse.getUtterances().stream()
-                    .map(this::createAndSaveSpeechSegment)
-                    .collect(Collectors.toList());
-        });
+    public Flux<SpeechSegment> processSttResult(String sttResult) {
+        return Mono.fromCallable(() -> objectMapper.readValue(sttResult, SttResponseDTO.class))
+                .flatMapMany(sttResponse -> Flux.fromStream(
+                        sttResponse.getUtterances().stream()
+                                .map(this::createAndSaveSpeechSegment)
+                ));
     }
 
     private SpeechSegment createAndSaveSpeechSegment(SttResponseDTO.UtteranceDTO utteranceDto) {

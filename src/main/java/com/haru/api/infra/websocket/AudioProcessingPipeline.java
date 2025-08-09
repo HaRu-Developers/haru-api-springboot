@@ -15,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.WebSocketSession;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-import java.util.List;
 import java.util.function.Function;
 
 @Slf4j
@@ -51,24 +51,14 @@ public class AudioProcessingPipeline {
     // 버퍼에 음성 바이트 스트림이 들어오면 FastAPI의 STT API를 호출하여 결과를 받아옴
     public Mono<Void> processAudioBuffer(byte[] audioBuffer) {
         return sttFunction.apply(audioBuffer)
-                .flatMap(this::processSttResponse)
-                .onErrorResume(error -> {
-                    log.error("Error in audio processing pipeline", error);
-                    return Mono.empty();
-                });
+                .flatMapMany(this::processSttResponse)
+                .then();
     }
 
     // STT API를 호출하여 받아온 결과를 SpeechSegmentProcessor를 사용하여
     // 각 speech를 생성하고 저장
-    private Mono<Void> processSttResponse(String sttResult) {
+    private Flux<Void> processSttResponse(String sttResult) {
         return speechSegmentProcessor.processSttResult(sttResult)
-                .flatMapMany(this::processEachSpeechSegment)
-                .then();
-    }
-
-    // 각 speech에 대해서 처리
-    private Flux<Void> processEachSpeechSegment(List<SpeechSegment> segments) {
-        return Flux.fromIterable(segments)
                 .flatMap(this::processSingleSegment);
     }
 
@@ -77,7 +67,8 @@ public class AudioProcessingPipeline {
         return scoringProcessor.processScoring(segment)
                 .flatMap(scoringResponse -> {
                     if (scoringResponse.getIsQuestionNeeded()) {
-                        return aiQuestionProcessor.processAIQuestions(segment);
+                        return aiQuestionProcessor.processAIQuestions(segment)
+                                .subscribeOn(Schedulers.boundedElastic());
                     }
                     return Mono.empty();
                 });
