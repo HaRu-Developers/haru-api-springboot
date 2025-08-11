@@ -8,8 +8,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${api.fast-api-url}")
-    private String fastApiUrl;
+    @Value("${api.stt-api-url}")
+    private String sttApiUrl;
+
+    @Value("${api.score-api-url}")
+    private String scoreApiUrl;
 
     @Value("${api.openai.api-key}")
     private String openaiApiKey;
@@ -17,7 +20,14 @@ public class WebClientConfig {
     @Bean
     public WebClient fastApiWebClient(WebClient.Builder builder) {
         return builder
-                .baseUrl(fastApiUrl)
+                .baseUrl(sttApiUrl)
+                .build();
+    }
+
+    @Bean
+    public WebClient scoreApiWebClient(WebClient.Builder builder) {
+        return builder
+                .baseUrl(scoreApiUrl)
                 .build();
     }
 

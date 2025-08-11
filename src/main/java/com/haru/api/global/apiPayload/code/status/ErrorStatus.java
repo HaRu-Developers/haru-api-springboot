@@ -70,7 +70,9 @@ public enum ErrorStatus implements BaseErrorCode {
     SNS_EVENT_NO_ACCESS_TOKEN(HttpStatus.BAD_REQUEST, "SNS_EVENT4006", "인스타그램 액세스 토큰이 없습니다."),
     SNS_EVENT_NO_AUTHORITY(HttpStatus.UNAUTHORIZED, "SNS_EVENT4007", "인스타그램 이벤트에 대한 수정 권한이 없습니다."),
     SNS_EVENT_INSTAGRAM_ALREADY_LINKED(HttpStatus.BAD_REQUEST, "SNS_EVENT4008", "이미 연동된 인스타그램 계정입니다."),
-  
+    SNS_EVENT_WRONG_FORMAT(HttpStatus.BAD_REQUEST, "SNS_EVENT4009", "잘못된 다운로드 파일 형식입니다."),
+    SNS_EVENT_DOWNLOAD_LIST_ERROR(HttpStatus.BAD_REQUEST, "SNS_EVENT4010", "리스트 다운로드중 오류가 발생했습니다."),
+
     // last opened 관련 에러
     USER_DOCUMENT_LAST_OPENED_NOT_FOUND(HttpStatus.NOT_FOUND, "LASTOPENED4001", "해당 문서에 대한 마지막 조회 데이터가 존재하지 않습니다."),
 

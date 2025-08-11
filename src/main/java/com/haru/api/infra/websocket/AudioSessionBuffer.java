@@ -5,10 +5,8 @@ import com.haru.api.infra.api.entity.SpeechSegment;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class AudioSessionBuffer {
 
@@ -21,6 +19,8 @@ public class AudioSessionBuffer {
 
     // 회의를 하면서 stt로 변환된 텍스트를 담아두기 위한 queue
     private final Queue<SpeechSegment> currentUtteranceQueue = new LinkedList<>();
+
+    private String agendaText;
 
     // 상태
     private boolean isTriggered = false;
@@ -74,6 +74,10 @@ public class AudioSessionBuffer {
         currentUtteranceQueue.offer(speechSegment);
     }
 
+    public synchronized Queue<SpeechSegment> getCurrentUtteranceQueue() {
+        return currentUtteranceQueue;
+    }
+
     public synchronized String getAllUtterance() {
         if (currentUtteranceQueue.isEmpty()) {
             return "No utterances recorded yet.";
@@ -92,6 +96,18 @@ public class AudioSessionBuffer {
         return sb.toString();
     }
 
+    public synchronized List<String> getAllUtterancesAsList() {
+        // 큐가 비어있으면 빈 리스트를 반환
+        if (currentUtteranceQueue.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 큐의 각 SpeechSegment에서 utterance만 추출하여 새 리스트에 저장
+        return currentUtteranceQueue.stream()
+                .map(SpeechSegment::getText)
+                .collect(Collectors.toList());
+    }
+
     public synchronized void setUtteranceStartTime(LocalDateTime utterance_start_time) {
         this.utterance_start_time = utterance_start_time;
     }
@@ -106,5 +122,13 @@ public class AudioSessionBuffer {
 
     public synchronized Meeting getMeeting() {
         return meeting;
+    }
+
+    public synchronized void setAgendaText(String agendaText) {
+        this.agendaText = agendaText;
+    }
+
+    public synchronized String getAgendaText() {
+        return agendaText;
     }
 }

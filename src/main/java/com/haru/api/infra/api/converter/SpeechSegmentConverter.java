@@ -28,7 +28,7 @@ public class SpeechSegmentConverter {
 
     public static SpeechSegmentResponseDTO.SpeechSegmentResponse toSpeechSegmentResponseDTO(SpeechSegment speechSegment) {
         return SpeechSegmentResponseDTO.SpeechSegmentResponse.builder()
-                .speakerId(speechSegment.getSpeakerId())
+                .speechId(speechSegment.getId())
                 .text(speechSegment.getText())
                 .startTime(speechSegment.getStartTime())
                 .build();

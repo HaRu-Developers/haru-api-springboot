@@ -2,12 +2,17 @@ package com.haru.api.domain.snsEvent.controller;
 
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
+import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.domain.snsEvent.entity.enums.ListType;
 import com.haru.api.domain.snsEvent.service.SnsEventCommandService;
 import com.haru.api.domain.snsEvent.service.SnsEventQueryService;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -118,5 +123,38 @@ public class SnsEventController {
         return ApiResponse.onSuccess(
                 snsEventQueryService.getSnsEvent(userId, Long.parseLong(snsEventId))
         );
+    }
+
+    @Operation(
+            summary = "참여자 및 당첨자 리스트 다운로드 API [v1.0 (2025-08-11)]",
+            description = "# [v1.0 (2025-08-11)](https://www.notion.so/API-21e5da7802c581cca23dff937ac3f155?p=2475da7802c5803ca84dc3f4b50ae257&pm=s)" +
+                    " 참여자 및 당첨자 리스트 다운로드 API입니다. Header에 access token을 넣고 Path Variable에는 snsEventId를 넣어 요청해주세요. Query String에는 다운로드 형식을 넣어주시고 다운로드 형식이 docx라면 리스트의 HTML을 Request Body에 넣어주세요."
+    )
+    @PostMapping("/{snsEventId}/list/download")
+    public ResponseEntity<byte[]> downloadList(
+            @PathVariable String snsEventId,
+            @RequestParam ListType listType,
+            @RequestParam Format format,
+            @RequestBody SnsEventRequestDTO.DownloadListRequest request
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        byte[] fileBytes = snsEventCommandService.downloadList(
+                userId,
+                Long.parseLong(snsEventId),
+                listType,
+                format,
+                request
+        );
+
+        String listTypefileName = listType == ListType.PARTICIPANT ? "참여자" : "당첨자";
+        String filename = format == Format.PDF ? listTypefileName + ".pdf" : listTypefileName + ".docx";
+        String contentType = format == Format.PDF
+                ? MediaType.APPLICATION_PDF_VALUE
+                : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(fileBytes);
     }
 }
