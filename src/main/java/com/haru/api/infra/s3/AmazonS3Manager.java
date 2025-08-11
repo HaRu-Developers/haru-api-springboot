@@ -6,8 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -66,6 +68,7 @@ public class AmazonS3Manager{
     }
 
 
+    // 프론트로 url을 보내기 위해 사용하는 메서드
     public String generatePresignedUrl(String keyName) {
         if (keyName == null || keyName.isBlank()) return null;
 
@@ -81,6 +84,25 @@ public class AmazonS3Manager{
 
         PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
         return presignedRequest.url().toString();
+    }
+
+    //S3에서 key에 해당하는 파일을 다운로드하여 byte 배열로 반환 -> 썸네일 생성시 활용
+    public byte[] downloadFile(String keyName) {
+        if (keyName == null || keyName.isBlank()) {
+            throw new IllegalArgumentException("파일 키가 유효하지 않습니다.");
+        }
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(amazonConfig.getBucket())
+                    .key(keyName)
+                    .build();
+
+            ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
+            return objectBytes.asByteArray();
+        } catch (Exception e) {
+            log.error("S3 파일 다운로드에 실패했습니다. key: {}", keyName, e);
+            throw new RuntimeException("S3 file download failed", e);
+        }
     }
 
     public String generateKeyName(String path, UUID uuid) {
