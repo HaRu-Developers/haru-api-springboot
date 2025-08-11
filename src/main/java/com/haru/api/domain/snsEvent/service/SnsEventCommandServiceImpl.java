@@ -10,6 +10,8 @@ import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
 import com.haru.api.domain.snsEvent.entity.Participant;
 import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.entity.Winner;
+import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.domain.snsEvent.entity.enums.ListType;
 import com.haru.api.domain.snsEvent.repository.ParticipantRepository;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.snsEvent.repository.WinnerRepository;
@@ -27,22 +29,22 @@ import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
 import com.haru.api.global.apiPayload.exception.handler.UserDocumentLastOpenedHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.infra.api.restTemplate.InstagramOauth2RestTemplate;
+import com.lowagie.text.Element;
+import com.lowagie.text.pdf.*;
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.xwpf.usermodel.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.*;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -69,9 +71,14 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final RestTemplate restTemplate;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
+    private final int WORD_TABLE_SIZE = 40; // 페이지당 총 아이디 수
+    private final int PER_COL = WORD_TABLE_SIZE/ 2; // 한쪽 컬럼에 들어갈 개수
 
     @Override
-    public SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(Long workspaceId, SnsEventRequestDTO.CreateSnsRequest request) {
+    public SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(
+            Long workspaceId,
+            SnsEventRequestDTO.CreateSnsRequest request
+    ) {
         // SNS 이벤트 생성 및 저장
         Long userId = SecurityUtil.getCurrentUserId();
         User foundUser = userRepository.findById(userId)
@@ -151,7 +158,9 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                 .build();
     }
 
-    private SnsEventResponseDTO.InstagramMediaResponse fetchInstagramMedia(String accessToken) {
+    private SnsEventResponseDTO.InstagramMediaResponse fetchInstagramMedia(
+            String accessToken
+    ) {
         String baseUrl = "https://graph.instagram.com/me/media";
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
                 .queryParam("fields", "shortcode")
@@ -178,7 +187,10 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     }
 
 
-    public List<SnsEventResponseDTO.Comment> getComments(String mediaId, String accessToken) {
+    public List<SnsEventResponseDTO.Comment> getComments(
+            String mediaId,
+            String accessToken
+    ) {
         String baseUrl = "https://graph.instagram.com/" + mediaId + "/comments";
         String url = UriComponentsBuilder
                 .fromHttpUrl(baseUrl)
@@ -203,7 +215,10 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         }
     }
 
-    private int countOccurrences(String text, String keyword) {
+    private int countOccurrences(
+            String text,
+            String keyword
+    ) {
         if (text == null || keyword == null || keyword.isEmpty()) return 0;
 
         int count = 0, idx = 0;
@@ -227,7 +242,10 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
     @Override
     @Transactional
-    public SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(String code, Long workspaceId) {
+    public SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(
+            String code,
+            Long workspaceId
+    ) {
         String shortLivedAccessToken;
         String longLivedAccessToken;
         Map<String, Object> userInfo;
@@ -257,7 +275,11 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
   
     @Override
     @Transactional
-    public void updateSnsEventTitle(Long userId, Long snsEventId, SnsEventRequestDTO.UpdateSnsEventRequest request) {
+    public void updateSnsEventTitle(
+            Long userId,
+            Long snsEventId,
+            SnsEventRequestDTO.UpdateSnsEventRequest request
+    ) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
         SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
@@ -282,7 +304,10 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
     @Override
     @Transactional
-    public void deleteSnsEvent(Long userId, Long snsEventId) {
+    public void deleteSnsEvent(
+            Long userId,
+            Long snsEventId
+    ) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
         SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
@@ -304,4 +329,248 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
     }
 
+    @Override
+    public byte[] downloadList(
+            Long userId,
+            Long snsEventId,
+            ListType listType,
+            Format format,
+            SnsEventRequestDTO.DownloadListRequest request
+    ) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
+        String pdfTitle = snsEventRepository.findById(snsEventId)
+                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND))
+                .getTitle();
+        try {
+            if (format == Format.PDF) {
+                // 폰트 경로
+                URL resource = getClass().getClassLoader().getResource("templates/NotoSansKR-Regular.ttf");
+                File reg = new File(resource.toURI()); // catch에서 Exception 따로 처리해주기
+                String listHtml = injectHead(request.getListHtml());
+                listHtml = injectPageMarginStyle(listHtml);
+                byte[] shiftedPdfByte = convertHtmlToPdf(listHtml, reg);
+                return addPdfTitle(shiftedPdfByte, pdfTitle, reg.getAbsolutePath());
+            }
+            else if (format == Format.DOCX) {
+                return createWord(listType, pdfTitle);
+            }
+            else throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
+        } catch (Exception e) {
+            log.error("Error creating document: {}", e.getMessage());
+            throw new SnsEventHandler(SNS_EVENT_DOWNLOAD_LIST_ERROR);
+        }
+    }
+
+    private String injectHead(String html) {
+        String fontCss = """
+        <style>
+            body {
+                font-family: 'NotoSansKR', sans-serif;
+            }
+        </style>
+        """;
+        if (html.toLowerCase().contains("<head>")) {
+            // <head> 바로 뒤에 스타일 삽입
+            return html.replaceFirst("(?i)<head>", "<head>" + fontCss);
+        } else {
+            // head가 없으면 생성
+            return html.replaceFirst("(?i)<html>", "<html><head>" + fontCss + "</head>");
+        }
+    }
+
+    private String injectPageMarginStyle(String html) {
+        String styleBlock = """
+        <style>
+            @page {
+                size: A4;
+                margin-top: 80pt;
+                margin-bottom: 80pt;
+            }
+            @page :first {
+                margin-top: 100pt; /* 첫 페이지만 위 여백 크게 */
+            }
+        </style>
+        """;
+        String lowerHtml = html.toLowerCase();
+        if (lowerHtml.contains("<head>")) {
+            // <head> 태그가 있는 경우 → 바로 뒤에 스타일 삽입
+            return html.replaceFirst("(?i)<head>", "<head>" + styleBlock);
+        } else {
+            // <head> 태그가 없는 경우 → <html> 다음에 <head> 생성 후 스타일 삽입
+            return html.replaceFirst("(?i)<html>", "<html><head>" + styleBlock + "</head>");
+        }
+    }
+
+    private byte[] convertHtmlToPdf(String listHtml, File reg) throws Exception {
+        // Openhtmltopdf/Flying Saucer를 사용하여 PDF 변환
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PdfRendererBuilder builder = new PdfRendererBuilder();
+        builder.useFastMode();
+        builder.withHtmlContent(listHtml, null); // ex) "file:/opt/app/static/" or "https://your.cdn/", // base url 설정, 직접css파일 가져오거나 프론트엔드 배포 후 적용
+        builder.toStream(baos);
+        // 한글 폰트 임베딩
+        if (reg.exists() && reg.canRead()) {
+            builder.useFont(
+                    reg,
+                    "NotoSansKR"
+            );
+        }
+        builder.run();
+        return baos.toByteArray();
+    }
+
+    private byte[] addPdfTitle(byte[] pdfBytes, String text, String fontPath) throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfReader reader = new PdfReader(new ByteArrayInputStream(pdfBytes));
+        PdfStamper stamper = new PdfStamper(reader, out);
+        BaseFont bf = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+        int totalPages = reader.getNumberOfPages();
+        for (int i = 1; i <= totalPages; i++) {
+            PdfContentByte over = stamper.getOverContent(i);
+            over.beginText();
+            over.setFontAndSize(bf, 28f); // 글씨 크게 (28pt)
+            // 페이지 폭 중앙 계산
+            float x = reader.getPageSize(i).getWidth() / 2;
+            // 페이지 상단에서 약간 내려오게 (40pt 여백)
+            float y = reader.getPageSize(i).getTop() - 60f;
+            over.showTextAligned(Element.ALIGN_CENTER, text, x, y, 0);
+            over.endText();
+        }
+        stamper.close();
+        reader.close();
+        return out.toByteArray();
+    }
+
+    private byte[] createWord(ListType listType, String listTitle) throws Exception { // 참여자 또는 당첨자 리스트 DB에서 가져와 표로 만들어 word로 변환해서 응답주기
+        List<String> list = new ArrayList<>();
+        if (listType == ListType.PARTICIPANT) {
+            List<Participant> participantList = participantRepository.findAll();
+            for (Participant participant : participantList) {
+                list.add(participant.getNickname());
+            }
+            return createTable(list, listTitle);
+        } else {
+            List<Winner> winnerList = winnerRepository.findAll();
+            for (Winner winner : winnerList) {
+                list.add(winner.getNickname());
+            }
+            return createTable(list, listTitle);
+        }
+    }
+
+    private byte[] createTable(List<String> list, String listTitle) throws Exception {
+        int page = list.size() / WORD_TABLE_SIZE + (list.size() % WORD_TABLE_SIZE == 0 ? 0 : 1);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        XWPFDocument doc = new XWPFDocument();
+        for (int p = 0; p < page; p++) {
+            int pageStart = p * WORD_TABLE_SIZE;
+            int pageEnd = Math.min(pageStart + WORD_TABLE_SIZE, list.size());
+            // 첫 페이지에만 제목 추가
+            if (p == 0) {
+                addTitle(doc, listTitle, 22);
+            }
+            // ── 현재 페이지 테이블: (헤더 1행 + 데이터 18행) × 4열 [번호, ID, 번호, ID]
+            // 열 너비를 twip 단위로 설정 (1cm ≈ 567 twip)
+            // [번호, ID, 번호, ID] 순서
+            int[] colWidths = {1000, 3000, 1000, 3000};
+            XWPFTable table = doc.createTable(PER_COL + 1, 4); // +1은 헤더
+            setColumnWidths(table, colWidths);
+            // 스타일(테두리/정렬)
+            table.setInsideHBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+            table.setInsideVBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+            table.setBottomBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+            table.setTopBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+            table.setLeftBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+            table.setRightBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+            table.setTableAlignment(TableRowAlign.CENTER);
+            // 헤더
+            setCellTextCentered(table.getRow(0).getCell(0), "번호", true);
+            setCellTextCentered(table.getRow(0).getCell(1), "ID",   true);
+            setCellTextCentered(table.getRow(0).getCell(2), "번호", true);
+            setCellTextCentered(table.getRow(0).getCell(3), "ID",   true);
+            // 데이터 채우기
+            for (int i = 0; i < PER_COL; i++) {
+                int rowIdx = i + 1; // 헤더 다음 줄부터
+                int leftIdx  = pageStart + i;               // 왼쪽 컬럼 번호 시작
+                int rightIdx = pageStart + PER_COL + i;     // 오른쪽 컬럼 번호 시작
+                // 왼쪽
+                if (leftIdx < pageEnd) {
+                    setCellTextCentered(table.getRow(rowIdx).getCell(0), String.valueOf(leftIdx + 1), false);
+                    setCellTextLeft    (table.getRow(rowIdx).getCell(1), list.get(leftIdx), false);
+                } else {
+                    clearCell(table.getRow(rowIdx).getCell(0));
+                    clearCell(table.getRow(rowIdx).getCell(1));
+                }
+                // 오른쪽
+                if (rightIdx < pageEnd) {
+                    setCellTextCentered(table.getRow(rowIdx).getCell(2), String.valueOf(rightIdx + 1), false);
+                    setCellTextLeft    (table.getRow(rowIdx).getCell(3), list.get(rightIdx), false);
+                } else {
+                    clearCell(table.getRow(rowIdx).getCell(2));
+                    clearCell(table.getRow(rowIdx).getCell(3));
+                }
+                // 행 분할 금지(페이지 넘어가며 쪼개지지 않도록)
+                try { table.getRow(rowIdx).setCantSplitRow(true); } catch (Throwable ignored) {}
+            }
+            // 마지막 페이지가 아니면 페이지 브레이크
+            if (p < page - 1) {
+                XWPFParagraph br = doc.createParagraph();
+                XWPFRun r = br.createRun();
+                r.addBreak(BreakType.PAGE);
+            }
+        }
+        doc.write(baos);
+        doc.close();
+        return baos.toByteArray();
+    }
+
+    private void clearCell(XWPFTableCell cell) {
+        for (int i = cell.getParagraphs().size() - 1; i >= 0; i--) cell.removeParagraph(i);
+        cell.addParagraph(); // 빈 문단 하나 유지
+    }
+
+    private void setCellTextCentered(XWPFTableCell cell, String text, boolean bold) {
+        setCellText(cell, text, ParagraphAlignment.CENTER, bold);
+    }
+
+    private void setCellTextLeft(XWPFTableCell cell, String text, boolean bold) {
+        setCellText(cell, text, ParagraphAlignment.LEFT, bold);
+    }
+
+    private void setCellText(XWPFTableCell cell, String text, ParagraphAlignment align, boolean bold) {
+        if (!cell.getParagraphs().isEmpty()) cell.removeParagraph(0);
+        XWPFParagraph p = cell.addParagraph();
+        p.setAlignment(align);
+        XWPFRun r = p.createRun();
+        r.setFontSize(11);
+        r.setBold(bold);
+        r.setText(text);
+    }
+
+    private void setColumnWidths(XWPFTable table, int[] colWidths) {
+        // 표 전체 너비 고정
+        table.setWidthType(TableWidthType.DXA);
+        int totalWidth = 0;
+        for (int w : colWidths) totalWidth += w;
+        table.setWidth(String.valueOf(totalWidth));
+        for (int col = 0; col < colWidths.length; col++) {
+            for (XWPFTableRow row : table.getRows()) {
+                XWPFTableCell cell = row.getCell(col);
+                cell.setWidthType(TableWidthType.DXA);
+                cell.setWidth(String.valueOf(colWidths[col]));
+            }
+        }
+    }
+
+    // 제목 추가 메소드
+    private void addTitle(XWPFDocument doc, String titleText, int fontSize) {
+        XWPFParagraph title = doc.createParagraph();
+        title.setAlignment(ParagraphAlignment.CENTER); // 가운데 정렬
+        XWPFRun run = title.createRun();
+        run.setText(titleText);
+        run.setFontSize(fontSize);  // 전달받은 크기로 설정
+        run.setBold(true);             // 굵게
+        run.addBreak();                // 제목과 표 사이 한 줄 띄움
+    }
 }

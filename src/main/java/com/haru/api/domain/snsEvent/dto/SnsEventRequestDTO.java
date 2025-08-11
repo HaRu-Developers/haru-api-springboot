@@ -36,4 +36,12 @@ public class SnsEventRequestDTO {
     public static class UpdateSnsEventRequest {
         private String title;
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DownloadListRequest {
+        private String listHtml;
+    }
 }
