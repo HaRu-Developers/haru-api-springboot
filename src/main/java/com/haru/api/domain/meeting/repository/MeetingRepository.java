@@ -1,7 +1,6 @@
 package com.haru.api.domain.meeting.repository;
 
 import com.haru.api.domain.meeting.entity.Meeting;
-import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.entity.Workspace;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,19 +21,9 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
 
     List<Meeting> findAllByWorkspaceId(Long workspaceId);
 
-//    @Query("SELECT new com.haru.api.domain.workspace.dto.WorkspaceResponseDTO$DocumentCalendar(" +
-//            "mt.id, " +
-//            "mt.title, " +
-//            "com.haru.api.domain.lastOpened.entity.enums.DocumentType.AI_MEETING_MANAGER, " +
-//            "mt.createdAt) " +
-//            "FROM Meeting mt " +
-//            "WHERE mt.workspace.id = :workspaceId " +
-//            "AND mt.createdAt BETWEEN :startDate AND :endDate")
-//    List<WorkspaceResponseDTO.DocumentCalendar> findAllDocumentForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
-
     @Query("SELECT mt FROM Meeting mt " +
-            "WHERE mt.workspace.id = :workspaceId " +
+            "WHERE mt.workspace = :workspace " +
             "AND mt.createdAt BETWEEN :startDate AND :endDate")
-    List<Meeting> findAllDocumentForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
+    List<Meeting> findAllDocumentForCalendars(Workspace workspace, LocalDateTime startDate, LocalDateTime endDate);
 
 }

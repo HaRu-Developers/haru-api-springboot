@@ -1,5 +1,6 @@
 package com.haru.api.domain.userWorkspace.service;
 
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.userWorkspace.dto.UserWorkspaceResponseDTO;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,8 @@ public class UserWorkspaceQueryServiceImpl implements UserWorkspaceQueryService 
     private final UserWorkspaceRepository userWorkspaceRepository;
 
     @Override
-    public List<UserWorkspaceResponseDTO.UserWorkspaceWithTitle> getUserWorkspaceList(Long userId) {
+    public List<UserWorkspaceResponseDTO.UserWorkspaceWithTitle> getUserWorkspaceList(User user) {
 
-        return userWorkspaceRepository.getUserWorkspacesWithTitle(userId);
+        return userWorkspaceRepository.getUserWorkspacesWithTitle(user.getId());
     }
 }

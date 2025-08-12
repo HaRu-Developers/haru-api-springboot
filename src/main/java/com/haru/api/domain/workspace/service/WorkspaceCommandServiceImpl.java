@@ -22,7 +22,6 @@ import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.domain.workspaceInvitation.entity.WorkspaceInvitation;
 import com.haru.api.domain.workspaceInvitation.repository.WorkspaceInvitationRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
-import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceInvitationHandler;
@@ -61,10 +60,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
     @Transactional
     @Override
-    public WorkspaceResponseDTO.Workspace createWorkspace(Long userId, WorkspaceRequestDTO.WorkspaceCreateRequest request, MultipartFile image) {
-
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    public WorkspaceResponseDTO.Workspace createWorkspace(User user, WorkspaceRequestDTO.WorkspaceCreateRequest request, MultipartFile image) {
 
         String imageUrl = null;
 
@@ -82,7 +78,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
         // users_workspaces 테이블에 생성자 정보 저장
         userWorkspaceRepository.save(UserWorkspace.builder()
-                .user(foundUser)
+                .user(user)
                 .workspace(workspace)
                 .auth(Auth.ADMIN)
                 .build());
@@ -92,31 +88,25 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
     @Transactional
     @Override
-    public WorkspaceResponseDTO.Workspace updateWorkspace(Long userId, Long workspaceId, WorkspaceRequestDTO.WorkspaceUpdateRequest request, MultipartFile image) {
+    public WorkspaceResponseDTO.Workspace updateWorkspace(User user, Workspace workspace, WorkspaceRequestDTO.WorkspaceUpdateRequest request, MultipartFile image) {
 
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
-
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(foundWorkspace.getId(), foundUser.getId())
+        UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         if(userWorkspace.getAuth() != Auth.ADMIN)
             throw new WorkspaceHandler(ErrorStatus.WORKSPACE_MODIFY_NOT_ALLOWED);
 
         // 제목 수정
-        foundWorkspace.updateTitle(request.getTitle());
+        workspace.updateTitle(request.getTitle());
 
         // 이미지 수정
         if (image != null) {
             String path = amazonS3Manager.generateKeyName("/workspace/image", UUID.randomUUID());
             String imageUrl = amazonS3Manager.uploadFile(path, image);
-            foundWorkspace.updateImageUrl(imageUrl);
+            workspace.updateImageUrl(imageUrl);
         }
 
-        return WorkspaceConverter.toWorkspaceDTO(foundWorkspace);
+        return WorkspaceConverter.toWorkspaceDTO(workspace);
     }
 
     @Transactional
@@ -203,17 +193,14 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
     @Transactional
     @Override
-    public void sendInviteEmail(Long userId, WorkspaceRequestDTO.WorkspaceInviteEmailRequest request) {
+    public void sendInviteEmail(User user, WorkspaceRequestDTO.WorkspaceInviteEmailRequest request) {
         Long workspaceId = request.getWorkspaceId();
         List<String> emails = request.getEmails();
-
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        userWorkspaceRepository.findByUserAndWorkspace(foundUser, foundWorkspace)
+        userWorkspaceRepository.findByUserAndWorkspace(user, foundWorkspace)
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 이메일마다 invitation 생성하여 저장, 초대 수락 토큰 생성, 초대 이메일 발송
@@ -230,8 +217,8 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
             String invitationLink = inviteBaseUrl + "?token=" + token;
 
-            String subject = String.format("[%s] 에서 [%s] 님이 당신을 초대했어요!", foundWorkspace.getTitle(), foundUser.getName());
-            String content = generateInvitationEmailContentHtml(email, foundUser.getName(), foundWorkspace.getTitle(), invitationLink);
+            String subject = String.format("[%s] 에서 [%s] 님이 당신을 초대했어요!", foundWorkspace.getTitle(), user.getName());
+            String content = generateInvitationEmailContentHtml(email, user.getName(), foundWorkspace.getTitle(), invitationLink);
 
             emailSender.send(email, subject, content);
         }
