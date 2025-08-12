@@ -100,6 +100,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         userDocumentLastOpenedRepository.save(
                 UserDocumentLastOpened.builder()
                         .id(documentId)
+                        .user(foundUser)
                         .title(savedMoodTracker.getTitle())
                         .workspaceId(foundWorkspace.getId())
                         .lastOpened(null)
