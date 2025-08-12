@@ -27,7 +27,7 @@ public class AudioSessionBuffer {
 
     private int noVoiceCount = 0;
 
-    public static final int NO_VOICE_COUNT_TARGET = 300;
+    public static final int NO_VOICE_COUNT_TARGET = 200;
 
     private LocalDateTime utterance_start_time;
 

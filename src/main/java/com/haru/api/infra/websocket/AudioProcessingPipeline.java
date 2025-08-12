@@ -50,21 +50,24 @@ public class AudioProcessingPipeline {
 
     // 버퍼에 음성 바이트 스트림이 들어오면 FastAPI의 STT API를 호출하여 결과를 받아옴
     public Mono<Void> processAudioBuffer(byte[] audioBuffer) {
-        return sttFunction.apply(audioBuffer)
+        return sttFunction.apply(audioBuffer) // stt api 호출해서 텍스트 받아옴
+                .doOnError(error -> log.error("STT API 호출 실패", error))
+                .onErrorResume(error -> Mono.empty())
                 .flatMapMany(this::processSttResponse)
                 .then();
     }
 
-    // STT API를 호출하여 받아온 결과를 SpeechSegmentProcessor를 사용하여
-    // 각 speech를 생성하고 저장
+    // FastAPI의 STT API를 호출하여 받아온 JSON 결과를 SpeechSegmentProcessor를 사용하여 처리
     private Flux<Void> processSttResponse(String sttResult) {
         return speechSegmentProcessor.processSttResult(sttResult)
-                .flatMap(this::processSingleSegment);
+                .flatMapSequential(this::processSingleSegment);
     }
 
-    // 각 speech에 대해서 processScoring을 사용하여 FastAPI의 scoring API 호출
+    // 각 speech에 대해서 processScoring를 적용
     private Mono<Void> processSingleSegment(SpeechSegment segment) {
         return scoringProcessor.processScoring(segment)
+                // scoring api를 통해 각 발화에 점수를 매기고, 일정 점수를 넘어 질문이 필요하다고 판단되면
+                // processAiQuestions를 사용하여 질문 생성
                 .flatMap(scoringResponse -> {
                     if (scoringResponse.getIsQuestionNeeded()) {
                         return aiQuestionProcessor.processAIQuestions(segment)
