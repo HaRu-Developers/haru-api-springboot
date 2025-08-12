@@ -93,20 +93,22 @@ public class WorkspaceController {
         try {
             WorkspaceResponseDTO.InvitationAcceptResult result = workspaceCommandService.acceptInvite(token);
 
-            String redirectUrl;
+            String redirectUrl = null;
             if (result.isSuccess()) {
                 if (result.isAlreadyRegistered()) {
                     // 이미 가입된 사용자면, 로그인 후 워크스페이스 페이지로 이동
                     redirectUrl = "https://haru.it.kr/auth/sign-in?redirect=/workspace/" + result.getWorkspaceId();
-                } else {
-                    // 미가입 사용자면 회원가입 페이지로 이동 (토큰 정보 포함)
-                    redirectUrl = "https://haru.it.kr/auth/sign-up?token=" + token;
                 }
             } else {
-                redirectUrl = "https://haru.it.kr/error-page";
+                if (!result.isAlreadyRegistered()) {
+                    // 미가입 사용자면 회원가입 페이지로 이동 (토큰 정보 포함)
+                    redirectUrl = "https://haru.it.kr/auth/sign-up?token=" + token;
+                } else {
+                    redirectUrl = "https://haru.it.kr/error-page";
+                }
             }
 
-            return new RedirectView(redirectUrl);
+            return redirectUrl!=null ? new RedirectView(redirectUrl) : new RedirectView("https://haru.it.kr/error-page");
         } catch (WorkspaceHandler e) {
             return new RedirectView("https://haru.it.kr/error-page");
         }
