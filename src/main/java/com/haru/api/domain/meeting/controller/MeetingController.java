@@ -68,7 +68,7 @@ public class MeetingController {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryService.getMeetings(userId, workspaceId);
+        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryService.getMeetings(userId, Long.parseLong(workspaceId));
 
         return ApiResponse.onSuccess(response);
     }
@@ -83,7 +83,7 @@ public class MeetingController {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        meetingCommandService.updateMeetingTitle(userId, meetingId, request.getTitle());
+        meetingCommandService.updateMeetingTitle(userId, Long.parseLong(meetingId), request.getTitle());
 
         return ApiResponse.onSuccess("제목수정이 완료되었습니다.");
     }
@@ -97,7 +97,7 @@ public class MeetingController {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        meetingCommandService.deleteMeeting(userId, meetingId);
+        meetingCommandService.deleteMeeting(userId, Long.parseLong(meetingId));
 
         return ApiResponse.onSuccess("회의가 삭제되었습니다.");
     }
@@ -110,7 +110,7 @@ public class MeetingController {
         @PathVariable("meetingId")String meetingId) {
 
         Long userId = SecurityUtil.getCurrentUserId();
-        MeetingResponseDTO.getMeetingProceeding response = meetingQueryService.getMeetingProceeding(userId, meetingId);
+        MeetingResponseDTO.getMeetingProceeding response = meetingQueryService.getMeetingProceeding(userId, Long.parseLong(meetingId));
 
         return ApiResponse.onSuccess(response);
     }
@@ -128,7 +128,7 @@ public class MeetingController {
 
         Long userId = SecurityUtil.getCurrentUserId();
 
-        meetingCommandService.adjustProceeding(userId, meetingId, request);
+        meetingCommandService.adjustProceeding(userId, Long.parseLong(meetingId), request);
 
         return ApiResponse.onSuccess("회의가 수정되었습니다.");
     }

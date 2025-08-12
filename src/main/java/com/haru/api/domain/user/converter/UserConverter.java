@@ -46,4 +46,10 @@ public class UserConverter {
                 .name(user.getName())
                 .build();
     }
+
+    public static UserResponseDTO.CheckOriginalPasswordResponse toCheckOriginalPassword(boolean isMatched) {
+        return UserResponseDTO.CheckOriginalPasswordResponse.builder()
+                .isMatched(isMatched)
+                .build();
+    }
 }

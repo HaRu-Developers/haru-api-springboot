@@ -6,8 +6,8 @@ import java.util.List;
 
 public interface MeetingQueryService {
 
-    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, String workspaceId);
+    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, Long workspaceId);
 
-    public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, String meetingId);
+    public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, Long meetingId);
 
 }

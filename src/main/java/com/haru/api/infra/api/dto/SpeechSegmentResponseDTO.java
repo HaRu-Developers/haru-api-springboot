@@ -1,5 +1,7 @@
 package com.haru.api.infra.api.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,7 +12,8 @@ public class SpeechSegmentResponseDTO {
     @Getter
     @Builder
     public static class SpeechSegmentResponse {
-        private String speakerId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long speechId;
         private String text;
         private LocalDateTime startTime;
     }

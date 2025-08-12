@@ -1,5 +1,6 @@
 package com.haru.api.global.config;
 import lombok.Getter;
+import java.net.URI;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,7 @@ public class AmazonConfig {
         return S3Client.builder()
                 .region(Region.of(region))
                 .credentialsProvider(awsCredentialsProvider())
+                .endpointOverride(URI.create("https://s3." + region + ".amazonaws.com"))
                 .build();
     }
 
@@ -43,6 +45,7 @@ public class AmazonConfig {
         return S3Presigner.builder()
                 .region(Region.of(region))
                 .credentialsProvider(awsCredentialsProvider())
+                .endpointOverride(URI.create("https://s3." + region + ".amazonaws.com"))
                 .build();
     }
 }

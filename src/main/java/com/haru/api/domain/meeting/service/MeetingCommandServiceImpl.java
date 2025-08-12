@@ -54,7 +54,6 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final WorkspaceRepository workspaceRepository;
     private final MeetingRepository meetingRepository;
     private final KeywordRepository keywordRepository;
-    private final MeetingKeywordRepository meetingKeywordRepository;
     private final ChatGPTClient chatGPTClient;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
 
@@ -113,6 +112,21 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         Meeting savedMeeting = meetingRepository.save(newMeeting);
 
+        // meeting 생성 시 last opened에 추가
+        // 마지막으로 연 시간은 null
+
+        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedMeeting.getId(), DocumentType.AI_MEETING_MANAGER);
+
+        userDocumentLastOpenedRepository.save(
+                UserDocumentLastOpened.builder()
+                        .id(documentId)
+                        .user(foundUser)
+                        .title(savedMeeting.getTitle())
+                        .workspaceId(foundWorkspace.getId())
+                        .lastOpened(null)
+                        .build()
+        );
+
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
     }
 
@@ -120,11 +134,10 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     @Override
     @Transactional
-    public void updateMeetingTitle(Long userId, String meetingId, String newTitle) {
+    public void updateMeetingTitle(Long userId, Long meetingId, String newTitle) {
 
-        Long foundMeetingId = Long.parseLong(meetingId);
 
-        Meeting meeting = meetingRepository.findById(foundMeetingId)
+        Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
         User foundUser = userRepository.findById(userId)
@@ -138,7 +151,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         meeting.updateTitle(newTitle);
 
         // last opened title 수정
-        UserDocumentId userDocumentId = new UserDocumentId(userId, foundMeetingId, DocumentType.AI_MEETING_MANAGER);
+        UserDocumentId userDocumentId = new UserDocumentId(userId, meetingId, DocumentType.AI_MEETING_MANAGER);
 
         UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
                 .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
@@ -148,16 +161,14 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     @Override
     @Transactional
-    public void deleteMeeting(Long userId, String meetingId) {
+    public void deleteMeeting(Long userId, Long meetingId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        Long foundMeetingId = Long.parseLong(meetingId);
-
-        Meeting foundMeeting = meetingRepository.findById(foundMeetingId)
+        Meeting foundMeeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(foundMeetingId)
+        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
@@ -170,26 +181,24 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         meetingRepository.delete(foundMeeting);
 
         // last opened 테이블 튜플 삭제
-        UserDocumentId userDocumentId = new UserDocumentId(userId, foundMeetingId, DocumentType.AI_MEETING_MANAGER);
+        // last opened가 없어도 오류 X
+        UserDocumentId userDocumentId = new UserDocumentId(userId, meetingId, DocumentType.AI_MEETING_MANAGER);
 
-        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
-                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+        Optional<UserDocumentLastOpened> foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId);
 
-        userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
+        foundUserDocumentLastOpened.ifPresent(userDocumentLastOpenedRepository::delete);
     }
 
     @Override
     @Transactional
-    public void adjustProceeding(Long userId, String meetingId, MeetingRequestDTO.meetingProceedingRequest newProceeding){
+    public void adjustProceeding(Long userId, Long meetingId, MeetingRequestDTO.meetingProceedingRequest newProceeding){
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        Long foundMeetingId = Long.parseLong(meetingId);
-
-        Meeting foundMeeting = meetingRepository.findById(foundMeetingId)
+        Meeting foundMeeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(foundMeetingId)
+        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())

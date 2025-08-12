@@ -29,6 +29,7 @@ public class Meeting extends BaseEntity {
     //private String agendaFile;
 
     // 안건지 요약본
+    @Column(columnDefinition="TEXT")
     private String agendaResult;
 
     // 회의가 끝난 후에 AI 회의록 정리본

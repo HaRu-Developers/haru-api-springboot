@@ -73,7 +73,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         // 분위기 트래커 생성 및 저장
         MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, foundUser, foundWorkspace);
-        moodTrackerRepository.save(moodTracker);
+        MoodTracker savedMoodTracker = moodTrackerRepository.save(moodTracker);
 
         // 선택지 생성 및 저장
         for (MoodTrackerRequestDTO.SurveyQuestion questionDTO : request.getQuestions()) {
@@ -91,6 +91,21 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         // Redis Queue에 스케쥴링 추가
         redisReportProducer.scheduleReport(moodTracker.getId(), moodTracker.getDueDate());
+
+        // mood tracker 생성 시 last opened에 추가
+        // 마지막으로 연 시간은 null
+
+        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedMoodTracker.getId(), DocumentType.TEAM_MOOD_TRACKER);
+
+        userDocumentLastOpenedRepository.save(
+                UserDocumentLastOpened.builder()
+                        .id(documentId)
+                        .user(foundUser)
+                        .title(savedMoodTracker.getTitle())
+                        .workspaceId(foundWorkspace.getId())
+                        .lastOpened(null)
+                        .build()
+        );
 
         return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
     }
@@ -159,12 +174,12 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         moodTrackerRepository.delete(foundMoodTracker);
 
         // last opened 테이블 튜플 삭제
+        // last opened가 없어도 오류 X
         UserDocumentId userDocumentId = new UserDocumentId(userId, moodTrackerId, DocumentType.TEAM_MOOD_TRACKER);
 
-        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
-                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+        Optional<UserDocumentLastOpened> foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId);
 
-        userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
+        foundUserDocumentLastOpened.ifPresent(userDocumentLastOpenedRepository::delete);
     }
 
     /**

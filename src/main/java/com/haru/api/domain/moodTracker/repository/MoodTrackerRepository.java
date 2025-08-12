@@ -1,7 +1,7 @@
 package com.haru.api.domain.moodTracker.repository;
 
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
-import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
+import com.haru.api.domain.workspace.entity.Workspace;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -20,18 +20,9 @@ public interface MoodTrackerRepository extends JpaRepository<MoodTracker, Long> 
     @Query("UPDATE MoodTracker m SET m.respondentsNum = m.respondentsNum + 1 WHERE m.id = :moodTrackerId")
     void addRespondentsNum(Long moodTrackerId);
 
-//    @Query("SELECT new com.haru.api.domain.workspace.dto.WorkspaceResponseDTO$DocumentCalendar(" +
-//            "se.id, " +
-//            "se.title, " +
-//            "com.haru.api.domain.lastOpened.entity.enums.DocumentType.SNS_EVENT_ASSISTANT, " +
-//            "se.createdAt) " +
-//            "FROM SnsEvent se " +
-//            "WHERE se.workspace.id = :workspaceId " +
-//            "AND se.createdAt BETWEEN :startDate AND :endDate")
-//    List<WorkspaceResponseDTO.DocumentCalendar> findAllDocumentForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
 
     @Query("SELECT mt FROM MoodTracker mt " +
-            "WHERE mt.workspace.id = :workspaceId " +
+            "WHERE mt.workspace = :workspace " +
             "AND mt.createdAt BETWEEN :startDate AND :endDate")
-    List<MoodTracker> findAllDocumentForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
+    List<MoodTracker> findAllDocumentForCalendars(Workspace workspace, LocalDateTime startDate, LocalDateTime endDate);
 }

@@ -2,6 +2,8 @@ package com.haru.api.domain.snsEvent.service;
 
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
+import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.domain.snsEvent.entity.enums.ListType;
 
 public interface SnsEventCommandService {
     SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(Long workspaceId, SnsEventRequestDTO.CreateSnsRequest request);
@@ -11,4 +13,6 @@ public interface SnsEventCommandService {
     void updateSnsEventTitle(Long userId, Long snsEventId, SnsEventRequestDTO.UpdateSnsEventRequest request);
 
     void deleteSnsEvent(Long userId, Long snsEventId);
+
+    byte[] downloadList(Long userId, Long snsEventId, ListType listType, Format format, SnsEventRequestDTO.DownloadListRequest request);
 }

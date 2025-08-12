@@ -3,13 +3,14 @@ package com.haru.api.domain.user.controller;
 import com.haru.api.domain.user.dto.UserRequestDTO;
 import com.haru.api.domain.user.dto.UserResponseDTO;
 import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.domain.user.service.UserCommandService;
 import com.haru.api.domain.user.service.UserQueryService;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.service.WorkspaceCommandService;
+import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -89,13 +90,12 @@ public class UserController {
                     "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
     )
     @GetMapping("/info")
-    public ApiResponse<UserResponseDTO.User> getUserInfo() {
+    public ApiResponse<UserResponseDTO.User> getUserInfo(
+            @Parameter(hidden = true) @AuthUser User user
+    ) {
+        UserResponseDTO.User userResponse = userQueryService.getUserInfo(user);
 
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        UserResponseDTO.User user = userQueryService.getUserInfo(userId);
-
-        return ApiResponse.onSuccess(user);
+        return ApiResponse.onSuccess(userResponse);
     }
 
     @Operation(summary = "회원 정보 수정", description =
@@ -104,13 +104,12 @@ public class UserController {
     )
     @PatchMapping("/info")
     public ApiResponse<UserResponseDTO.User> updateUserInfo(
-            @RequestBody @Valid UserRequestDTO.UserInfoUpdateRequest request
+            @RequestBody @Valid UserRequestDTO.UserInfoUpdateRequest request,
+            @Parameter(hidden = true) @AuthUser User user
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
+        UserResponseDTO.User userResponse = userCommandService.updateUserInfo(user, request);
 
-        UserResponseDTO.User user = userCommandService.updateUserInfo(userId, request);
-
-        return ApiResponse.onSuccess(user);
+        return ApiResponse.onSuccess(userResponse);
     }
 
     @Operation(summary = "이메일로 회원 리스트 조회", description =
@@ -120,11 +119,10 @@ public class UserController {
     )
     @GetMapping("/search")
     public ApiResponse<List<UserResponseDTO.User>> searchUsers(
-            @RequestParam String email
+            @RequestParam String email,
+            @Parameter(hidden = true) @AuthUser User user
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        List<UserResponseDTO.User> users = userQueryService.getSimilarEmailUsers(userId, email);
+        List<UserResponseDTO.User> users = userQueryService.getSimilarEmailUsers(user, email);
 
         return ApiResponse.onSuccess(users);
     }
@@ -142,5 +140,17 @@ public class UserController {
                         request
                 )
         );
+    }
+
+    @Operation(summary = "기존 비밀번호 일치 검사 [v1.0 (2025-08-12)]", description =
+            "# [v1.0 (2025-08-12)](https://www.notion.so/24d5da7802c580c68535f3a5982d82d2)" +
+                    " 비밀번호 변경 시 기존 비밀버호가 일치하는지 확인하는 API입니다."
+    )
+    @PostMapping("/password/check")
+    public ApiResponse<UserResponseDTO.CheckOriginalPasswordResponse> checkOriginalPassword(
+            @RequestBody UserRequestDTO.CheckOriginalPasswordRequest request,
+            @Parameter(hidden = true) @AuthUser User user
+    ) {
+        return ApiResponse.onSuccess(userCommandService.checkOriginalPassword(request, user));
     }
 }

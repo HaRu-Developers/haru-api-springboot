@@ -27,7 +27,9 @@ jwt:
   header: "Authorization"
 
 api:
-  fast-api-url: http://localhost:8000/test
+  stt-api-url: http://localhost:8000/stt
+
+  score-api-url: http://localhost:8001/api/v1/score_utterance
 
   openai:
     api-key: test_api_key
