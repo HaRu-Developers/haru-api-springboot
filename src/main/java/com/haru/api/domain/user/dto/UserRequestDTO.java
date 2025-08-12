@@ -1,8 +1,6 @@
 package com.haru.api.domain.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -50,5 +48,14 @@ public class UserRequestDTO {
     public static class CheckEmailDuplicationRequest {
         @NotBlank(message = "이메일은 빈값일 수 없습니다.")
         private String email;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CheckOriginalPasswordRequest {
+        @NotBlank(message = "비밀번호는 빈값일 수 없습니다.")
+        private String requestPassword;
     }
 }
