@@ -37,7 +37,7 @@ public class MarkdownFileUploader {
             log.info("기존 PDF 갱신을 시작합니다. Key: {}", pdfKeyToUse);
         } else {
             // 기존 키가 없으면, 새로운 키를 생성
-            pdfKeyToUse = amazonS3Manager.generateKeyName("pdfs/" + featurePath, UUID.randomUUID()) + ".pdf";
+            pdfKeyToUse = amazonS3Manager.generateKeyName("pdfs/" + featurePath) + ".pdf";
             log.info("새로운 PDF 생성을 시작합니다. New Key: {}", pdfKeyToUse);
         }
 
@@ -72,7 +72,7 @@ public class MarkdownFileUploader {
             log.info("기존 썸네일 갱신을 시작합니다. Key: {}", thumbnailKeyToUse);
         } else {
             // 기존 키가 없으면, 새로운 키를 생성
-            thumbnailKeyToUse = amazonS3Manager.generateKeyName("thumbnails/" + featurePath, UUID.randomUUID()) + "." + IMAGE_FORMAT;
+            thumbnailKeyToUse = amazonS3Manager.generateKeyName("thumbnails/" + featurePath) + "." + IMAGE_FORMAT;
             log.info("새로운 썸네일 생성을 시작합니다. New Key: {}", thumbnailKeyToUse);
         }
 

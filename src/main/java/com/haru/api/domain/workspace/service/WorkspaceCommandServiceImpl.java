@@ -62,18 +62,18 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     @Override
     public WorkspaceResponseDTO.Workspace createWorkspace(User user, WorkspaceRequestDTO.WorkspaceCreateRequest request, MultipartFile image) {
 
-        String imageUrl = null;
+        String keyName = null;
 
         if (image != null) {
             // s3에 사진 추가하는 메서드
-            String path = amazonS3Manager.generateKeyName("/workspace/image", UUID.randomUUID());
-            imageUrl = amazonS3Manager.uploadFile(path, image);
+            String path = amazonS3Manager.generateKeyName("workspace/image");
+            keyName = amazonS3Manager.uploadFile(path, image);
         }
 
         // workspace entity 생성
         Workspace workspace = workspaceRepository.save(Workspace.builder()
                 .title(request.getTitle())
-                .imageUrl(imageUrl)
+                .keyName(keyName)
                 .build());
 
         // users_workspaces 테이블에 생성자 정보 저장
@@ -101,9 +101,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
         // 이미지 수정
         if (image != null) {
-            String path = amazonS3Manager.generateKeyName("/workspace/image", UUID.randomUUID());
-            String imageUrl = amazonS3Manager.uploadFile(path, image);
-            workspace.updateImageUrl(imageUrl);
+            amazonS3Manager.uploadFile(workspace.getKeyName(), image);
         }
 
         return WorkspaceConverter.toWorkspaceDTO(workspace);

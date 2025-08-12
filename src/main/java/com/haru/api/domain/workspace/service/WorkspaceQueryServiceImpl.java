@@ -15,6 +15,10 @@ import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.converter.WorkspaceConverter;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.exception.handler.*;
+import com.haru.api.infra.s3.AmazonS3Manager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +39,7 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
     private final UserWorkspaceRepository userWorkspaceRepository;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final WorkspaceConverter workspaceConverter;
+    private final AmazonS3Manager amazonS3Manager;
 
     @Override
     public WorkspaceResponseDTO.DocumentList getDocuments(User user, Workspace workspace, String title) {
@@ -83,6 +88,8 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
                 .map(UserConverter::toMemberInfo)
                 .toList();
 
-        return workspaceConverter.toWorkspaceEditPage(workspace, memberInfoList);
+        String imageUrl = amazonS3Manager.generatePresignedUrl(workspace.getKeyName());
+
+        return workspaceConverter.toWorkspaceEditPage(workspace, memberInfoList, imageUrl);
     }
 }
