@@ -89,7 +89,21 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                 .orElseThrow(() -> new MemberHandler(NOT_BELONG_TO_WORKSPACE));
         SnsEvent createdSnsEvent = SnsEventConverter.toSnsEvent(request, foundUser);
         createdSnsEvent.setWorkspace(foundWorkspace);
-        snsEventRepository.save(createdSnsEvent);
+        SnsEvent savedSnsEvent = snsEventRepository.save(createdSnsEvent);
+
+        // mood tracker 생성 시 last opened에 추가
+        // 마지막으로 연 시간은 null
+
+        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedSnsEvent.getId(), DocumentType.SNS_EVENT_ASSISTANT);
+
+        userDocumentLastOpenedRepository.save(
+                UserDocumentLastOpened.builder()
+                        .id(documentId)
+                        .title(savedSnsEvent.getTitle())
+                        .workspaceId(foundWorkspace.getId())
+                        .lastOpened(null)
+                        .build()
+        );
 
         // Instagarm API 호출 후 참여라 리스트, 당첨자 리스트 생성 및 저장
         String accessToken = foundWorkspace.getInstagramAccessToken();

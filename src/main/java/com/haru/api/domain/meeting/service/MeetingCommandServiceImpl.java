@@ -54,7 +54,6 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final WorkspaceRepository workspaceRepository;
     private final MeetingRepository meetingRepository;
     private final KeywordRepository keywordRepository;
-    private final MeetingKeywordRepository meetingKeywordRepository;
     private final ChatGPTClient chatGPTClient;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
 
@@ -112,6 +111,20 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         }
 
         Meeting savedMeeting = meetingRepository.save(newMeeting);
+
+        // meeting 생성 시 last opened에 추가
+        // 마지막으로 연 시간은 null
+
+        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedMeeting.getId(), DocumentType.AI_MEETING_MANAGER);
+
+        userDocumentLastOpenedRepository.save(
+                UserDocumentLastOpened.builder()
+                        .id(documentId)
+                        .title(savedMeeting.getTitle())
+                        .workspaceId(foundWorkspace.getId())
+                        .lastOpened(null)
+                        .build()
+        );
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
     }

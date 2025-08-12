@@ -73,7 +73,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         // 분위기 트래커 생성 및 저장
         MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, foundUser, foundWorkspace);
-        moodTrackerRepository.save(moodTracker);
+        MoodTracker savedMoodTracker = moodTrackerRepository.save(moodTracker);
 
         // 선택지 생성 및 저장
         for (MoodTrackerRequestDTO.SurveyQuestion questionDTO : request.getQuestions()) {
@@ -91,6 +91,20 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         // Redis Queue에 스케쥴링 추가
         redisReportProducer.scheduleReport(moodTracker.getId(), moodTracker.getDueDate());
+
+        // mood tracker 생성 시 last opened에 추가
+        // 마지막으로 연 시간은 null
+
+        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedMoodTracker.getId(), DocumentType.TEAM_MOOD_TRACKER);
+
+        userDocumentLastOpenedRepository.save(
+                UserDocumentLastOpened.builder()
+                        .id(documentId)
+                        .title(savedMoodTracker.getTitle())
+                        .workspaceId(foundWorkspace.getId())
+                        .lastOpened(null)
+                        .build()
+        );
 
         return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
     }
