@@ -133,11 +133,10 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     @Override
     @Transactional
-    public void updateMeetingTitle(Long userId, String meetingId, String newTitle) {
+    public void updateMeetingTitle(Long userId, Long meetingId, String newTitle) {
 
-        Long foundMeetingId = Long.parseLong(meetingId);
 
-        Meeting meeting = meetingRepository.findById(foundMeetingId)
+        Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
         User foundUser = userRepository.findById(userId)
@@ -151,7 +150,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         meeting.updateTitle(newTitle);
 
         // last opened title 수정
-        UserDocumentId userDocumentId = new UserDocumentId(userId, foundMeetingId, DocumentType.AI_MEETING_MANAGER);
+        UserDocumentId userDocumentId = new UserDocumentId(userId, meetingId, DocumentType.AI_MEETING_MANAGER);
 
         UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
                 .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
@@ -161,16 +160,14 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     @Override
     @Transactional
-    public void deleteMeeting(Long userId, String meetingId) {
+    public void deleteMeeting(Long userId, Long meetingId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        Long foundMeetingId = Long.parseLong(meetingId);
-
-        Meeting foundMeeting = meetingRepository.findById(foundMeetingId)
+        Meeting foundMeeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(foundMeetingId)
+        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
@@ -184,7 +181,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         // last opened 테이블 튜플 삭제
         // last opened가 없어도 오류 X
-        UserDocumentId userDocumentId = new UserDocumentId(userId, foundMeetingId, DocumentType.AI_MEETING_MANAGER);
+        UserDocumentId userDocumentId = new UserDocumentId(userId, meetingId, DocumentType.AI_MEETING_MANAGER);
 
         Optional<UserDocumentLastOpened> foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId);
 
@@ -193,16 +190,14 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     @Override
     @Transactional
-    public void adjustProceeding(Long userId, String meetingId, MeetingRequestDTO.meetingProceedingRequest newProceeding){
+    public void adjustProceeding(Long userId, Long meetingId, MeetingRequestDTO.meetingProceedingRequest newProceeding){
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        Long foundMeetingId = Long.parseLong(meetingId);
-
-        Meeting foundMeeting = meetingRepository.findById(foundMeetingId)
+        Meeting foundMeeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(foundMeetingId)
+        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
