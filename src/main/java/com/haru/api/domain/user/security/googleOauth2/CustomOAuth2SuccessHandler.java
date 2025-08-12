@@ -27,17 +27,23 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             HttpServletResponse response,
             Authentication authentication
     ) throws IOException {
+        StringBuilder redirectUrl = new StringBuilder();
+        String baseUrl = "http://localhost:3000"; // 프론트엔드 URL
         String successGoogleLoginUrl = "/auth/login/google/callback";
         CustomOauth2UserDetails userDetails = (CustomOauth2UserDetails) authentication.getPrincipal();
-        if (!userDetails.getIsNewUser()) { // 회원가입인지 로그인인지 판단, 로그인이면 토큰 반환
-            Long userId = userDetails.getUser().getId();
-            String key = "users:" + userId.toString();
-            String accessToken = userCommandService.generateAccessToken(userId, accessExpTime);
-            String refreshToken = userCommandService.generateAndSaveRefreshToken(key, refreshExpTime);
-            // 프론트엔드 URL로 리다이렉트 (query param 전달)
-            response.sendRedirect("http://localhost:3000" + successGoogleLoginUrl + "?status=success" + "&accessToken=" + accessToken + "&refreshToken=" + refreshToken);
-        } else { // 회원가입
-            response.sendRedirect("http://localhost:3000" + successGoogleLoginUrl + "?status=success");
-        }
+        // 회원가입이든 로그인이든 똑같이 프론트엔드로 리다이렉트
+        Long userId = userDetails.getUser().getId();
+        String key = "users:" + userId.toString();
+        String accessToken = userCommandService.generateAccessToken(userId, accessExpTime);
+        String refreshToken = userCommandService.generateAndSaveRefreshToken(key, refreshExpTime);
+        // 프론트엔드 URL로 리다이렉트 (query param 전달)
+        redirectUrl.append(baseUrl)
+                .append(successGoogleLoginUrl)
+                .append("?status=success")
+                .append("&userId=").append(userId)
+                .append("&profileImage=").append(userDetails.getUser().getProfileImage())
+                .append("&accessToken=").append(accessToken)
+                .append("&refreshToken=").append(refreshToken);
+        response.sendRedirect(redirectUrl.toString());
     }
 }
