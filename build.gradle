@@ -117,7 +117,8 @@ dependencies {
 	implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
 	implementation 'org.docx4j:docx4j-export-fo:8.3.3'
 
-	// Openhtmltopdf core
+	// file
+	implementation 'org.commonmark:commonmark:0.21.0'
 	implementation 'com.openhtmltopdf:openhtmltopdf-core:1.0.10'
 	implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10'
 
