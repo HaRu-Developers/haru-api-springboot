@@ -8,7 +8,7 @@ public interface UserCommandService {
     User signUp(UserRequestDTO.SignUpRequest request);
     UserResponseDTO.LoginResponse login(UserRequestDTO.LoginRequest request);
 
-    UserResponseDTO.User updateUserInfo(Long userId, UserRequestDTO.UserInfoUpdateRequest request);
+    UserResponseDTO.User updateUserInfo(User user, UserRequestDTO.UserInfoUpdateRequest request);
 
     UserResponseDTO.RefreshResponse refresh(String refreshToken);
 
@@ -19,4 +19,6 @@ public interface UserCommandService {
     String generateAndSaveRefreshToken(String key, int refreshExpTime);
 
     UserResponseDTO.CheckEmailDuplicationResponse checkEmailDuplication(UserRequestDTO.CheckEmailDuplicationRequest request);
+
+    UserResponseDTO.CheckOriginalPasswordResponse checkOriginalPassword(UserRequestDTO.CheckOriginalPasswordRequest request, User user);
 }
