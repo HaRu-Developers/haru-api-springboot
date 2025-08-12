@@ -101,8 +101,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
         // 이미지 수정
         if (image != null) {
-            String imageUrl = amazonS3Manager.uploadFile(workspace.getKeyName(), image);
-            workspace.updateImageUrl(imageUrl);
+            amazonS3Manager.uploadFile(workspace.getKeyName(), image);
         }
 
         return WorkspaceConverter.toWorkspaceDTO(workspace);
