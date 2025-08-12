@@ -120,6 +120,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         userDocumentLastOpenedRepository.save(
                 UserDocumentLastOpened.builder()
                         .id(documentId)
+                        .user(foundUser)
                         .title(savedMeeting.getTitle())
                         .workspaceId(foundWorkspace.getId())
                         .lastOpened(null)

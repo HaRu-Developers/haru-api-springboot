@@ -99,6 +99,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         userDocumentLastOpenedRepository.save(
                 UserDocumentLastOpened.builder()
                         .id(documentId)
+                        .user(foundUser)
                         .title(savedSnsEvent.getTitle())
                         .workspaceId(foundWorkspace.getId())
                         .lastOpened(null)
