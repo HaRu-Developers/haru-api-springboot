@@ -35,6 +35,7 @@ public class AmazonConfig {
         return S3Client.builder()
                 .region(Region.of(region))
                 .credentialsProvider(awsCredentialsProvider())
+                .forcePathStyle(true)
                 .build();
     }
 

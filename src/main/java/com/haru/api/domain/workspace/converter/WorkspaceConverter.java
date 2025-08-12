@@ -26,7 +26,7 @@ public class WorkspaceConverter {
         return WorkspaceResponseDTO.Workspace.builder()
                 .workspaceId(workspace.getId())
                 .title(workspace.getTitle())
-                .imageUrl(workspace.getImageUrl())
+                .imageUrl(workspace.getKeyName())
                 .build();
     }
 
@@ -139,10 +139,10 @@ public class WorkspaceConverter {
                 .build();
     }
 
-    public WorkspaceResponseDTO.WorkspaceEditPage toWorkspaceEditPage(Workspace workspace, List<UserResponseDTO.MemberInfo> memberInfoList) {
+    public WorkspaceResponseDTO.WorkspaceEditPage toWorkspaceEditPage(Workspace workspace, List<UserResponseDTO.MemberInfo> memberInfoList, String imageUrl) {
         return WorkspaceResponseDTO.WorkspaceEditPage.builder()
                 .title(workspace.getTitle())
-                .imageUrl(workspace.getImageUrl())
+                .imageUrl(imageUrl)
                 .members(memberInfoList)
                 .build();
     }
