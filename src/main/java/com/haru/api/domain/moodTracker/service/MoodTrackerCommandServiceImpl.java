@@ -173,12 +173,12 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         moodTrackerRepository.delete(foundMoodTracker);
 
         // last opened 테이블 튜플 삭제
+        // last opened가 없어도 오류 X
         UserDocumentId userDocumentId = new UserDocumentId(userId, moodTrackerId, DocumentType.TEAM_MOOD_TRACKER);
 
-        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
-                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+        Optional<UserDocumentLastOpened> foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId);
 
-        userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
+        foundUserDocumentLastOpened.ifPresent(userDocumentLastOpenedRepository::delete);
     }
 
     /**
