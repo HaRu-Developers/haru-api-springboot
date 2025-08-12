@@ -11,7 +11,6 @@ import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.user.converter.UserConverter;
 import com.haru.api.domain.user.dto.UserResponseDTO;
 import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.converter.WorkspaceConverter;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
@@ -37,29 +36,15 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
     private final MeetingRepository meetingRepository;
     private final SnsEventRepository snsEventRepository;
     private final MoodTrackerRepository moodTrackerRepository;
-    private final UserRepository userRepository;
-    private final WorkspaceRepository workspaceRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final WorkspaceConverter workspaceConverter;
     private final AmazonS3Manager amazonS3Manager;
 
     @Override
-    public WorkspaceResponseDTO.DocumentList getDocuments(Long userId, Long workspaceId, String title) {
+    public WorkspaceResponseDTO.DocumentList getDocuments(User user, Workspace workspace, String title) {
 
-        // 유저 존재 확인
-        userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
-
-        // workspace 존재 확인
-        workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        // 유저가 워크스페이스에 속해있는지 확인
-        if (!userWorkspaceRepository.existsByUserIdAndWorkspaceId(userId, workspaceId))
-            throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
-
-        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedRepository.findRecentDocumentsByTitle(workspaceId, userId, title);
+        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedRepository.findRecentDocumentsByTitle(workspace.getId(), user.getId(), title);
 
         return WorkspaceConverter.toDocumentList(
                 documentList.stream()
@@ -69,22 +54,10 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
     }
 
     @Override
-    public WorkspaceResponseDTO.DocumentSidebarList getDocumentWithoutLastOpenedList(Long userId, Long workspaceId) {
-
-        // 유저 존재 확인
-        userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
-
-        // workspace 존재 확인
-        workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        // 유저가 워크스페이스에 속해있는지 확인
-        if (!userWorkspaceRepository.existsByUserIdAndWorkspaceId(userId, workspaceId))
-            throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
+    public WorkspaceResponseDTO.DocumentSidebarList getDocumentWithoutLastOpenedList(User user, Workspace workspace) {
 
         // 유저가 가장 최근에 조회한 문서 5개 추출
-        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedRepository.findTop5ByWorkspaceIdAndUserIdOrderByLastOpenedDesc(workspaceId, userId);
+        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedRepository.findTop5ByWorkspaceIdAndUserIdOrderByLastOpenedDesc(workspace.getId(), user.getId());
 
         return WorkspaceConverter.toDocumentSidebarList(
                 documentList.stream()
@@ -94,48 +67,24 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
     }
 
     @Override
-    public WorkspaceResponseDTO.DocumentCalendarList getDocumentForCalendar(Long userId, Long workspaceId, LocalDate startDate, LocalDate endDate) {
-
-        // 유저 존재 확인
-        userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
-
-        // workspace 존재 확인
-        workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        // 유저가 워크스페이스에 속해있는지 확인
-        if (!userWorkspaceRepository.existsByUserIdAndWorkspaceId(userId, workspaceId))
-            throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
+    public WorkspaceResponseDTO.DocumentCalendarList getDocumentForCalendar(User user, Workspace workspace, LocalDate startDate, LocalDate endDate) {
 
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
         // 워크스페이스에 속하면서 생성 날짜가 startDate, endDate 사이인 문서 리스트 검색
-        List<Meeting> meetingList = meetingRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
-        List<SnsEvent> snsEventList = snsEventRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
-        List<MoodTracker> moodTrackerList = moodTrackerRepository.findAllDocumentForCalendars(workspaceId, startDateTime, endDateTime);
+        List<Meeting> meetingList = meetingRepository.findAllDocumentForCalendars(workspace, startDateTime, endDateTime);
+        List<SnsEvent> snsEventList = snsEventRepository.findAllDocumentForCalendars(workspace, startDateTime, endDateTime);
+        List<MoodTracker> moodTrackerList = moodTrackerRepository.findAllDocumentForCalendars(workspace, startDateTime, endDateTime);
 
         // 모든 문서 합치기
         return workspaceConverter.toDocumentCalendarList(meetingList, snsEventList, moodTrackerList);
     }
 
     @Override
-    public WorkspaceResponseDTO.WorkspaceEditPage getEditPage(Long userId, Long workspaceId) {
+    public WorkspaceResponseDTO.WorkspaceEditPage getEditPage(User user, Workspace workspace) {
 
-        // 유저 존재 확인
-        userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
-
-        // workspace 존재 확인
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        // 유저가 워크스페이스에 속해있는지 확인
-        if (!userWorkspaceRepository.existsByUserIdAndWorkspaceId(userId, workspaceId))
-            throw new WorkspaceHandler(ErrorStatus.NOT_BELONG_TO_WORKSPACE);
-
-        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspaceRepository.findUsersByWorkspaceId(workspaceId).stream()
+        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspaceRepository.findUsersByWorkspace(workspace).stream()
                 .map(UserConverter::toMemberInfo)
                 .toList();
 

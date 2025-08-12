@@ -1,15 +1,19 @@
 package com.haru.api.domain.workspace.controller;
 
-import com.haru.api.domain.user.security.jwt.SecurityUtil;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.userWorkspace.dto.UserWorkspaceResponseDTO;
 import com.haru.api.domain.userWorkspace.service.UserWorkspaceQueryService;
 import com.haru.api.domain.workspace.dto.WorkspaceRequestDTO;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
+import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.service.WorkspaceCommandService;
 import com.haru.api.domain.workspace.service.WorkspaceQueryService;
+import com.haru.api.global.annotation.AuthUser;
+import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.ApiResponse;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -37,12 +41,10 @@ public class WorkspaceController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<WorkspaceResponseDTO.Workspace> createWorkspace(
             @RequestPart("request") @Validated WorkspaceRequestDTO.WorkspaceCreateRequest request,
-            @RequestPart(value = "image", required = false) MultipartFile image
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @Parameter(hidden = true) @AuthUser User user
     ) {
-
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        WorkspaceResponseDTO.Workspace workspace = workspaceCommandService.createWorkspace(userId, request, image);
+        WorkspaceResponseDTO.Workspace workspace = workspaceCommandService.createWorkspace(user, request, image);
 
         return ApiResponse.onSuccess(workspace);
     }
@@ -53,11 +55,10 @@ public class WorkspaceController {
                     " 워크스페이스 리스트 제목 조회 API 입니다. jwt 토큰을 헤더에 넣어주세요"
     )
     @GetMapping("/me")
-    public ApiResponse<List<UserWorkspaceResponseDTO.UserWorkspaceWithTitle>> getWorkspaceWithTitleList() {
-
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        List<UserWorkspaceResponseDTO.UserWorkspaceWithTitle> workspaceWithTitleList = userWorkspaceQueryService.getUserWorkspaceList(userId);
+    public ApiResponse<List<UserWorkspaceResponseDTO.UserWorkspaceWithTitle>> getWorkspaceWithTitleList(
+            @Parameter(hidden = true) @AuthUser User user
+    ) {
+        List<UserWorkspaceResponseDTO.UserWorkspaceWithTitle> workspaceWithTitleList = userWorkspaceQueryService.getUserWorkspaceList(user);
 
         return ApiResponse.onSuccess(workspaceWithTitleList);
     }
@@ -71,15 +72,13 @@ public class WorkspaceController {
     public ApiResponse<WorkspaceResponseDTO.Workspace> updateWorkspace(
             @RequestPart("request") @Validated WorkspaceRequestDTO.WorkspaceUpdateRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image,
-            @PathVariable String workspaceId
+            @PathVariable String workspaceId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
+        WorkspaceResponseDTO.Workspace updatedWorkspace = workspaceCommandService.updateWorkspace(user, workspace, request, image);
 
-        Long workspaceIdLong = Long.parseLong(workspaceId);
-
-        WorkspaceResponseDTO.Workspace workspace = workspaceCommandService.updateWorkspace(userId, workspaceIdLong, request, image);
-
-        return ApiResponse.onSuccess(workspace);
+        return ApiResponse.onSuccess(updatedWorkspace);
     }
 
     @Operation(
@@ -121,13 +120,12 @@ public class WorkspaceController {
     @GetMapping("/{workspaceId}")
     public ApiResponse<WorkspaceResponseDTO.DocumentList> getDocument(
             @PathVariable String workspaceId,
-            @RequestParam String title
+            @RequestParam String title,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
+
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        Long workspaceIdLong = Long.parseLong(workspaceId);
-
-        WorkspaceResponseDTO.DocumentList documentList = workspaceQueryService.getDocuments(userId, workspaceIdLong, title);
+        WorkspaceResponseDTO.DocumentList documentList = workspaceQueryService.getDocuments(user, workspace, title);
 
         return ApiResponse.onSuccess(documentList);
     }
@@ -138,11 +136,10 @@ public class WorkspaceController {
                     " 워크스페이스 초대 메일 발송 API 입니다. jwt 토큰을 헤더에 넣어주세요"
     )
     @PostMapping("/invite") ApiResponse<Void> sendInviteEmail(
-            @RequestBody WorkspaceRequestDTO.WorkspaceInviteEmailRequest request
+            @RequestBody WorkspaceRequestDTO.WorkspaceInviteEmailRequest request,
+            @Parameter(hidden = true) @AuthUser User user
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        workspaceCommandService.sendInviteEmail(userId, request);
+        workspaceCommandService.sendInviteEmail(user, request);
 
         return ApiResponse.onSuccess(null);
     }
@@ -154,13 +151,11 @@ public class WorkspaceController {
     )
     @GetMapping("/{workspaceId}/sidebar")
     public ApiResponse<WorkspaceResponseDTO.DocumentSidebarList> getSidebar(
-            @PathVariable String workspaceId
+            @PathVariable String workspaceId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        Long workspaceIdLong = Long.parseLong(workspaceId);
-
-        WorkspaceResponseDTO.DocumentSidebarList documentSidebarList = workspaceQueryService.getDocumentWithoutLastOpenedList(userId, workspaceIdLong);
+        WorkspaceResponseDTO.DocumentSidebarList documentSidebarList = workspaceQueryService.getDocumentWithoutLastOpenedList(user, workspace);
 
         return ApiResponse.onSuccess(documentSidebarList);
     }
@@ -174,13 +169,11 @@ public class WorkspaceController {
     public ApiResponse<WorkspaceResponseDTO.DocumentCalendarList> getCalendar(
             @PathVariable String workspaceId,
             @RequestParam("start")LocalDate startDate,
-            @RequestParam("end") LocalDate endDate
+            @RequestParam("end") LocalDate endDate,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        Long workspaceIdLong = Long.parseLong(workspaceId);
-
-        WorkspaceResponseDTO.DocumentCalendarList documentCalendarList = workspaceQueryService.getDocumentForCalendar(userId, workspaceIdLong, startDate, endDate);
+        WorkspaceResponseDTO.DocumentCalendarList documentCalendarList = workspaceQueryService.getDocumentForCalendar(user, workspace, startDate, endDate);
 
         return ApiResponse.onSuccess(documentCalendarList);
     }
@@ -192,13 +185,12 @@ public class WorkspaceController {
     )
     @GetMapping("/{workspaceId}/edit")
     public ApiResponse<WorkspaceResponseDTO.WorkspaceEditPage> modifyWorkspace(
-            @PathVariable String workspaceId
+            @PathVariable String workspaceId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
 
-        Long workspaceIdLong = Long.parseLong(workspaceId);
-
-        WorkspaceResponseDTO.WorkspaceEditPage workspaceEditPage = workspaceQueryService.getEditPage(userId, workspaceIdLong);
+        WorkspaceResponseDTO.WorkspaceEditPage workspaceEditPage = workspaceQueryService.getEditPage(user, workspace);
 
         return ApiResponse.onSuccess(workspaceEditPage);
     }

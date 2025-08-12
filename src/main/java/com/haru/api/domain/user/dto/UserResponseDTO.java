@@ -47,4 +47,10 @@ public class UserResponseDTO {
     public static class CheckEmailDuplicationResponse {
         private EmailStatus emailStatus;
     }
+
+    @Getter
+    @Builder
+    public static class CheckOriginalPasswordResponse {
+        private Boolean isMatched;
+    }
 }
