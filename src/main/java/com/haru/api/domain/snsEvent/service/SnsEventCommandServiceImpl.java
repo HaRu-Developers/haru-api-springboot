@@ -335,12 +335,12 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         snsEventRepository.delete(foundSnsEvent);
 
         // last opened 테이블 튜플 삭제
+        // last opened가 없어도 오류 X
         UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
 
-        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
-                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
+        Optional<UserDocumentLastOpened> foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId);
 
-        userDocumentLastOpenedRepository.delete(foundUserDocumentLastOpened);
+        foundUserDocumentLastOpened.ifPresent(userDocumentLastOpenedRepository::delete);
     }
 
     @Override
