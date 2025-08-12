@@ -66,18 +66,18 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        String imageUrl = null;
+        String keyName = null;
 
         if (image != null) {
             // s3에 사진 추가하는 메서드
-            String path = amazonS3Manager.generateKeyName("/workspace/image", UUID.randomUUID());
-            imageUrl = amazonS3Manager.uploadFile(path, image);
+            String path = amazonS3Manager.generateKeyName("workspace/image", UUID.randomUUID());
+            keyName = amazonS3Manager.uploadFile(path, image);
         }
 
         // workspace entity 생성
         Workspace workspace = workspaceRepository.save(Workspace.builder()
                 .title(request.getTitle())
-                .imageUrl(imageUrl)
+                .keyName(keyName)
                 .build());
 
         // users_workspaces 테이블에 생성자 정보 저장
