@@ -35,13 +35,11 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
     private final UserWorkspaceRepository userWorkspaceRepository;
 
     @Override
-    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, String workspaceId) {
+    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, Long workspaceId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        Long foundWorkspaceId = Long.parseLong(workspaceId);
-
-        Workspace foundWorkspace = workspaceRepository.findById(foundWorkspaceId)
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         List<Meeting> foundMeetings = meetingRepository.findByWorkspaceOrderByUpdatedAtDesc(foundWorkspace);
@@ -53,16 +51,14 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
 
     @Override
     @TrackLastOpened(type = DocumentType.AI_MEETING_MANAGER)
-    public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, String meetingId){
+    public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, Long meetingId){
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
-        Long foundMeetingId = Long.parseLong(meetingId);
-
-        Meeting foundMeeting = meetingRepository.findById(foundMeetingId)
+        Meeting foundMeeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(foundMeetingId)
+        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
