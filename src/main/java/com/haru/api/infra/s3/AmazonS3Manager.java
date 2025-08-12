@@ -1,6 +1,5 @@
 package com.haru.api.infra.s3;
 
-import com.haru.api.global.common.entity.Uuid;
 import com.haru.api.global.config.AmazonConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -105,8 +104,8 @@ public class AmazonS3Manager{
         }
     }
 
-    public String generateKeyName(String path, UUID uuid) {
-        return path + '/' + uuid.toString();
+    public String generateKeyName(String path) {
+        return path + '/' +UUID.randomUUID();
     }
 
 }

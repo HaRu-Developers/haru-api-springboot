@@ -29,7 +29,7 @@ public class DocumentConversionService {
         log.info("PDF 썸네일 생성 시작. 원본 파일: {}", originalFileName);
 
         String fullPath = "thumbnails/" + featurePath;
-        String keyName = amazonS3Manager.generateKeyName(fullPath, UUID.randomUUID()) + "." + IMAGE_FORMAT;
+        String keyName = amazonS3Manager.generateKeyName(fullPath) + "." + IMAGE_FORMAT;
 
         try (PDDocument document = PDDocument.load(pdfBytes)) {
             // PDFBox를 사용하여 첫 페이지를 이미지로 변환

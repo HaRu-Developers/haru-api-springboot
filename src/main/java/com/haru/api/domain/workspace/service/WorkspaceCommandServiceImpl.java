@@ -66,7 +66,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
         if (image != null) {
             // s3에 사진 추가하는 메서드
-            String path = amazonS3Manager.generateKeyName("workspace/image", UUID.randomUUID());
+            String path = amazonS3Manager.generateKeyName("workspace/image");
             keyName = amazonS3Manager.uploadFile(path, image);
         }
 
@@ -101,8 +101,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
         // 이미지 수정
         if (image != null) {
-            String path = amazonS3Manager.generateKeyName("/workspace/image", UUID.randomUUID());
-            String imageUrl = amazonS3Manager.uploadFile(path, image);
+            String imageUrl = amazonS3Manager.uploadFile(workspace.getKeyName(), image);
             workspace.updateImageUrl(imageUrl);
         }
 
