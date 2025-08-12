@@ -88,8 +88,8 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
                 .map(UserConverter::toMemberInfo)
                 .toList();
 
-        String imageUrl = amazonS3Manager.generatePresignedUrl(foundWorkspace.getKeyName());
+        String imageUrl = amazonS3Manager.generatePresignedUrl(workspace.getKeyName());
 
-        return workspaceConverter.toWorkspaceEditPage(foundWorkspace, memberInfoList, imageUrl);
+        return workspaceConverter.toWorkspaceEditPage(workspace, memberInfoList, imageUrl);
     }
 }
