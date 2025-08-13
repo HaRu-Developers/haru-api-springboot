@@ -83,4 +83,28 @@ public class MarkdownFileUploader {
         // 5. 사용된 썸네일의 key를 반환
         return thumbnailKeyToUse;
     }
+
+    public String createOrUpdateThumbnailForSnsEvent(byte[] pdfBytes, String featurePath, String existingThumbnailKey) {
+        // 1. 다운로드한 PDF로 새로운 썸네일 데이터 생성
+        byte[] newThumbnailBytes = thumbnailGeneratorService.generate(pdfBytes);
+
+        // 2. 사용할 썸네일 키 결정
+        String thumbnailKeyToUse;
+        if (existingThumbnailKey != null && !existingThumbnailKey.isBlank()) {
+            // 기존 키가 제공되면, 그 키를 그대로 사용하여 갱신(덮어쓰기)
+            thumbnailKeyToUse = existingThumbnailKey;
+            log.info("기존 썸네일 갱신을 시작합니다. Key: {}", thumbnailKeyToUse);
+        } else {
+            // 기존 키가 없으면, 새로운 키를 생성
+            thumbnailKeyToUse = amazonS3Manager.generateKeyName("thumbnails/" + featurePath) + "." + IMAGE_FORMAT;
+            log.info("새로운 썸네일 생성을 시작합니다. New Key: {}", thumbnailKeyToUse);
+        }
+
+        // 3. 결정된 키로 썸네일을 S3에 업로드
+        amazonS3Manager.uploadFile(thumbnailKeyToUse, newThumbnailBytes, "image/" + IMAGE_FORMAT);
+        log.info("썸네일 업로드/갱신 성공. Key: {}", thumbnailKeyToUse);
+
+        // 4. 사용된 썸네일의 key를 반환
+        return thumbnailKeyToUse;
+    }
 }

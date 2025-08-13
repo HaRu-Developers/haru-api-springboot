@@ -128,8 +128,12 @@ dependencies {
 	// Apache POI의 XWPF(XML Word Processing Format)
 	implementation 'org.apache.poi:poi-ooxml:5.2.5'
 
+	//thymeleaf
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
 	// audio encoder
 	implementation "ws.schild:jave-all-deps:3.5.0"
+
 }
 
 dependencyManagement {
