@@ -44,6 +44,21 @@ public class SnsEvent extends BaseEntity implements Documentable {
     @JoinColumn(name = "workspace_id")
     private Workspace workspace;
 
+    @Column(columnDefinition = "TEXT")
+    private String keyNameParticipantPdf;
+
+    @Column(columnDefinition = "TEXT")
+    private String keyNameParticipantWord;
+
+    @Column(columnDefinition = "TEXT")
+    private String keyNameWinnerPdf;
+
+    @Column(columnDefinition = "TEXT")
+    private String keyNameWinnerWord;
+
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKey;
+
     @OneToMany(mappedBy = "snsEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Participant> participantList = new ArrayList<>();
 
@@ -60,6 +75,21 @@ public class SnsEvent extends BaseEntity implements Documentable {
 
     public void updateTitle(String title) {
         this.title = title;
+    }
+
+    public void updateKeyNameParticipantPdf(
+            String keyNameParticipantPdf,
+            String keyNameParicipantWord,
+            String keyNameWinnerPdf,
+            String keyNameWinnerWord) {
+        this.keyNameParticipantPdf = keyNameParticipantPdf;
+        this.keyNameParticipantWord = keyNameParicipantWord;
+        this.keyNameWinnerPdf = keyNameWinnerPdf;
+        this.keyNameWinnerWord = keyNameWinnerWord;
+    }
+
+    public void updateThumbnailKey(String thumbnailKey) {
+        this.thumbnailKey = thumbnailKey;
     }
 
     @Override
