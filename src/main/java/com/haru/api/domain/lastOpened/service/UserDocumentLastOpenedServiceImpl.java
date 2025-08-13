@@ -40,7 +40,6 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
                             .user(foundUser)
                             .workspaceId(workspaceId)
                             .title(title)
-                            .lastOpened(null)
                             .build();
                 });
 
@@ -50,12 +49,47 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
         log.info("userDocumentLastOpened updated for userId: {}, documentId:{}, workspaceId:{}, title:{}", record.getUser().getId(), record.getId().getDocumentId(), workspaceId, title);
     }
 
+    @Override
     public void createInitialRecordsForWorkspaceUsers(List<User> usersInWorkspace, Documentable document) {
 
-        // 저장할 엔티티들을 담을 리스트를 생성
-        List<UserDocumentLastOpened> recordsToSave = new ArrayList<>();
+        // 저장할 엔티티 리스트 생성
+        List<UserDocumentLastOpened> recordsToSave = recordsToProcess(usersInWorkspace, document);
 
-        // 각 유저에 대해 last opened entity를 생성하고 리스트에 추가
+        // 전체 save
+        if (!recordsToSave.isEmpty()) {
+            userDocumentLastOpenedRepository.saveAll(recordsToSave);
+        }
+    }
+
+    @Override
+    public void deleteRecordsForWorkspaceUsers(Documentable documentable) {
+
+        // 해당 문서 id에 해당하는 last opened 튜플 검색
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findById_DocumentId(documentable.getId());
+
+        if (!recordsToUpdate.isEmpty()) {
+            userDocumentLastOpenedRepository.deleteAllInBatch(recordsToUpdate);
+        }
+
+    }
+
+    @Override
+    public void updateRecordsForWorkspaceUsers(Documentable documentable) {
+
+        // 해당 문서 id에 해당하는 last opened 튜플 검색
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findById_DocumentId(documentable.getId());
+
+        if (!recordsToUpdate.isEmpty()) {
+            for (UserDocumentLastOpened record : recordsToUpdate) {
+                record.updateTitle(documentable.getTitle());
+            }
+        }
+    }
+
+    private List<UserDocumentLastOpened> recordsToProcess(List<User> usersInWorkspace, Documentable document) {
+        // 처리할 엔티티들을 담을 리스트 생성
+        List<UserDocumentLastOpened> recordsToProcess = new ArrayList<>();
+
         for (User user : usersInWorkspace) {
             UserDocumentId documentId = new UserDocumentId(
                     user.getId(),
@@ -68,15 +102,12 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
                     .user(user)
                     .title(document.getTitle())
                     .workspaceId(document.getWorkspaceId())
-                    .lastOpened(null)
                     .build();
 
-            recordsToSave.add(newRecord);
+            recordsToProcess.add(newRecord);
         }
 
-        if (!recordsToSave.isEmpty()) {
-            userDocumentLastOpenedRepository.saveAll(recordsToSave);
-        }
+        return recordsToProcess;
     }
 
 }

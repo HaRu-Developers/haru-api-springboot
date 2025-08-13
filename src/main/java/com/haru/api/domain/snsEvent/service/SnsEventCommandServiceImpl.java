@@ -1,8 +1,5 @@
 package com.haru.api.domain.snsEvent.service;
 
-import com.haru.api.domain.lastOpened.entity.UserDocumentId;
-import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
@@ -24,10 +21,8 @@ import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
-import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
-import com.haru.api.global.apiPayload.exception.handler.UserDocumentLastOpenedHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.infra.api.restTemplate.InstagramOauth2RestTemplate;
 import com.lowagie.text.Element;
@@ -301,13 +296,9 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         foundSnsEvent.updateTitle(request.getTitle());
         snsEventRepository.save(foundSnsEvent);
 
-        // last opened title 수정
-        UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
-
-        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
-                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
-
-        foundUserDocumentLastOpened.updateTitle(request.getTitle());
+        // sns event 수정 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에서 해당 문서 id를 가지고 있는 튜플 모두 삭제
+        userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(foundSnsEvent);
     }
 
     @Override
@@ -328,13 +319,9 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         }
         snsEventRepository.delete(foundSnsEvent);
 
-        // last opened 테이블 튜플 삭제
-        // last opened가 없어도 오류 X
-        UserDocumentId userDocumentId = new UserDocumentId(userId, snsEventId, DocumentType.SNS_EVENT_ASSISTANT);
-
-        Optional<UserDocumentLastOpened> foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId);
-
-        foundUserDocumentLastOpened.ifPresent(userDocumentLastOpenedRepository::delete);
+        // meeting 삭제 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에서 해당 문서 id를 가지고 있는 튜플 모두 삭제
+        userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(foundSnsEvent);
     }
 
     @Override

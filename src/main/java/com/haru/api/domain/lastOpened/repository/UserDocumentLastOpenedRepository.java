@@ -19,4 +19,6 @@ public interface UserDocumentLastOpenedRepository extends JpaRepository<UserDocu
             "AND udlo.title LIKE %:title% " +
             "ORDER BY udlo.lastOpened DESC")
     List<UserDocumentLastOpened> findRecentDocumentsByTitle(Long workspaceId, Long userId, String title);
+
+    List<UserDocumentLastOpened> findById_DocumentId(Long documentId);
 }

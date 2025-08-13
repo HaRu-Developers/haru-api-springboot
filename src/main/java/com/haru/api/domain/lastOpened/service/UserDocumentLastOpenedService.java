@@ -11,4 +11,8 @@ public interface UserDocumentLastOpenedService {
     void updateLastOpened(Long userId, DocumentType documentType, Long documentId, Long workspaceId, String title);
 
     void createInitialRecordsForWorkspaceUsers(List<User> usersInWorkspace, Documentable document);
+
+    void deleteRecordsForWorkspaceUsers(Documentable document);
+
+    void updateRecordsForWorkspaceUsers(Documentable document);
 }

@@ -1,8 +1,5 @@
 package com.haru.api.domain.moodTracker.service;
 
-import com.haru.api.domain.lastOpened.entity.UserDocumentId;
-import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
@@ -129,13 +126,9 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         foundMoodTracker.updateTitle(request.getTitle());
 
-        // last opened title 수정
-        UserDocumentId userDocumentId = new UserDocumentId(userId, moodTrackerId, DocumentType.TEAM_MOOD_TRACKER);
-
-        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
-                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
-
-        foundUserDocumentLastOpened.updateTitle(request.getTitle());
+        // mood tracker 수정 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에서 해당 문서 정보 업데이트
+        userDocumentLastOpenedService.updateRecordsForWorkspaceUsers(foundMoodTracker);
     }
 
     /**
@@ -165,13 +158,9 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         moodTrackerRepository.delete(foundMoodTracker);
 
-        // last opened 테이블 튜플 삭제
-        // last opened가 없어도 오류 X
-        UserDocumentId userDocumentId = new UserDocumentId(userId, moodTrackerId, DocumentType.TEAM_MOOD_TRACKER);
-
-        Optional<UserDocumentLastOpened> foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId);
-
-        foundUserDocumentLastOpened.ifPresent(userDocumentLastOpenedRepository::delete);
+        // meeting 삭제 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에서 해당 문서 id를 가지고 있는 튜플 모두 삭제
+        userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(foundMoodTracker);
     }
 
     /**
