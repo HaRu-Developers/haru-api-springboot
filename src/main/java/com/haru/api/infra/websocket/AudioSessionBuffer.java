@@ -40,8 +40,8 @@ public class AudioSessionBuffer {
         currentUtteranceBuffer.write(chunk, 0, chunk.length);
     }
 
-    public synchronized byte[] getAllBytes() {
-        return fullBuffer.toByteArray();
+    public synchronized ByteArrayOutputStream getAllBytes() {
+        return fullBuffer;
     }
 
     public synchronized byte[] getCurrentUtteranceBuffer() {

@@ -52,7 +52,8 @@ public class Meeting extends BaseEntity {
     private LocalDateTime startTime;
 
     // s3 음성 파일 key
-    private String voiceFileKey;
+    @Setter
+    private String audioFileKey;
 
     private Meeting(String title, String agendaResult, User user, Workspace workspace) {
         this.title = title;
@@ -70,7 +71,9 @@ public class Meeting extends BaseEntity {
     public void updateProceeding(String proceeding) {
         this.proceeding = proceeding;
     }
-
+    public void initStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
 
     // 연관관계 편의 메서드
     public void addTag(Keyword keyword) {
