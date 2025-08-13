@@ -450,37 +450,56 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     }
 
     @Override
-    public byte[] downloadList(
+    public SnsEventResponseDTO.ListDownLoadLinkResponse downloadList(
             Long userId,
             Long snsEventId,
             ListType listType,
-            Format format,
-            SnsEventRequestDTO.DownloadListRequest request
+            Format format
     ) {
+        String downloadLink = "";
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        String pdfTitle = snsEventRepository.findById(snsEventId)
-                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND))
-                .getTitle();
-        try {
+        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
+                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
+        String snsEventTitle = foundSnsEvent.getTitle();
+        if (listType == ListType.PARTICIPANT) {
             if (format == Format.PDF) {
-                // 폰트 경로
-                URL resource = getClass().getClassLoader().getResource("templates/NotoSansKR-Regular.ttf");
-                File reg = new File(resource.toURI()); // catch에서 Exception 따로 처리해주기
-                String listHtml = injectHead(request.getListHtml());
-                listHtml = injectPageMarginStyle(listHtml);
-                byte[] shiftedPdfByte = convertHtmlToPdf(listHtml, reg);
-                return addPdfTitle(shiftedPdfByte, pdfTitle, reg.getAbsolutePath());
+                String keyName = foundSnsEvent.getKeyNameParticipantPdf();
+                if (keyName == null || keyName.isEmpty()) {
+                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
+                }
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_participnat_list.pdf");
+            } else if (format == Format.DOCX) {
+                String keyName = foundSnsEvent.getKeyNameParticipantWord();
+                if (keyName == null || keyName.isEmpty()) {
+                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
+                }
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_participnat_list.docx");
+            } else {
+                throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
             }
-            else if (format == Format.DOCX) {
-                return createWord(listType, pdfTitle, snsEventRepository.findById(snsEventId)
-                        .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND)));
+        } else if (listType == ListType.WINNER) {
+            if (format == Format.PDF) {
+                String keyName = foundSnsEvent.getKeyNameWinnerPdf();
+                if (keyName == null || keyName.isEmpty()) {
+                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
+                }
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_winner_list.pdf");
+            } else if (format == Format.DOCX) {
+                String keyName = foundSnsEvent.getKeyNameWinnerWord();
+                if (keyName == null || keyName.isEmpty()) {
+                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
+                }
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_winner_list.docx");
+            } else {
+                throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
             }
-            else throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
-        } catch (Exception e) {
-            log.error("Error creating document: {}", e.getMessage());
-            throw new SnsEventHandler(SNS_EVENT_DOWNLOAD_LIST_ERROR);
+        } else {
+            throw new SnsEventHandler(SNS_EVENT_WRONG_LIST_TYPE);
         }
+        return SnsEventResponseDTO.ListDownLoadLinkResponse.builder()
+                .downloadLink(downloadLink)
+                .build();
     }
 
     private String injectHead(String html) {
