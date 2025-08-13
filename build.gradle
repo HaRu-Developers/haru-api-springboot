@@ -129,7 +129,7 @@ dependencies {
 	implementation 'org.apache.poi:poi-ooxml:5.2.5'
 
 	// audio encoder
-	implementation("ws.schild:jave-all-deps:3.5.0")
+	implementation "ws.schild:jave-all-deps:3.5.0"
 }
 
 dependencyManagement {
