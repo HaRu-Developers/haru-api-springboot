@@ -57,7 +57,7 @@ public class SnsEvent extends BaseEntity implements Documentable {
     private String keyNameWinnerWord;
 
     @Column(columnDefinition = "TEXT")
-    private String thumbnailKey;
+    private String thumbnailKeyName;
 
     @OneToMany(mappedBy = "snsEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Participant> participantList = new ArrayList<>();
@@ -88,8 +88,8 @@ public class SnsEvent extends BaseEntity implements Documentable {
         this.keyNameWinnerWord = keyNameWinnerWord;
     }
 
-    public void updateThumbnailKey(String thumbnailKey) {
-        this.thumbnailKey = thumbnailKey;
+    public void initThumbnailKey(String thumbnailKey) {
+        this.thumbnailKeyName = thumbnailKey;
     }
 
     @Override

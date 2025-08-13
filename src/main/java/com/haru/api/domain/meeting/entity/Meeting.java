@@ -57,6 +57,9 @@ public class Meeting extends BaseEntity implements Documentable {
     @Setter
     private String audioFileKey;
 
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKeyName;
+
     private Meeting(String title, String agendaResult, User user, Workspace workspace) {
         this.title = title;
         this.agendaResult = agendaResult;
@@ -84,6 +87,10 @@ public class Meeting extends BaseEntity implements Documentable {
                 .keyword(keyword)
                 .build();
         this.meetingKeywords.add(meetingKeyword);
+    }
+
+    public void initThumbnailKey(String thumbnailKey) {
+        this.thumbnailKeyName = thumbnailKey;
     }
 
     @Override

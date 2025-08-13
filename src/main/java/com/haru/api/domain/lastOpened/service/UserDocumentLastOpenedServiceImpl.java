@@ -102,6 +102,7 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
                     .user(user)
                     .title(document.getTitle())
                     .workspaceId(document.getWorkspaceId())
+                    .thumbnailKeyName(document.getThumbnailKeyName())
                     .build();
 
             recordsToProcess.add(newRecord);

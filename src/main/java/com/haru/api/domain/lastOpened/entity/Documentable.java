@@ -7,4 +7,5 @@ public interface Documentable {
     String getTitle();
     Long getWorkspaceId();
     DocumentType getDocumentType();
+    String getThumbnailKeyName();
 }

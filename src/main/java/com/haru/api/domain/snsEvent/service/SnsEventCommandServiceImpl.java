@@ -4,6 +4,7 @@ import com.haru.api.domain.lastOpened.entity.UserDocumentId;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
+import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
@@ -75,6 +76,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final WinnerRepository winnerRepository;
     private final RestTemplate restTemplate;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
+    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
     private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
     private final int WORD_TABLE_SIZE = 40; // 페이지당 총 아이디 수
     private final int PER_COL = WORD_TABLE_SIZE/ 2; // 한쪽 컬럼에 들어갈 개수
@@ -98,19 +100,6 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         SnsEvent createdSnsEvent = SnsEventConverter.toSnsEvent(request, foundUser);
         createdSnsEvent.setWorkspace(foundWorkspace);
         SnsEvent savedSnsEvent = snsEventRepository.save(createdSnsEvent);
-
-        // mood tracker 생성 시 last opened에 추가
-        // 마지막으로 연 시간은 null
-        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedSnsEvent.getId(), DocumentType.SNS_EVENT_ASSISTANT);
-        UserDocumentLastOpened savedUserDocumentLastOpened = userDocumentLastOpenedRepository.save(
-                UserDocumentLastOpened.builder()
-                        .id(documentId)
-                        .user(foundUser)
-                        .title(savedSnsEvent.getTitle())
-                        .workspaceId(foundWorkspace.getId())
-                        .lastOpened(null)
-                        .build()
-        );
 
         // Instagarm API 호출 후 참여라 리스트, 당첨자 리스트 생성 및 저장
         String accessToken = foundWorkspace.getInstagramAccessToken();
@@ -176,11 +165,17 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         winnerRepository.saveAll(winnerList);
 
         // PDF, DOCX파일 바이트 배열로 생성 및 썸네일 생성 & 업로드 / DB에 keyName저장
-        createAndUploadListFileAndThumbnail(
+        String thumbnailKeyName = createAndUploadListFileAndThumbnail(
                 request,
-                savedSnsEvent,
-                savedUserDocumentLastOpened
+                savedSnsEvent
         );
+
+        createdSnsEvent.initThumbnailKey(thumbnailKeyName);
+
+        // sns event 생성 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(savedSnsEvent.getId());
+        userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedSnsEvent);
 
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
                 .snsEventId(createdSnsEvent.getId())
@@ -225,10 +220,9 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
     }
 
-    private void createAndUploadListFileAndThumbnail(
+    private String createAndUploadListFileAndThumbnail(
             SnsEventRequestDTO.CreateSnsRequest request,
-            SnsEvent snsEvent,
-            UserDocumentLastOpened userDocumentLastOpened
+            SnsEvent snsEvent
     ){
         String listHtmlParticipant = createListHtml(snsEvent, ListType.PARTICIPANT);
         String listHtmlWinner = createListHtml(snsEvent, ListType.WINNER);
@@ -269,15 +263,13 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                 keyNameWinnerPdf,
                 keyNameWinnerWord
         );
+
         // SNS 이벤트 당첨자 PDF의 첫페이지 썸네일로 S3에 업로드
-        String thumbnailKey = markdownFileUploader.createOrUpdateThumbnailForSnsEvent(
+        return markdownFileUploader.createOrUpdateThumbnailForSnsEvent(
                 pdfBytesWinner,
                 "sns-event",
                 null
         );
-        snsEvent.updateThumbnailKey(thumbnailKey);
-        // UserDocumentLastOpened Entity에도 thmbnailKeyName추가
-        userDocumentLastOpened.updateThumbnailKeyName(thumbnailKey);
     }
 
     private SnsEventResponseDTO.InstagramMediaResponse fetchInstagramMedia(

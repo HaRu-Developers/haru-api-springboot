@@ -48,6 +48,9 @@ public class MoodTracker extends BaseEntity implements Documentable {
     @Column(name = "due_date")
     private LocalDateTime dueDate; // 마감일
 
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKeyName;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
     private MoodTrackerVisibility visibility; // 공개범위 (PUBLIC, PRIVATE)
@@ -66,6 +69,10 @@ public class MoodTracker extends BaseEntity implements Documentable {
     }
 
     public void createReport(String report) { this.report = report; }
+
+    public void initThumbnailKey(String thumbnailKey) {
+        this.thumbnailKeyName = thumbnailKey;
+    }
 
     @Override
     public Long getWorkspaceId() {
