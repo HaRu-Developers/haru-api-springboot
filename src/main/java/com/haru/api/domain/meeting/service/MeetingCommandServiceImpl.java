@@ -246,19 +246,28 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     @Override
     @Async
+    @Transactional
     public void processAfterMeeting(AudioSessionBuffer sessionBuffer) {
 
         // 현재 처리하고자 하는 session의 meeting entity
-        Meeting currentMeeting = sessionBuffer.getMeeting();
+        Meeting currentMeeting = meetingRepository.findById(sessionBuffer.getMeeting().getId())
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        // 해당 세션의 전체 오디오 버퍼 가져오기
+        // 버퍼에서 오디오 스트림 가져오기
         ByteArrayOutputStream audioBuffer = sessionBuffer.getAllBytes();
 
-        // 음성 파일 s3에 업로드
-        uploadAudioFile(audioBuffer, currentMeeting);
+        if (audioBuffer != null && audioBuffer.size() > 0) {
+            // 파일 업로드 후, key name을 반환
+            String keyName = uploadAudioFile(audioBuffer);
 
-        // todo: chatGPT를 사용하여 AI 회의록 생성하는 기능
+            // 3. 조회한 엔티티의 상태를 변경합니다.
+            currentMeeting.setAudioFileKey(keyName);
 
+            // 4. todo: AI 회의록 생성
+
+        } else {
+            log.warn("meetingId: {}에 처리할 오디오 데이터가 없습니다.", currentMeeting.getId());
+        }
     }
 
     private List<String> convertFileToImages(MultipartFile file) {
@@ -346,43 +355,28 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     /**
      *
      * @param audioBuffer : 현재 처리하는 세션의 전체 원본 음성 데이터
-     * @param currentMeeting : 현재 처리하는 meeting
      *
      * 전체 회의 음성 파일을 s3에 업로드하고, audio file key name을 저장합니다.
      */
-    private void uploadAudioFile(ByteArrayOutputStream audioBuffer, Meeting currentMeeting) {
+    private String uploadAudioFile(ByteArrayOutputStream audioBuffer) {
 
-        // 버퍼에 데이터가 있는지 확인
-        if (audioBuffer != null && audioBuffer.size() > 0) {
-            try{
-                // 원본 오디오 데이터를 byte[]로 변환
-                byte[] rawAudioData = audioBuffer.toByteArray();
+        try {
+            byte[] rawAudioData = audioBuffer.toByteArray();
 
-                // 클라이언트 오디오 설정에 맞춰 MP3로 인코딩
-                int channels = 1;
-                int samplingRate = 16000; // 16kHz
-                int bitRate = 128000;     // 128kbps
-                byte[] mp3Data = encoderService.encodePcmToMp3(rawAudioData, channels, samplingRate, bitRate);
-                log.info("MP3 인코딩 완료. 인코딩된 크기: {} bytes", mp3Data.length);
+            int channels = 1;
+            int samplingRate = 16000;
+            int bitRate = 128000;
+            byte[] mp3Data = encoderService.encodePcmToMp3(rawAudioData, channels, samplingRate, bitRate);
+            log.info("MP3 인코딩 완료. 인코딩된 크기: {} bytes", mp3Data.length);
 
-                // S3에 저장할 고유한 키를 생성 및 저장 (확장자 .mp3 추가)
-                String keyName = s3Manager.generateKeyName("meeting/recording") + ".mp3";
+            String keyName = s3Manager.generateKeyName("meeting/recording") + ".mp3";
+            s3Manager.uploadFile(keyName, mp3Data, "audio/mpeg");
+            log.info("S3 업로드 성공. Key: {}", keyName);
 
-                // S3에 인코딩된 MP3 파일을 업로드
-                s3Manager.uploadFile(keyName, mp3Data, "audio/mpeg"); // MP3의 MIME 타입은 "audio/mpeg"
-                log.info("S3 업로드 성공. Key: {}", keyName);
+            return keyName;
 
-                // meeting entity에 audio key name 저장
-                currentMeeting.setAudioFileKey(keyName);
-                meetingRepository.save(currentMeeting);
-
-                // WebSocketSessionRegistry에서 해당 session 제거
-                webSocketSessionRegistry.removeSession(currentMeeting.getId());
-            } catch (Exception e) {
-                throw new MeetingHandler(ErrorStatus.MEETING_AUDIO_FILE_UPLOAD_FAIL);
-            }
-        } else {
-            log.warn("meetingId: {}에 처리할 오디오 데이터가 없습니다.", currentMeeting.getId());
+        } catch (Exception e) {
+            throw new MeetingHandler(ErrorStatus.MEETING_AUDIO_FILE_UPLOAD_FAIL);
         }
     }
 }

@@ -68,8 +68,9 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
             Meeting foundMeeting = meetingRepository.findById(meetingId)
                             .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-            // meeting의 회의 시작 시간 기록
+            // meeting의 회의 시작 시간 기록 및 db에 업데이트
             foundMeeting.initStartTime(LocalDateTime.now());
+            meetingRepository.save(foundMeeting);
 
             sessionBuffers.get(session.getId()).setMeeting(foundMeeting);
         } else {
