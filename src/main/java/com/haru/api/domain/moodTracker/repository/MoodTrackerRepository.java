@@ -13,6 +13,8 @@ import java.util.List;
 
 @Repository
 public interface MoodTrackerRepository extends JpaRepository<MoodTracker, Long> {
+
+    @Query("SELECT m FROM Meeting m WHERE m.workspace.id = :workspaceId")
     List<MoodTracker> findAllByWorkspaceId(Long workspaceId);
   
     @Modifying
