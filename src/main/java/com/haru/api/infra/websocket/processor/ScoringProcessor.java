@@ -21,10 +21,12 @@ public class ScoringProcessor {
         this.audioSessionBuffer = audioSessionBuffer;
     }
 
-    // 각 segment에 대해서 FastAPI의 scoring API 호출
+    // 각 speech segment에 대해서 FastAPI의 scoring API 호출
     public Mono<ScoringResponseDTO> processScoring(SpeechSegment segment) {
         ScoringRequestDTO scoringRequest = createScoringRequest(segment);
         return scoringFunction.apply(scoringRequest)
+                .doOnError(error -> log.error("scoring API 호출 실패", error))
+                .onErrorResume(error -> Mono.empty())
                 .doOnNext(response -> {
                     if (response.getIsQuestionNeeded()) {
                         log.info("Question is needed for segment: {}", segment.getId());
@@ -40,8 +42,8 @@ public class ScoringProcessor {
         return ScoringRequestDTO.builder()
                 .speechId(segment.getId())
                 .utterance(segment.getText())
-                .hasAgenda(audioSessionBuffer.getAgendaText() != null)
-                .agendaText(audioSessionBuffer.getAgendaText())
+                .hasAgenda(audioSessionBuffer.getAgenda() != null)
+                .agendaText(audioSessionBuffer.getAgenda())
                 .recentUtterances(allUtterances)
                 .build();
     }

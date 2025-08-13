@@ -22,12 +22,12 @@ public class WebSocketNotificationService {
         this.objectMapper = objectMapper;
     }
 
-    public void sendUtteranceNotification(SpeechSegment segment) {
+    public void sendUtteranceNotification(SpeechSegment segment, String speakerId) {
         try {
             WebSocketMessage<SpeechSegmentResponseDTO.SpeechSegmentResponse> message =
                     WebSocketMessage.<SpeechSegmentResponseDTO.SpeechSegmentResponse>builder()
                             .type("utterance")
-                            .data(SpeechSegmentConverter.toSpeechSegmentResponseDTO(segment))
+                            .data(SpeechSegmentConverter.toSpeechSegmentResponseDTO(segment, speakerId))
                             .build();
 
             sendMessage(message);
