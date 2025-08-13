@@ -42,8 +42,8 @@ public class ScoringProcessor {
         return ScoringRequestDTO.builder()
                 .speechId(segment.getId())
                 .utterance(segment.getText())
-                .hasAgenda(audioSessionBuffer.getAgendaText() != null)
-                .agendaText(audioSessionBuffer.getAgendaText())
+                .hasAgenda(audioSessionBuffer.getAgenda() != null)
+                .agendaText(audioSessionBuffer.getAgenda())
                 .recentUtterances(allUtterances)
                 .build();
     }
