@@ -76,11 +76,11 @@ public class SnsEvent extends BaseEntity {
     }
 
     public void updateKeyNameParticipantPdf(
-            String keyNameParicipantPdf,
+            String keyNameParticipantPdf,
             String keyNameParicipantWord,
             String keyNameWinnerPdf,
             String keyNameWinnerWord) {
-        this.keyNameParticipantPdf = keyNameParicipantPdf;
+        this.keyNameParticipantPdf = keyNameParticipantPdf;
         this.keyNameParticipantWord = keyNameParicipantWord;
         this.keyNameWinnerPdf = keyNameWinnerPdf;
         this.keyNameWinnerWord = keyNameWinnerWord;
