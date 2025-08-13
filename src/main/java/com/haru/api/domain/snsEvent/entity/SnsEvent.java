@@ -42,6 +42,21 @@ public class SnsEvent extends BaseEntity {
     @JoinColumn(name = "workspace_id")
     private Workspace workspace;
 
+    @Column(columnDefinition = "TEXT")
+    private String keyNameParticipantPdf;
+
+    @Column(columnDefinition = "TEXT")
+    private String keyNameParticipantWord;
+
+    @Column(columnDefinition = "TEXT")
+    private String keyNameWinnerPdf;
+
+    @Column(columnDefinition = "TEXT")
+    private String keyNameWinnerWord;
+
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKey;
+
     @OneToMany(mappedBy = "snsEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Participant> participantList = new ArrayList<>();
 
@@ -58,5 +73,20 @@ public class SnsEvent extends BaseEntity {
 
     public void updateTitle(String title) {
         this.title = title;
+    }
+
+    public void updateKeyNameParticipantPdf(
+            String keyNameParicipantPdf,
+            String keyNameParicipantWord,
+            String keyNameWinnerPdf,
+            String keyNameWinnerWord) {
+        this.keyNameParticipantPdf = keyNameParicipantPdf;
+        this.keyNameParticipantWord = keyNameParicipantWord;
+        this.keyNameWinnerPdf = keyNameWinnerPdf;
+        this.keyNameWinnerWord = keyNameWinnerWord;
+    }
+
+    public void updateThumbnailKey(String thumbnailKey) {
+        this.thumbnailKey = thumbnailKey;
     }
 }

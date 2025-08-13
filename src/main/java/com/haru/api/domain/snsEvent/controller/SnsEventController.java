@@ -131,30 +131,30 @@ public class SnsEventController {
                     " 참여자 및 당첨자 리스트 다운로드 API입니다. Header에 access token을 넣고 Path Variable에는 snsEventId를 넣어 요청해주세요. Query String에는 다운로드 형식을 넣어주시고 다운로드 형식이 docx라면 리스트의 HTML을 Request Body에 넣어주세요."
     )
     @PostMapping("/{snsEventId}/list/download")
-    public ResponseEntity<byte[]> downloadList(
+    public ApiResponse<SnsEventResponseDTO.ListDownLoadLinkResponse> downloadList(
             @PathVariable String snsEventId,
             @RequestParam ListType listType,
-            @RequestParam Format format,
-            @RequestBody SnsEventRequestDTO.DownloadListRequest request
+            @RequestParam Format format
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        byte[] fileBytes = snsEventCommandService.downloadList(
-                userId,
-                Long.parseLong(snsEventId),
-                listType,
-                format,
-                request
+        return ApiResponse.onSuccess(
+                snsEventCommandService.downloadList(
+                        userId,
+                        Long.parseLong(snsEventId),
+                        listType,
+                        format
+                )
         );
 
-        String listTypefileName = listType == ListType.PARTICIPANT ? "참여자" : "당첨자";
-        String filename = format == Format.PDF ? listTypefileName + ".pdf" : listTypefileName + ".docx";
-        String contentType = format == Format.PDF
-                ? MediaType.APPLICATION_PDF_VALUE
-                : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .contentType(MediaType.parseMediaType(contentType))
-                .body(fileBytes);
+//        String listTypefileName = listType == ListType.PARTICIPANT ? "참여자" : "당첨자";
+//        String filename = format == Format.PDF ? listTypefileName + ".pdf" : listTypefileName + ".docx";
+//        String contentType = format == Format.PDF
+//                ? MediaType.APPLICATION_PDF_VALUE
+//                : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+//
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+//                .contentType(MediaType.parseMediaType(contentType))
+//                .body(fileBytes);
     }
 }

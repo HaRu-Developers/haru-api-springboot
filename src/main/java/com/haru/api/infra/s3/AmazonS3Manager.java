@@ -85,6 +85,25 @@ public class AmazonS3Manager{
         return presignedRequest.url().toString();
     }
 
+    // 프론트로 수정한 파일명으로 다운로드 가능한 url을 보내기 위해 사용하는 메서드
+    public String generatePresignedUrlForDownloadPdfAndWord(String keyName, String fileName) {
+        if (keyName == null || keyName.isBlank()) return null;
+
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(amazonConfig.getBucket())
+                .key(keyName)
+                .responseContentDisposition("attachment; filename=\"" + fileName + "\"") // S3파일(PDF) 링크 클릭 시 즉시 다운가능,파일 다운로드 시 이름 설정
+                .build();
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
+        return presignedRequest.url().toString();
+    }
+
     //S3에서 key에 해당하는 파일을 다운로드하여 byte 배열로 반환 -> 썸네일 생성시 활용
     public byte[] downloadFile(String keyName) {
         if (keyName == null || keyName.isBlank()) {
