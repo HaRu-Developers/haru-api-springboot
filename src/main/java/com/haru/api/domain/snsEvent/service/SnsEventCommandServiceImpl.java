@@ -29,6 +29,8 @@ import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
 import com.haru.api.global.apiPayload.exception.handler.UserDocumentLastOpenedHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.infra.api.restTemplate.InstagramOauth2RestTemplate;
+import com.haru.api.infra.s3.AmazonS3Manager;
+import com.haru.api.infra.s3.MarkdownFileUploader;
 import com.lowagie.text.Element;
 import com.lowagie.text.pdf.*;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
@@ -42,6 +44,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.io.*;
 import java.net.URL;
@@ -56,6 +60,7 @@ import static com.haru.api.global.apiPayload.code.status.ErrorStatus.*;
 @RequiredArgsConstructor
 public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
+    private final SpringTemplateEngine templateEngine;
     @Value("${instagram.client.id}")
     private String instagramClientId;
     @Value("${instagram.client.secret}")
@@ -73,8 +78,11 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
     private final int WORD_TABLE_SIZE = 40; // 페이지당 총 아이디 수
     private final int PER_COL = WORD_TABLE_SIZE/ 2; // 한쪽 컬럼에 들어갈 개수
+    private final AmazonS3Manager amazonS3Manager;
+    private final MarkdownFileUploader markdownFileUploader;
 
     @Override
+    @Transactional
     public SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(
             Long workspaceId,
             SnsEventRequestDTO.CreateSnsRequest request
@@ -168,9 +176,106 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             winnerList.add(winner);
         }
         winnerRepository.saveAll(winnerList);
+
+        // PDF, DOCX파일 바이트 배열로 생성 및 썸네일 생성 & 업로드 / DB에 keyName저장
+        createAndUploadListFileAndThumbnail(
+                request,
+                savedSnsEvent
+        );
+
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
                 .snsEventId(createdSnsEvent.getId())
                 .build();
+    }
+
+    private String createListHtml(
+            SnsEvent snsEvent,
+            ListType listType
+    ) {
+        if (listType == ListType.PARTICIPANT) {
+            List<Participant> participantList = participantRepository.findAllBySnsEvent(snsEvent);
+            List<Participant> leftList = new ArrayList<>();
+            List<Participant> rightList = new ArrayList<>();
+            int total = participantList.size();
+            int mid = (total + 1) / 2;
+            leftList = participantList.subList(0, mid);
+            rightList = participantList.subList(mid, total);
+            // Thymeleaf context에 데이터 세팅
+            Context context = new Context();
+            context.setVariable("leftList", leftList);
+            context.setVariable("rightList", rightList);
+            // 템플릿 렌더링 → HTML 문자열 생성
+            return templateEngine.process("sns-event-list-pdf-template", context);
+        } else if (listType == ListType.WINNER) {
+            List<Winner> winnerList = winnerRepository.findAllBySnsEvent(snsEvent);
+            List<Winner> leftList = new ArrayList<>();
+            List<Winner> rightList = new ArrayList<>();
+            int total = winnerList.size();
+            int mid = (total + 1) / 2;
+            leftList = winnerList.subList(0, mid);
+            rightList = winnerList.subList(mid, total);
+            // Thymeleaf context에 데이터 세팅
+            Context context = new Context();
+            context.setVariable("leftList", leftList);
+            context.setVariable("rightList", rightList);
+            // 템플릿 렌더링 → HTML 문자열 생성
+            return templateEngine.process("sns-event-list-pdf-template", context);
+        } else {
+            throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
+        }
+
+    }
+
+    private void createAndUploadListFileAndThumbnail(
+            SnsEventRequestDTO.CreateSnsRequest request,
+            SnsEvent snsEvent
+    ){
+        String listHtmlParticipant = createListHtml(snsEvent, ListType.PARTICIPANT);
+        String listHtmlWinner = createListHtml(snsEvent, ListType.WINNER);
+        byte[] pdfBytesParticipant;
+        byte[] pdfBytesWinner;
+        byte[] docxBytesParticipant;
+        byte[] docxBytesWinner;
+        try {
+            // 폰트 경로
+            URL resource = getClass().getClassLoader().getResource("templates/NotoSansKR-Regular.ttf");
+            File reg = new File(resource.toURI()); // catch에서 Exception 따로 처리해주기
+            listHtmlParticipant = injectPageMarginStyle(listHtmlParticipant);
+            listHtmlWinner = injectPageMarginStyle(listHtmlWinner);
+            byte[] shiftedPdfBytesParticipant = convertHtmlToPdf(listHtmlParticipant, reg);
+            byte[] shiftedPdfBytesWinner = convertHtmlToPdf(listHtmlWinner, reg);
+            pdfBytesParticipant =  addPdfTitle(shiftedPdfBytesParticipant, request.getTitle(), reg.getAbsolutePath());
+            pdfBytesWinner =  addPdfTitle(shiftedPdfBytesWinner, request.getTitle(), reg.getAbsolutePath());
+            docxBytesParticipant =  createWord(ListType.PARTICIPANT, request.getTitle(), snsEvent);
+            docxBytesWinner =  createWord(ListType.WINNER, request.getTitle(), snsEvent );
+        } catch (Exception e) {
+            log.error("Error creating document: {}", e.getMessage());
+            throw new SnsEventHandler(SNS_EVENT_DOWNLOAD_LIST_ERROR);
+        }
+        // PDF, DOCS파일, 썸네일 S3에 업로드 및 DB에 keyName저장
+        String fullPath = "sns-event/" + snsEvent.getId();
+        String keyNameParicipantPdf = amazonS3Manager.generateKeyName(fullPath) + "." + "pdf";
+        String keyNameParicipantWord = amazonS3Manager.generateKeyName(fullPath) + "." + "docx";
+        String keyNameWinnerPdf = amazonS3Manager.generateKeyName(fullPath) + "." + "pdf";
+        String keyNameWinnerWord = amazonS3Manager.generateKeyName(fullPath) + "." + "docx";
+        amazonS3Manager.uploadFile(keyNameParicipantPdf, pdfBytesParticipant, "application/pdf");
+        amazonS3Manager.uploadFile(keyNameWinnerPdf, pdfBytesWinner, "application/pdf");
+        amazonS3Manager.uploadFile(keyNameParicipantWord, docxBytesParticipant, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        amazonS3Manager.uploadFile(keyNameWinnerWord, docxBytesWinner, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        // SNS 이벤트에 keyName 저장
+        snsEvent.updateKeyNameParticipantPdf(
+                keyNameParicipantPdf,
+                keyNameParicipantWord,
+                keyNameWinnerPdf,
+                keyNameWinnerWord
+        );
+        // SNS 이벤트 당첨자 PDF의 첫페이지 썸네일로 저장
+        String thumbnailKey = markdownFileUploader.createOrUpdateThumbnailForSnsEvent(
+                pdfBytesWinner,
+                "sns-event",
+                null
+        );
+        snsEvent.updateThumbnailKey(thumbnailKey);
     }
 
     private SnsEventResponseDTO.InstagramMediaResponse fetchInstagramMedia(
@@ -368,7 +473,8 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                 return addPdfTitle(shiftedPdfByte, pdfTitle, reg.getAbsolutePath());
             }
             else if (format == Format.DOCX) {
-                return createWord(listType, pdfTitle);
+                return createWord(listType, pdfTitle, snsEventRepository.findById(snsEventId)
+                        .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND)));
             }
             else throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
         } catch (Exception e) {
@@ -403,7 +509,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                 margin-bottom: 80pt;
             }
             @page :first {
-                margin-top: 100pt; /* 첫 페이지만 위 여백 크게 */
+                margin-top: 90pt; /* 첫 페이지만 위 여백 크게 */
             }
         </style>
         """;
@@ -447,8 +553,8 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             over.setFontAndSize(bf, 28f); // 글씨 크게 (28pt)
             // 페이지 폭 중앙 계산
             float x = reader.getPageSize(i).getWidth() / 2;
-            // 페이지 상단에서 약간 내려오게 (40pt 여백)
-            float y = reader.getPageSize(i).getTop() - 60f;
+            // 페이지 상단에서 약간 내려오게 (70pt 여백)
+            float y = reader.getPageSize(i).getTop() - 70f;
             over.showTextAligned(Element.ALIGN_CENTER, text, x, y, 0);
             over.endText();
         }
@@ -457,16 +563,16 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         return out.toByteArray();
     }
 
-    private byte[] createWord(ListType listType, String listTitle) throws Exception { // 참여자 또는 당첨자 리스트 DB에서 가져와 표로 만들어 word로 변환해서 응답주기
+    private byte[] createWord(ListType listType, String listTitle, SnsEvent snsEvent) throws Exception { // 참여자 또는 당첨자 리스트 DB에서 가져와 표로 만들어 word로 변환해서 응답주기
         List<String> list = new ArrayList<>();
         if (listType == ListType.PARTICIPANT) {
-            List<Participant> participantList = participantRepository.findAll();
+            List<Participant> participantList = participantRepository.findAllBySnsEvent(snsEvent);
             for (Participant participant : participantList) {
                 list.add(participant.getNickname());
             }
             return createTable(list, listTitle);
         } else {
-            List<Winner> winnerList = winnerRepository.findAll();
+            List<Winner> winnerList = winnerRepository.findAllBySnsEvent(snsEvent);
             for (Winner winner : winnerList) {
                 list.add(winner.getNickname());
             }

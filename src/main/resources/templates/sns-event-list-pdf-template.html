@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>SNS 이벤트 PDF 리스트 HTML 템플릿</title>
+    <style>
+        table.sns-table {
+            border-collapse: collapse;
+            font-family: 'NotoSansKR', Arial, sans-serif;
+            width: 668px; /* 고정 너비 668px */
+        }
+        /* 셀 공통 스타일 */
+        .sns-table th,
+        .sns-table td {
+            font-size: 15px;
+            color: #333;
+            padding: 6px 22px 6px 10px;
+        }
+        /* 헤더: 아래로 더 내려오게 → padding-top 증가 */
+        .sns-table th {
+            height: 25px; /* 높이 25px */
+            color: #999;
+            font-size: 13px;
+            font-weight: 400;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 8px; /* ▼ 추가 여백 */
+            background: #fff;
+        }
+        /* 바디(일반 셀) */
+        .sns-table td {
+            height: 50px; /* 높이 50px */
+            border-bottom: 1px solid #f3f4f6;
+            font-weight: 400; /* 번호와 ID 글씨 굵기 */
+            background: #fff;
+        }
+        /* ID 열: 양 사이즈 큼 */
+        .sns-table .id-col {
+            width: 290px;
+        }
+        /* 번호 열: 폭 좁음 */
+        .sns-table .num-col {
+            width: 44px;
+        }
+        /* ★ 가운데선: 2번째/4번째 헤더, 2번째/4번째 바디 각각에 border-right 지정 */
+        .sns-table th.middle-border,
+        .sns-table td.middle-border {
+            border-right: 1px solid #e5e7eb !important;  /* !important로 확실히 */
+        }
+    </style>
+</head>
+<body style="font-family: 'NotoSansKR', Arial, sans-serif; margin: 24px;">
+<table class="sns-table">
+    <thead>
+    <tr>
+        <th style="min-width:40px; width:50px;">번호</th>
+        <th style="min-width:120px;">ID</th>
+        <th style="min-width:40px; width:50px;">번호</th>
+        <th style="min-width:120px;">ID</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 한 행에 왼쪽리스트와 오른쪽리스트를 쌍으로 출력 -->
+    <tr th:each="leftItem, leftStat : ${leftList}">
+        <td th:text="${leftStat.count}"></td>
+        <td class="id" th:text="${leftItem.nickname}"></td>
+        <td th:text="${#lists.size(rightList) >= leftStat.index + 1 ? leftStat.count + #lists.size(leftList) : ''}"></td>
+        <td class="id" th:text="${#lists.size(rightList) >= leftStat.index + 1 ? rightList[leftStat.index].nickname : ''}"></td>
+    </tr>
+    <!-- 만약 왼쪽 리스트가 더 짧고, 오른쪽 리스트가 더 길 때 추가 행 출력 -->
+    <tr th:each="rightStat : ${#numbers.sequence(leftList.size() + 1, rightList.size())}" th:if="${rightList.size() > leftList.size()}">
+        <td></td>
+        <td class="id"></td>
+        <td th:text="${rightStat + leftList.size() - 1}"></td>
+        <td class="id" th:text="${rightList[rightStat - 1].nickname}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

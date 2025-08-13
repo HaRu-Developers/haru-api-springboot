@@ -127,6 +127,9 @@ dependencies {
 
 	// Apache POI의 XWPF(XML Word Processing Format)
 	implementation 'org.apache.poi:poi-ooxml:5.2.5'
+
+	//thymeleaf
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 }
 
 dependencyManagement {
