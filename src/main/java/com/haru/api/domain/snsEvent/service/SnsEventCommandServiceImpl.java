@@ -101,10 +101,8 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
         // mood tracker 생성 시 last opened에 추가
         // 마지막으로 연 시간은 null
-
         UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedSnsEvent.getId(), DocumentType.SNS_EVENT_ASSISTANT);
-
-        userDocumentLastOpenedRepository.save(
+        UserDocumentLastOpened savedUserDocumentLastOpened = userDocumentLastOpenedRepository.save(
                 UserDocumentLastOpened.builder()
                         .id(documentId)
                         .user(foundUser)
@@ -180,7 +178,8 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         // PDF, DOCX파일 바이트 배열로 생성 및 썸네일 생성 & 업로드 / DB에 keyName저장
         createAndUploadListFileAndThumbnail(
                 request,
-                savedSnsEvent
+                savedSnsEvent,
+                savedUserDocumentLastOpened
         );
 
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
@@ -228,7 +227,8 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
     private void createAndUploadListFileAndThumbnail(
             SnsEventRequestDTO.CreateSnsRequest request,
-            SnsEvent snsEvent
+            SnsEvent snsEvent,
+            UserDocumentLastOpened userDocumentLastOpened
     ){
         String listHtmlParticipant = createListHtml(snsEvent, ListType.PARTICIPANT);
         String listHtmlWinner = createListHtml(snsEvent, ListType.WINNER);
@@ -269,13 +269,15 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                 keyNameWinnerPdf,
                 keyNameWinnerWord
         );
-        // SNS 이벤트 당첨자 PDF의 첫페이지 썸네일로 저장
+        // SNS 이벤트 당첨자 PDF의 첫페이지 썸네일로 S3에 업로드
         String thumbnailKey = markdownFileUploader.createOrUpdateThumbnailForSnsEvent(
                 pdfBytesWinner,
                 "sns-event",
                 null
         );
         snsEvent.updateThumbnailKey(thumbnailKey);
+        // UserDocumentLastOpened Entity에도 thmbnailKeyName추가
+        userDocumentLastOpened.updateThumbnailKeyName(thumbnailKey);
     }
 
     private SnsEventResponseDTO.InstagramMediaResponse fetchInstagramMedia(
