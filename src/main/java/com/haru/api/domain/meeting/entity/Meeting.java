@@ -8,6 +8,7 @@ import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +48,11 @@ public class Meeting extends BaseEntity {
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MeetingKeyword> meetingKeywords = new ArrayList<>();
 
+    // 회의 시작 시간
+    private LocalDateTime startTime;
 
+    // s3 음성 파일 key
+    private String voiceFileKey;
 
     private Meeting(String title, String agendaResult, User user, Workspace workspace) {
         this.title = title;
