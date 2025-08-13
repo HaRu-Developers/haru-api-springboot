@@ -3,6 +3,7 @@ package com.haru.api.infra.websocket;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
+import com.haru.api.domain.meeting.service.MeetingCommandService;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.infra.api.client.ChatGPTClient;
@@ -10,8 +11,6 @@ import com.haru.api.infra.api.client.FastApiClient;
 import com.haru.api.infra.api.client.ScoringApiClient;
 import com.haru.api.infra.api.repository.AIQuestionRepository;
 import com.haru.api.infra.api.repository.SpeechSegmentRepository;
-import com.haru.api.infra.mp3encoder.Mp3EncoderService;
-import com.haru.api.infra.s3.AmazonS3Manager;
 import com.orctom.vad4j.VAD;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,6 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
-import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,6 +33,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     private final Map<String, AudioSessionBuffer> sessionBuffers = new ConcurrentHashMap<>();
     private final Map<String, AudioProcessingQueue> sessionQueues = new ConcurrentHashMap<>();
+    private final WebSocketSessionRegistry webSocketSessionRegistry;
 
     private final FastApiClient fastApiClient;
     private final ChatGPTClient chatGPTClient;
@@ -46,9 +45,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     private final ObjectMapper objectMapper;
 
-    private final AmazonS3Manager s3Manager;
-
-    private final Mp3EncoderService encoderService;
+    private final MeetingCommandService meetingCommandService;
 
     private final Pattern pathPattern = Pattern.compile("^/ws/audio/(\\w+)$");
 
@@ -62,8 +59,11 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
         if (matcher.matches()) {
             Long meetingId = Long.parseLong(matcher.group(1));
 
+            // WebSocketSessionRegistry에 meetingId를 key로 session 추가
+            webSocketSessionRegistry.addSession(meetingId, session);
+
             // meetingId를 활용하여 로직 처리
-            System.out.println("Meeting ID: " + meetingId);
+            log.info("Meeting ID: {}", meetingId);
 
             Meeting foundMeeting = meetingRepository.findById(meetingId)
                             .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
@@ -76,48 +76,15 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
             // 경로가 올바르지 않은 경우 처리
             session.close(CloseStatus.BAD_DATA.withReason("Invalid path"));
         }
-        System.out.println("WebSocket 연결됨: " + session.getId());
+        log.info("WebSocket 연결됨: {}", session.getId());
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         String sessionId = session.getId();
 
-        // 1. 해당 세션의 전체 오디어 버퍼 가져오기
-        ByteArrayOutputStream audioBuffer = sessionBuffers.get(sessionId).getAllBytes();
-
-        // 2. 버퍼에 데이터가 있는 지 확인
-        if (audioBuffer != null && audioBuffer.size() > 0) {
-            try {
-                // 3. 원본 오디오 데이터를 byte[]로 변환
-                byte[] rawAudioData = audioBuffer.toByteArray();
-                log.info("세션 ID {}의 오디오 데이터 처리 시작. 원본 크기: {} bytes", sessionId, rawAudioData.length);
-
-                // 4. 클라이언트 오디오 설정에 맞춰 MP3로 인코딩
-                int channels = 1;
-                int samplingRate = 16000; // 16kHz
-                int bitRate = 128000;     // 128kbps
-                byte[] mp3Data = encoderService.encodePcmToMp3(rawAudioData, channels, samplingRate, bitRate);
-                log.info("MP3 인코딩 완료. 인코딩된 크기: {} bytes", mp3Data.length);
-
-                // 5. S3에 저장할 고유한 키를 생성 및 저장 (확장자 .mp3 추가)
-                String keyName = s3Manager.generateKeyName("meeting/recording") + ".mp3";
-
-                // 6. S3에 인코딩된 MP3 파일을 업로드
-                s3Manager.uploadFile(keyName, mp3Data, "audio/mpeg"); // MP3의 MIME 타입은 "audio/mpeg"
-                log.info("S3 업로드 성공. Key: {}", keyName);
-
-                // 7. meeting entity에 audio key name 저장
-                Meeting currentMeeting = sessionBuffers.get(sessionId).getMeeting();
-                currentMeeting.setAudioFileKey(keyName);
-                meetingRepository.save(currentMeeting);
-
-            } catch (Exception e) {
-                log.error("세션 ID {}의 오디오 처리 및 S3 업로드 중 오류 발생", sessionId, e);
-            }
-        } else {
-            log.warn("세션 ID {}에 처리할 오디오 데이터가 없습니다.", sessionId);
-        }
+        // 회의 종료 후, 회의 음성 파일 s3 업로드, AI 회의록 생성
+        meetingCommandService.processAfterMeeting(sessionBuffers.get(sessionId));
 
         sessionBuffers.remove(sessionId);
         sessionQueues.remove(sessionId);
