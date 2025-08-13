@@ -40,12 +40,19 @@ public class UserDocumentLastOpened {
     @Column(name = "last_opened")
     private LocalDateTime lastOpened;
 
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKeyName;
+
     public void updateLastOpened(LocalDateTime lastOpened) {
         this.lastOpened = lastOpened;
     }
 
     public void updateTitle(String title) {
         this.title = title;
+    }
+
+    public void updateThumbnailKeyName(String thumbnailKeyName) {
+        this.thumbnailKeyName = thumbnailKeyName;
     }
 
 }
