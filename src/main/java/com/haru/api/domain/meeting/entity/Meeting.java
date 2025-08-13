@@ -25,9 +25,6 @@ public class Meeting extends BaseEntity {
     @Column(nullable = false, length = 50)
     private String title;
 
-    //file을 직접 저장하면 db의 용량이 커지고 조회때마다 io가 커지므로 저장하지 않도록 함
-    //private String agendaFile;
-
     // 안건지 요약본
     @Column(columnDefinition="TEXT")
     private String agendaResult;
@@ -43,6 +40,13 @@ public class Meeting extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_id")
     private Workspace workspace;
+
+    // AI 회의록 정리본 파일
+    @Column(columnDefinition = "TEXT")
+    private String proceedingKeyName;
+
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKey;
 
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MeetingKeyword> meetingKeywords = new ArrayList<>();
@@ -65,7 +69,8 @@ public class Meeting extends BaseEntity {
     public void updateProceeding(String proceeding) {
         this.proceeding = proceeding;
     }
-
+    public void initProceedingKeyName(String proceedingKeyName) {this.proceedingKeyName = proceedingKeyName;}
+    public void initThumbnailKey(String thumbnailKey) {this.thumbnailKey = thumbnailKey;}
 
     // 연관관계 편의 메서드
     public void addTag(Keyword keyword) {
