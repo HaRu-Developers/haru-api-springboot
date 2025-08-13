@@ -33,12 +33,14 @@ public class AIQuestionProcessor {
         this.objectMapper = objectMapper;
     }
 
+    // 질문이 필요하다고 판단된 segment에 대하여 처리 과정
     public Mono<Void> processAIQuestions(SpeechSegment segment) {
         return Mono.fromCallable(() -> generateAIQuestions(segment))
                 .flatMap(aiResponse -> saveAndNotifyAIQuestions(segment, aiResponse))
                 .subscribeOn(Schedulers.boundedElastic()); // 비동기 처리
     }
 
+    // 질문 생성하여 chatGPT에게서 json 형식으로 결과를 받아오고, 이를 AIQuestionResponse로 변환
     private AIQuestionResponse generateAIQuestions(SpeechSegment segment) {
         try {
             String aiQuestionsJson = chatGPTClient.getAIQuestionsRaw(audioSessionBuffer.getAllUtterance());
@@ -49,6 +51,7 @@ public class AIQuestionProcessor {
         }
     }
 
+    // AIQuestionResponse를 토대로 AI 질문을 저장하고, 클라이언트에게 보냄
     private Mono<Void> saveAndNotifyAIQuestions(SpeechSegment segment, AIQuestionResponse aiResponse) {
         return Mono.fromRunnable(() -> {
             if (aiResponse.getQuestions() != null) {

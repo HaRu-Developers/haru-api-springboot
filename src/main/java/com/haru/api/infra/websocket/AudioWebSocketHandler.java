@@ -73,6 +73,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         sessionBuffers.remove(session.getId());
+        sessionQueues.remove(session.getId());
         System.out.println("연결 종료: " + session.getId());
     }
 
@@ -105,6 +106,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                     sessionBuffer.appendCurrentUtteranceBuffer(audioChunk);
                     sessionBuffer.setNoVoiceCount(0);
                     sessionBuffer.setIsTriggered(true);
+                    sessionBuffer.resetCurrentUtteranceBuffer();
 
                     // todo: 음성이 시작된 시간 기록 (완료)
                     sessionBuffer.setUtteranceStartTime(LocalDateTime.now());
