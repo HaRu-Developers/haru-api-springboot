@@ -84,7 +84,7 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
     @Override
     public WorkspaceResponseDTO.WorkspaceEditPage getEditPage(User user, Workspace workspace) {
 
-        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspaceRepository.findUsersByWorkspace(workspace).stream()
+        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspaceRepository.findUsersByWorkspaceId(workspace.getId()).stream()
                 .map(UserConverter::toMemberInfo)
                 .toList();
 

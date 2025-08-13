@@ -4,6 +4,7 @@ import com.haru.api.domain.lastOpened.entity.UserDocumentId;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
+import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
@@ -66,6 +67,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
+    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
     private final ParticipantRepository participantRepository;
     private final WinnerRepository winnerRepository;
     private final RestTemplate restTemplate;
@@ -90,21 +92,6 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         SnsEvent createdSnsEvent = SnsEventConverter.toSnsEvent(request, foundUser);
         createdSnsEvent.setWorkspace(foundWorkspace);
         SnsEvent savedSnsEvent = snsEventRepository.save(createdSnsEvent);
-
-        // mood tracker 생성 시 last opened에 추가
-        // 마지막으로 연 시간은 null
-
-        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedSnsEvent.getId(), DocumentType.SNS_EVENT_ASSISTANT);
-
-        userDocumentLastOpenedRepository.save(
-                UserDocumentLastOpened.builder()
-                        .id(documentId)
-                        .user(foundUser)
-                        .title(savedSnsEvent.getTitle())
-                        .workspaceId(foundWorkspace.getId())
-                        .lastOpened(null)
-                        .build()
-        );
 
         // Instagarm API 호출 후 참여라 리스트, 당첨자 리스트 생성 및 저장
         String accessToken = foundWorkspace.getInstagramAccessToken();
@@ -168,6 +155,12 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             winnerList.add(winner);
         }
         winnerRepository.saveAll(winnerList);
+
+        // sns event 생성 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
+        userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedSnsEvent);
+
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
                 .snsEventId(createdSnsEvent.getId())
                 .build();

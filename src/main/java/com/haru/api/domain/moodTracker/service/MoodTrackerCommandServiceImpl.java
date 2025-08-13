@@ -4,6 +4,7 @@ import com.haru.api.domain.lastOpened.entity.UserDocumentId;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
+import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
@@ -54,6 +55,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
     private final HashIdUtil hashIdUtil;
 
+    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
 
     /**
@@ -92,20 +94,10 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         // Redis Queue에 스케쥴링 추가
         redisReportProducer.scheduleReport(moodTracker.getId(), moodTracker.getDueDate());
 
-        // mood tracker 생성 시 last opened에 추가
-        // 마지막으로 연 시간은 null
-
-        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedMoodTracker.getId(), DocumentType.TEAM_MOOD_TRACKER);
-
-        userDocumentLastOpenedRepository.save(
-                UserDocumentLastOpened.builder()
-                        .id(documentId)
-                        .user(foundUser)
-                        .title(savedMoodTracker.getTitle())
-                        .workspaceId(foundWorkspace.getId())
-                        .lastOpened(null)
-                        .build()
-        );
+        // mood tracker 생성 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
+        userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
 
         return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
     }

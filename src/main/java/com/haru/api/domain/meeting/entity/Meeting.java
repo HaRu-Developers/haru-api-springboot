@@ -1,5 +1,7 @@
 package com.haru.api.domain.meeting.entity;
 
+import com.haru.api.domain.lastOpened.entity.Documentable;
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
@@ -18,7 +20,7 @@ import java.util.List;
 @DynamicUpdate
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Meeting extends BaseEntity {
+public class Meeting extends BaseEntity implements Documentable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -82,5 +84,15 @@ public class Meeting extends BaseEntity {
                 .keyword(keyword)
                 .build();
         this.meetingKeywords.add(meetingKeyword);
+    }
+
+    @Override
+    public Long getWorkspaceId() {
+        return this.workspace.getId();
+    }
+
+    @Override
+    public DocumentType getDocumentType() {
+        return DocumentType.AI_MEETING_MANAGER;
     }
 }

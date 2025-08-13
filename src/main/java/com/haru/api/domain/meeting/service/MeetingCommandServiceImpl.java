@@ -4,6 +4,7 @@ import com.haru.api.domain.lastOpened.entity.UserDocumentId;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
+import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
@@ -61,6 +62,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final KeywordRepository keywordRepository;
     private final ChatGPTClient chatGPTClient;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
+    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
     private final WebSocketSessionRegistry webSocketSessionRegistry;
 
     private final AmazonS3Manager s3Manager;
@@ -121,20 +123,10 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         Meeting savedMeeting = meetingRepository.save(newMeeting);
 
-        // meeting 생성 시 last opened에 추가
-        // 마지막으로 연 시간은 null
-
-        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedMeeting.getId(), DocumentType.AI_MEETING_MANAGER);
-
-        userDocumentLastOpenedRepository.save(
-                UserDocumentLastOpened.builder()
-                        .id(documentId)
-                        .user(foundUser)
-                        .title(savedMeeting.getTitle())
-                        .workspaceId(foundWorkspace.getId())
-                        .lastOpened(null)
-                        .build()
-        );
+        // meeting 생성 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
+        userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMeeting);
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
     }

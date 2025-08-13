@@ -1,5 +1,7 @@
 package com.haru.api.domain.snsEvent.entity;
 
+import com.haru.api.domain.lastOpened.entity.Documentable;
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
@@ -19,7 +21,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class SnsEvent extends BaseEntity {
+public class SnsEvent extends BaseEntity implements Documentable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,5 +60,15 @@ public class SnsEvent extends BaseEntity {
 
     public void updateTitle(String title) {
         this.title = title;
+    }
+
+    @Override
+    public Long getWorkspaceId() {
+        return this.workspace.getId();
+    }
+
+    @Override
+    public DocumentType getDocumentType() {
+        return DocumentType.SNS_EVENT_ASSISTANT;
     }
 }
