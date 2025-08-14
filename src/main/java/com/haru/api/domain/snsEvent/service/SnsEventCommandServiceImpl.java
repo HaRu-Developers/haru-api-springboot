@@ -270,7 +270,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                 keyNameWinnerWord
         );
         // SNS 이벤트 당첨자 PDF의 첫페이지 썸네일로 저장
-        String thumbnailKey = markdownFileUploader.createOrUpdateThumbnailForSnsEvent(
+        String thumbnailKey = markdownFileUploader.createOrUpdateThumbnailWithPdfBytes(
                 pdfBytesWinner,
                 "sns-event",
                 null
