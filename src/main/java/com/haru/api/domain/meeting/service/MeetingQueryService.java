@@ -6,9 +6,11 @@ import java.util.List;
 
 public interface MeetingQueryService {
 
-    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, Long workspaceId);
+    List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, Long workspaceId);
 
-    public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, Long meetingId);
+    MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, Long meetingId);
 
-    public MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(Long userId, Long meetingId);
+    MeetingResponseDTO.TranscriptResponse getTranscript(Long userId, Long meetingId);
+
+    MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(Long userId, Long meetingId);
 }

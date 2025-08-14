@@ -25,4 +25,8 @@ public class AIQuestion {
 
     private String question;
 
+    public void setSpeechSegment(SpeechSegment speechSegment) {
+        this.speechSegment = speechSegment;
+    }
+
 }
