@@ -84,4 +84,21 @@ public class WorkspaceResponseDTO {
         private List<UserResponseDTO.MemberInfo> members;
     }
 
+    @Getter
+    @Builder
+    public static class RecentDocumentList {
+        private List<RecentDocument> documents;
+    }
+
+    @Getter
+    @Builder
+    public static class RecentDocument {
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long documentId;
+        private String title;
+        private DocumentType documentType;
+        private String thumbnailUrl;
+        private LocalDateTime lastOpened;
+    }
+
 }

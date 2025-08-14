@@ -1,9 +1,7 @@
 package com.haru.api.domain.moodTracker.service;
 
-import com.haru.api.domain.lastOpened.entity.UserDocumentId;
-import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
+import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
@@ -61,6 +59,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
     private final HashIdUtil hashIdUtil;
 
+    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
 
     private final AmazonS3Manager amazonS3Manager;
@@ -102,20 +101,10 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         // Redis Queue에 스케쥴링 추가
         redisReportProducer.scheduleReport(moodTracker.getId(), moodTracker.getDueDate());
 
-        // mood tracker 생성 시 last opened에 추가
-        // 마지막으로 연 시간은 null
-
-        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedMoodTracker.getId(), DocumentType.TEAM_MOOD_TRACKER);
-
-        userDocumentLastOpenedRepository.save(
-                UserDocumentLastOpened.builder()
-                        .id(documentId)
-                        .user(foundUser)
-                        .title(savedMoodTracker.getTitle())
-                        .workspaceId(foundWorkspace.getId())
-                        .lastOpened(null)
-                        .build()
-        );
+        // mood tracker 생성 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
+        userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
 
         return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
     }
@@ -148,13 +137,9 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         foundMoodTracker.updateTitle(request.getTitle());
 
-        // last opened title 수정
-        UserDocumentId userDocumentId = new UserDocumentId(userId, moodTrackerId, DocumentType.TEAM_MOOD_TRACKER);
-
-        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
-                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
-
-        foundUserDocumentLastOpened.updateTitle(request.getTitle());
+        // mood tracker 수정 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에서 해당 문서 정보 업데이트
+        userDocumentLastOpenedService.updateRecordsForWorkspaceUsers(foundMoodTracker);
     }
 
     /**
@@ -185,13 +170,9 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         moodTrackerRepository.delete(foundMoodTracker);
 
-        // last opened 테이블 튜플 삭제
-        // last opened가 없어도 오류 X
-        UserDocumentId userDocumentId = new UserDocumentId(userId, moodTrackerId, DocumentType.TEAM_MOOD_TRACKER);
-
-        Optional<UserDocumentLastOpened> foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId);
-
-        foundUserDocumentLastOpened.ifPresent(userDocumentLastOpenedRepository::delete);
+        // mood tracker 삭제 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에서 해당 문서 id를 가지고 있는 튜플 모두 삭제
+        userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(foundMoodTracker);
     }
 
     /**

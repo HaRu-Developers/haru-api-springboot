@@ -197,5 +197,21 @@ public class WorkspaceController {
         return ApiResponse.onSuccess(workspaceEditPage);
     }
 
+    @Operation(
+            summary = "메인페이지 최근 문서 조회",
+            description = "# [v1.0 (2025-08-14)](https://www.notion.so/2265da7802c580989a5fe98b0f3f24b8)" +
+                    " 메인 페이지 최근 문서 조회 API 입니다. jwt 토큰을 헤더에 넣고, path variable에 workspaceId를 넘겨주세요"
+    )
+    @GetMapping("/{workspaceId}/recent")
+    public ApiResponse<WorkspaceResponseDTO.RecentDocumentList> getRecent(
+            @PathVariable String workspaceId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
+    ) {
+
+        WorkspaceResponseDTO.RecentDocumentList recentDocuments = workspaceQueryService.getRecentDocuments(user, workspace);
+
+        return ApiResponse.onSuccess(recentDocuments);
+    }
 
 }

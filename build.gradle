@@ -130,6 +130,10 @@ dependencies {
 
 	//thymeleaf
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	// audio encoder
+	implementation "ws.schild:jave-all-deps:3.5.0"
+
 }
 
 dependencyManagement {

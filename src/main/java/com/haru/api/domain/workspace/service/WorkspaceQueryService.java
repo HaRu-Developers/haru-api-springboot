@@ -15,4 +15,6 @@ public interface WorkspaceQueryService {
     WorkspaceResponseDTO.DocumentCalendarList getDocumentForCalendar(User user, Workspace workspace, LocalDate startDate, LocalDate endDate);
 
     WorkspaceResponseDTO.WorkspaceEditPage getEditPage(User user, Workspace workspace);
+
+    WorkspaceResponseDTO.RecentDocumentList getRecentDocuments(User user, Workspace workspace);
 }

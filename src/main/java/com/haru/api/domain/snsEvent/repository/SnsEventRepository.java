@@ -12,13 +12,14 @@ import java.util.List;
 @Repository
 public interface SnsEventRepository extends JpaRepository<SnsEvent, Long> {
 
+    @Query("SELECT m FROM SnsEvent m WHERE m.workspace.id = :workspaceId")
     List<SnsEvent> findAllByWorkspaceId(Long workspaceId);
 
     List<SnsEvent> findAllByWorkspace(Workspace foundWorkspace);
 
 
     @Query("SELECT mt FROM SnsEvent mt " +
-            "WHERE mt.workspace = :workspace " +
+            "WHERE mt.workspace.id = :workspaceId " +
             "AND mt.createdAt BETWEEN :startDate AND :endDate")
-    List<SnsEvent> findAllDocumentForCalendars(Workspace workspace, LocalDateTime startDate, LocalDateTime endDate);
+    List<SnsEvent> findAllDocumentForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
 }
