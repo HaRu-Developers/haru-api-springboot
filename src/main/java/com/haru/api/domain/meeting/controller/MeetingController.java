@@ -154,11 +154,11 @@ public class MeetingController {
     )
     @GetMapping("/{meetingId}/transcript")
     public ApiResponse<MeetingResponseDTO.TranscriptResponse> getMeetingTranscript(
-            @PathVariable("meetingId") Long meetingId
+            @PathVariable("meetingId") String meetingId
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
 
-        MeetingResponseDTO.TranscriptResponse transcriptResponse = meetingQueryService.getTranscript(userId, meetingId);
+        MeetingResponseDTO.TranscriptResponse transcriptResponse = meetingQueryService.getTranscript(userId, Long.parseLong(meetingId));
 
         return ApiResponse.onSuccess(transcriptResponse);
     }

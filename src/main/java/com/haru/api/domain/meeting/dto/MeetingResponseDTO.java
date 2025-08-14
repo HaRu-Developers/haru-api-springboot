@@ -58,7 +58,9 @@ public class MeetingResponseDTO {
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Transcript {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long segmentId;
+        @JsonSerialize(using = ToStringSerializer.class)
         private String speakerId;
         private String text;
         private LocalDateTime startTime;
@@ -82,6 +84,7 @@ public class MeetingResponseDTO {
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public static class AIQuestionDTO {
+        @JsonSerialize(using = ToStringSerializer.class)
         private Long questionId;
         private String question;
 
