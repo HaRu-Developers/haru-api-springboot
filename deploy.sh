@@ -105,7 +105,7 @@ main() {
 
   # 컨테이너 충돌 방지를 위해, 동일한 이름의 컨테이너가 있을 경우 미리 삭제
   echo "Removing any existing container with the name 'app-$TARGET'..."
-  docker compose -f docker-compose.yml rm -f "app-$TARGET" 2>/dev/null || true
+  docker rm -f "app-$TARGET" 2>/dev/null || true
 
   # 최신 이미지 풀
   echo "Pulling the latest image for '$TARGET' service..."
