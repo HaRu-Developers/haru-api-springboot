@@ -5,8 +5,10 @@ import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
+import com.haru.api.global.util.HashIdUtil;
 import com.haru.api.infra.mail.EmailSender;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,8 +21,11 @@ public class MoodTrackerMailServiceImpl implements MoodTrackerMailService {
     private final MoodTrackerRepository moodTrackerRepository;
     private final EmailSender emailSender;
 
+    private final HashIdUtil hashIdUtil;
+
     // 예시
-    private final String surveyLinkPrefix = "https://haru.it.kr/survey/";
+    @Value("${survey-url}")
+    private String surveyBaseUrl;
 
     @Override
     public void sendSurveyLinkToEmail(
@@ -31,8 +36,8 @@ public class MoodTrackerMailServiceImpl implements MoodTrackerMailService {
         MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
-        // 이 후에 id에 hash 처리 요구됨
-        String surveyLink = surveyLinkPrefix + moodTrackerId;
+        // id hash 처리
+        String surveyLink = surveyBaseUrl + "/" + hashIdUtil.encode(moodTrackerId);
 
         Long workspaceId = foundMoodTracker.getWorkspace().getId();
         List<String> foundEmails = userWorkspaceRepository.findEmailsByWorkspaceId(workspaceId);
