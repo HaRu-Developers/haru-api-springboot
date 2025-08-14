@@ -50,6 +50,9 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -233,15 +236,22 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         byte[] docxBytesParticipant;
         byte[] docxBytesWinner;
         try {
-            // 폰트 경로
-            URL resource = getClass().getClassLoader().getResource("templates/NotoSansKR-Regular.ttf");
-            File reg = new File(resource.toURI()); // catch에서 Exception 따로 처리해주기
+            // 1) 폰트를 스트림/바이트로 읽기
+            byte[] fontBytes;
+            try (InputStream in = getClass().getClassLoader()
+                    .getResourceAsStream("templates/NotoSansKR-Regular.ttf")) {
+                if (in == null) throw new IllegalStateException("Font not found on classpath");
+                fontBytes = in.readAllBytes();
+            }
+//            // 폰트 경로
+//            URL resource = getClass().getClassLoader().getResource("templates/NotoSansKR-Regular.ttf");
+//            File reg = new File(resource.toURI()); // catch에서 Exception 따로 처리해주기
             listHtmlParticipant = injectPageMarginStyle(listHtmlParticipant);
             listHtmlWinner = injectPageMarginStyle(listHtmlWinner);
-            byte[] shiftedPdfBytesParticipant = convertHtmlToPdf(listHtmlParticipant, reg);
-            byte[] shiftedPdfBytesWinner = convertHtmlToPdf(listHtmlWinner, reg);
-            pdfBytesParticipant =  addPdfTitle(shiftedPdfBytesParticipant, request.getTitle(), reg.getAbsolutePath());
-            pdfBytesWinner =  addPdfTitle(shiftedPdfBytesWinner, request.getTitle(), reg.getAbsolutePath());
+            byte[] shiftedPdfBytesParticipant = convertHtmlToPdf(listHtmlParticipant, fontBytes);
+            byte[] shiftedPdfBytesWinner = convertHtmlToPdf(listHtmlWinner, fontBytes);
+            pdfBytesParticipant =  addPdfTitle(shiftedPdfBytesParticipant, request.getTitle(), fontBytes);
+            pdfBytesWinner =  addPdfTitle(shiftedPdfBytesWinner, request.getTitle(), fontBytes);
             docxBytesParticipant =  createWord(ListType.PARTICIPANT, request.getTitle(), snsEvent);
             docxBytesWinner =  createWord(ListType.WINNER, request.getTitle(), snsEvent );
         } catch (Exception e) {
@@ -530,7 +540,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         }
     }
 
-    private byte[] convertHtmlToPdf(String listHtml, File reg) throws Exception {
+    private byte[] convertHtmlToPdf(String listHtml, byte[] fontBytes) throws Exception {
         // Openhtmltopdf/Flying Saucer를 사용하여 PDF 변환
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfRendererBuilder builder = new PdfRendererBuilder();
@@ -538,21 +548,31 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         builder.withHtmlContent(listHtml, null); // ex) "file:/opt/app/static/" or "https://your.cdn/", // base url 설정, 직접css파일 가져오거나 프론트엔드 배포 후 적용
         builder.toStream(baos);
         // 한글 폰트 임베딩
-        if (reg.exists() && reg.canRead()) {
-            builder.useFont(
-                    reg,
-                    "NotoSansKR"
-            );
+        // byte[] → 임시 파일
+        if (fontBytes != null && fontBytes.length > 0) {
+            Path tmpFont = Files.createTempFile("NotoSansKR-", ".ttf");
+            Files.write(tmpFont, fontBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            builder.useFont(tmpFont.toFile(), "NotoSansKR");
         }
         builder.run();
         return baos.toByteArray();
     }
 
-    private byte[] addPdfTitle(byte[] pdfBytes, String text, String fontPath) throws Exception {
+    private byte[] addPdfTitle(byte[] pdfBytes, String text, byte[] fontBytes) throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PdfReader reader = new PdfReader(new ByteArrayInputStream(pdfBytes));
         PdfStamper stamper = new PdfStamper(reader, out);
-        BaseFont bf = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+        // byte[]로 폰트 임베딩 (경로 X)
+        // 첫 번째 인자 name은 식별용 문자열이라 임의명 가능, 실제 폰트는 byte[]에서 읽힙니다.
+        BaseFont bf = BaseFont.createFont(
+                "NotoSansKR-Regular.ttf",         // internal name (아무 문자열 OK)
+                BaseFont.IDENTITY_H,          // 유니코드 CJK
+                BaseFont.EMBEDDED,            // 폰트 임베드
+                false,                        // cached (메모리 캐시 안 함)
+                fontBytes,                    // TTF 바이트
+                null                          // PFB (Type1용, TTF면 null)
+        );
+//        BaseFont bf = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
         int totalPages = reader.getNumberOfPages();
         for (int i = 1; i <= totalPages; i++) {
             PdfContentByte over = stamper.getOverContent(i);
