@@ -7,6 +7,8 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "speech_segments")
@@ -31,6 +33,15 @@ public class SpeechSegment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "meeting_id", nullable = false)
     private Meeting meeting;
+
+    @OneToMany(mappedBy = "speechSegment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<AIQuestion> aiQuestions = new ArrayList<>();
+
+    public void addAIQuestion(AIQuestion aiQuestion) {
+        this.aiQuestions.add(aiQuestion);
+        aiQuestion.setSpeechSegment(this);
+    }
 
     @Override
     public String toString() {
