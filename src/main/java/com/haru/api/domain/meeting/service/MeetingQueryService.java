@@ -12,4 +12,5 @@ public interface MeetingQueryService {
 
     MeetingResponseDTO.TranscriptResponse getTranscript(Long userId, Long meetingId);
 
+    MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(Long userId, Long meetingId);
 }

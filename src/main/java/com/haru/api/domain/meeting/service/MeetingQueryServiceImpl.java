@@ -17,6 +17,7 @@ import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.api.entity.SpeechSegment;
 import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
     private final WorkspaceRepository workspaceRepository;
     private final UserRepository userRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
+    private final AmazonS3Manager amazonS3Manager;
     private final SpeechSegmentRepository speechSegmentRepository;
 
     @Override
@@ -96,6 +98,33 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
         return MeetingResponseDTO.TranscriptResponse.builder()
                 .meetingStartTime(foundMeeting.getStartTime())
                 .transcripts(transcriptList)
+                .build();
+    }
+
+    @Override
+    public MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(Long userId, Long meetingId){
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        Meeting foundMeeting = meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+
+        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
+                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+
+        String proceedingKeyName = foundMeeting.getProceedingKeyName();
+
+        if (proceedingKeyName == null || proceedingKeyName.isBlank()) {
+            throw new MeetingHandler(ErrorStatus.MEETING_PROCEEDING_NOT_FOUND);
+        }
+
+        String presignedUrl = amazonS3Manager.generatePresignedUrl(proceedingKeyName);
+
+        return MeetingResponseDTO.proceedingDownLoadLinkResponse.builder()
+                .downloadLink(presignedUrl)
                 .build();
     }
 
