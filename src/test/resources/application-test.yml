@@ -46,6 +46,8 @@ cloud:
 
 invite-url: invite-url
 
+survey-url: survey-url
+
 instagram:
   client:
     id: "dummy-client-id"
