@@ -4,13 +4,13 @@ import com.haru.api.domain.lastOpened.entity.UserDocumentId;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
+import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.entity.Keyword;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
-import com.haru.api.domain.meeting.repository.MeetingKeywordRepository;
 import com.haru.api.domain.meeting.repository.KeywordRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
@@ -22,6 +22,12 @@ import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.infra.api.client.ChatGPTClient;
+import com.haru.api.infra.api.entity.SpeechSegment;
+import com.haru.api.infra.api.repository.SpeechSegmentRepository;
+import com.haru.api.infra.mp3encoder.Mp3EncoderService;
+import com.haru.api.infra.s3.AmazonS3Manager;
+import com.haru.api.infra.websocket.AudioSessionBuffer;
+import com.haru.api.infra.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -30,11 +36,12 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.docx4j.Docx4J;
 import org.docx4j.TextUtils;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.socket.CloseStatus;
 
-import java.util.Optional;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -42,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -56,6 +64,12 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final KeywordRepository keywordRepository;
     private final ChatGPTClient chatGPTClient;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
+    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+    private final WebSocketSessionRegistry webSocketSessionRegistry;
+    private final SpeechSegmentRepository speechSegmentRepository;
+
+    private final AmazonS3Manager s3Manager;
+    private final Mp3EncoderService encoderService;
 
     @Override
     @Transactional
@@ -112,20 +126,10 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         Meeting savedMeeting = meetingRepository.save(newMeeting);
 
-        // meeting 생성 시 last opened에 추가
-        // 마지막으로 연 시간은 null
-
-        UserDocumentId documentId = new UserDocumentId(foundUser.getId(), savedMeeting.getId(), DocumentType.AI_MEETING_MANAGER);
-
-        userDocumentLastOpenedRepository.save(
-                UserDocumentLastOpened.builder()
-                        .id(documentId)
-                        .user(foundUser)
-                        .title(savedMeeting.getTitle())
-                        .workspaceId(foundWorkspace.getId())
-                        .lastOpened(null)
-                        .build()
-        );
+        // meeting 생성 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
+        userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMeeting);
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
     }
@@ -137,26 +141,22 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     public void updateMeetingTitle(Long userId, Long meetingId, String newTitle) {
 
 
-        Meeting meeting = meetingRepository.findById(meetingId)
+        Meeting foundMeeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         // 회의 생성자 권한 확인
-        if (!meeting.getCreator().getId().equals(userId)) {
+        if (!foundMeeting.getCreator().getId().equals(userId)) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
 
-        meeting.updateTitle(newTitle);
+        foundMeeting.updateTitle(newTitle);
 
-        // last opened title 수정
-        UserDocumentId userDocumentId = new UserDocumentId(userId, meetingId, DocumentType.AI_MEETING_MANAGER);
-
-        UserDocumentLastOpened foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId)
-                .orElseThrow(() -> new UserDocumentLastOpenedHandler(ErrorStatus.USER_DOCUMENT_LAST_OPENED_NOT_FOUND));
-
-        foundUserDocumentLastOpened.updateTitle(newTitle);
+        // meeting 수정 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에서 해당 문서 정보 업데이트
+        userDocumentLastOpenedService.updateRecordsForWorkspaceUsers(foundMeeting);
     }
 
     @Override
@@ -180,13 +180,9 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         meetingRepository.delete(foundMeeting);
 
-        // last opened 테이블 튜플 삭제
-        // last opened가 없어도 오류 X
-        UserDocumentId userDocumentId = new UserDocumentId(userId, meetingId, DocumentType.AI_MEETING_MANAGER);
-
-        Optional<UserDocumentLastOpened> foundUserDocumentLastOpened = userDocumentLastOpenedRepository.findById(userDocumentId);
-
-        foundUserDocumentLastOpened.ifPresent(userDocumentLastOpenedRepository::delete);
+        // meeting 삭제 시 워크스페이스에 속해있는 모든 유저에 대해
+        // last opened 테이블에서 해당 문서 id를 가지고 있는 튜플 모두 삭제
+        userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(foundMeeting);
     }
 
     @Override
@@ -211,6 +207,79 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     }
 
+    @Override
+    @Transactional
+    public void endMeeting(Long userId, Long meetingId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+
+        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
+                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+
+        // 웹소켓 연결 종료 및 세션 삭제
+        try {
+            webSocketSessionRegistry.getSession(meetingId).close(CloseStatus.BAD_DATA.withReason("Invalid path"));
+            webSocketSessionRegistry.removeSession(meetingId);
+        } catch (Exception e) {
+            log.error("meetingId: {} session 종료 오류", meetingId);
+        }
+    }
+
+    @Override
+    @Async
+    @Transactional
+    public void processAfterMeeting(AudioSessionBuffer sessionBuffer) {
+
+        // 현재 처리하고자 하는 session의 meeting entity
+        Meeting currentMeeting = meetingRepository.findById(sessionBuffer.getMeeting().getId())
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+
+        // 버퍼에서 오디오 스트림 가져오기
+        ByteArrayOutputStream audioBuffer = sessionBuffer.getAllBytes();
+
+        if (audioBuffer != null && audioBuffer.size() > 0) {
+            // 파일 업로드 후, key name을 반환
+            String keyName = uploadAudioFile(audioBuffer);
+
+            // 3. 조회한 엔티티의 상태를 변경합니다.
+            currentMeeting.setAudioFileKey(keyName);
+
+            // 4. AI 회의록 생성
+            List<SpeechSegment> segments = speechSegmentRepository.findByMeeting(currentMeeting);
+
+            if (segments.isEmpty()) {
+                log.warn("meetingId: {}에 대한 대화 내용이 없어 AI 요약을 생략합니다.", currentMeeting.getId());
+                return;
+            }
+
+            // 2. 모든 대화 텍스트를 하나의 문자열로 조합
+            String documentText = segments.stream()
+                    .map(SpeechSegment::getText)
+                    .collect(Collectors.joining("\n"));
+
+            String agendaResult = currentMeeting.getAgendaResult();
+
+            // 동기적 분석 요청
+            String analysisResult = chatGPTClient.analyzeMeetingTranscript(documentText, agendaResult).block();
+
+            // 분석 결과 업데이트
+            if (analysisResult != null && !analysisResult.isBlank()) {
+                currentMeeting.updateProceeding(analysisResult);
+                log.info("meetingId: {}의 AI 회의록 생성 및 저장 완료.", currentMeeting.getId());
+            } else {
+                log.warn("meetingId: {}의 AI 분석 결과가 비어있습니다.", currentMeeting.getId());
+            }
+
+        } else {
+            log.warn("meetingId: {}에 처리할 오디오 데이터가 없습니다.", currentMeeting.getId());
+        }
+    }
 
     private List<String> convertFileToImages(MultipartFile file) {
         if (file == null || file.isEmpty()) {
@@ -291,6 +360,34 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         } catch (Exception e) {
             log.error("파일에서 텍스트를 추출하는 중 오류가 발생했습니다.", e);
             throw new RuntimeException("파일 텍스트 추출에 실패했습니다.", e);
+        }
+    }
+
+    /**
+     *
+     * @param audioBuffer : 현재 처리하는 세션의 전체 원본 음성 데이터
+     *
+     * 전체 회의 음성 파일을 s3에 업로드하고, audio file key name을 저장합니다.
+     */
+    private String uploadAudioFile(ByteArrayOutputStream audioBuffer) {
+
+        try {
+            byte[] rawAudioData = audioBuffer.toByteArray();
+
+            int channels = 1;
+            int samplingRate = 16000;
+            int bitRate = 128000;
+            byte[] mp3Data = encoderService.encodePcmToMp3(rawAudioData, channels, samplingRate, bitRate);
+            log.info("MP3 인코딩 완료. 인코딩된 크기: {} bytes", mp3Data.length);
+
+            String keyName = s3Manager.generateKeyName("meeting/recording") + ".mp3";
+            s3Manager.uploadFile(keyName, mp3Data, "audio/mpeg");
+            log.info("S3 업로드 성공. Key: {}", keyName);
+
+            return keyName;
+
+        } catch (Exception e) {
+            throw new MeetingHandler(ErrorStatus.MEETING_AUDIO_FILE_UPLOAD_FAIL);
         }
     }
 }

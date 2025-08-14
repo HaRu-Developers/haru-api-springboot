@@ -42,7 +42,10 @@ public class AudioProcessingQueue {
 
     private void initializeProcessingPipeline() {
         this.flux
-                .concatMap(pipeline::processAudioBuffer)
+                // flatMapSequential을 통해서 1번 음성데이터가 stt 처리되는 동안, 2번 음성데이터가 들어오면
+                // 1번 음성데이터가 stt 완료될때까지 기다리는게 아니라 2번 음성데이터에 대해서 바로 stt 처리되도록 구현
+                // 1번 2번에 대한 결과 순서는 보장
+                .flatMapSequential(pipeline::processAudioBuffer)
                 .subscribe( // flux를 구독하여, enqueue 될 때 마다 해당 파이프라인 실행
                         result -> log.info("Audio processing completed successfully"),
                         error -> log.error("Audio processing failed", error)

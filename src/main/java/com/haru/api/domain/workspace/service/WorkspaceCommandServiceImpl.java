@@ -142,15 +142,14 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
                 .auth(Auth.MEMBER)
                 .build());
 
-        // 각 문서 조회
         // 각 문서 UserDocumentLastOpened로 변환
         List<UserDocumentLastOpened> userDocumentLastOpenedList = addDocumentsToUserLastOpened(foundWorkspace, foundUser.get());
 
         // 워크스페이스에 속해있는 모든 문서를 user_document_last_opened에 추가
         // last_opened는 null
-        userDocumentLastOpenedList.forEach(userDocumentLastOpened -> {
+        if (!userDocumentLastOpenedList.isEmpty()) {
             userDocumentLastOpenedRepository.saveAll(userDocumentLastOpenedList);
-        });
+        }
 
         return WorkspaceConverter.toInvitationAcceptResult(true, true, foundWorkspace);
     }

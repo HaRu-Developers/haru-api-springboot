@@ -18,12 +18,12 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
     @Query("SELECT m.workspace FROM Meeting m WHERE m.id = :meetingId")
     Optional<Workspace> findWorkspaceByMeetingId(@Param("meetingId") Long meetingId);
 
-
+    @Query("SELECT m FROM Meeting m WHERE m.workspace.id = :workspaceId")
     List<Meeting> findAllByWorkspaceId(Long workspaceId);
 
     @Query("SELECT mt FROM Meeting mt " +
-            "WHERE mt.workspace = :workspace " +
+            "WHERE mt.workspace.id = :workspaceId " +
             "AND mt.createdAt BETWEEN :startDate AND :endDate")
-    List<Meeting> findAllDocumentForCalendars(Workspace workspace, LocalDateTime startDate, LocalDateTime endDate);
+    List<Meeting> findAllDocumentForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
 
 }

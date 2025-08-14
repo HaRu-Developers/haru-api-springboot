@@ -14,6 +14,7 @@ public class SpeechSegmentResponseDTO {
     public static class SpeechSegmentResponse {
         @JsonSerialize(using = ToStringSerializer.class)
         private Long speechId;
+        private String speakerId;
         private String text;
         private LocalDateTime startTime;
     }

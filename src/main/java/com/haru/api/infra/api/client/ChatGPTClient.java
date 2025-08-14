@@ -37,7 +37,7 @@ public class ChatGPTClient {
         List<Map<String, String>> messages = List.of(
                 Map.of(
                         "role", "system",
-                        "content", "너는 실시간 회의 도우미야. 회의 참가자들의 발화를 계속 듣고, 회의의 맥락을 파악해서 그에 도움이 될 수 있는 질문을 실시간으로 제안하는 역할이야. 회의 흐름을 방해하지 않으면서, 더 깊이 있는 논의를 유도할 수 있는 질문을 제안해줘. 반드시 JSON 형식으로 응답해. 형식은 {\"questions\": [\"질문1\", \"질문2\", \"질문3\"]} 이며, 질문은 최대 3개까지만 포함해야 하고, 꼭 3개일 필요는 없어."
+                        "content", "너는 실시간 회의 도우미야. 회의 참가자들의 발화를 계속 듣고, 회의의 맥락을 파악해서 그에 도움이 될 수 있는 질문을 실시간으로 제안하는 역할이야. 회의 흐름을 방해하지 않으면서, 더 깊이 있는 논의를 유도할 수 있는 질문을 제안해줘. 반드시 JSON 형식으로만 응답해야 하며, 절대로 백틱(`)이나 코드 블록을 포함하지 마. 형식은 {\"questions\": [\"질문1\", \"질문2\", \"질문3\"]} 이며, 질문은 최대 3개까지만 포함해야 하고, 꼭 3개일 필요는 없어."
                 ),
                 Map.of(
                         "role", "user",
@@ -222,4 +222,42 @@ public class ChatGPTClient {
                 .bodyToMono(OpenAIResponse.class)
                 .map(response -> response.getChoices().get(0).getMessage().getContent());
     }
+
+    public Mono<String> analyzeMeetingTranscript(String documentText, String agendaResult) {
+        if (documentText == null || documentText.isBlank()) {
+            // 분석할 내용이 없으면 미리 정의된 응답을 반환합니다.
+            return Mono.just("분석할 대화 내용이 없습니다.");
+        }
+
+        // 안건 요약과 실제 대화록을 모두 포함하도록 프롬프트 수정
+        String prompt = "다음은 회의 전에 공유된 '안건 요약'과 실제 진행된 '회의 대화록'입니다. 두 내용을 모두 참고하여 다음 세 가지 작업을 수행해주세요.\n\n" +
+                "--- 안건 요약 ---\n" +
+                (agendaResult != null && !agendaResult.isBlank() ? agendaResult : "제공된 안건 요약 없음") + "\n\n" +
+                "--- 회의 대화록 ---\n" +
+                documentText + "\n\n" +
+                "1. 회의의 전체 내용을 3~4 문장으로 요약해주세요.\n" +
+                "2. 논의된 핵심 주제들을 발화 주제와 세부 사항으로 이루어지도록 추출해주세요.\n" +
+                "3. 회의에서 도출된 실행 과제(Action Item)가 있다면 목록으로 정리해주세요. 없다면 응답에 아예 포함하지 마세요.\n" +
+                "반드시 '요약 내용|||핵심 주제1,핵심 주제2|||실행 과제 목록' 형식으로 응답해주세요. 다른 설명은 절대 붙이지 마세요.\n" +
+                "또한, 응답하는 모든 내용은 마크다운(Markdown) 형식으로 작성해주세요. 예를 들어, 실행 과제는 마크다운의 리스트 형식(-)을 사용해주세요.";
+
+        List<Map<String, String>> messages = List.of(
+                Map.of("role", "system", "content", "너는 회의록을 분석하여 요약, 핵심 주제, 실행 과제를 정해진 형식에 따라 추출하는 전문 AI 비서야."),
+                Map.of("role", "user", "content", prompt)
+        );
+
+        Map<String, Object> requestBody = Map.of(
+                "model", "gpt-4o",
+                "messages", messages,
+                "max_tokens", 800 // 응답 길이를 넉넉하게 설정
+        );
+
+        // WebClient를 통해 OpenAI API 호출
+        return webClient.post()
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(OpenAIResponse.class)
+                .map(response -> response.getChoices().get(0).getMessage().getContent());
+    }
+
 }

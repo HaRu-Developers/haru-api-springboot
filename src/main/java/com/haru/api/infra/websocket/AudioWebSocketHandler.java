@@ -3,6 +3,7 @@ package com.haru.api.infra.websocket;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
+import com.haru.api.domain.meeting.service.MeetingCommandService;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.infra.api.client.ChatGPTClient;
@@ -32,6 +33,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     private final Map<String, AudioSessionBuffer> sessionBuffers = new ConcurrentHashMap<>();
     private final Map<String, AudioProcessingQueue> sessionQueues = new ConcurrentHashMap<>();
+    private final WebSocketSessionRegistry webSocketSessionRegistry;
 
     private final FastApiClient fastApiClient;
     private final ChatGPTClient chatGPTClient;
@@ -42,6 +44,8 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
     private final AIQuestionRepository aiQuestionRepository;
 
     private final ObjectMapper objectMapper;
+
+    private final MeetingCommandService meetingCommandService;
 
     private final Pattern pathPattern = Pattern.compile("^/ws/audio/(\\w+)$");
 
@@ -55,25 +59,37 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
         if (matcher.matches()) {
             Long meetingId = Long.parseLong(matcher.group(1));
 
+            // WebSocketSessionRegistry에 meetingId를 key로 session 추가
+            webSocketSessionRegistry.addSession(meetingId, session);
+
             // meetingId를 활용하여 로직 처리
-            System.out.println("Meeting ID: " + meetingId);
+            log.info("Meeting ID: {}", meetingId);
 
             Meeting foundMeeting = meetingRepository.findById(meetingId)
                             .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+
+            // meeting의 회의 시작 시간 기록 및 db에 업데이트
+            foundMeeting.initStartTime(LocalDateTime.now());
+            meetingRepository.save(foundMeeting);
 
             sessionBuffers.get(session.getId()).setMeeting(foundMeeting);
         } else {
             // 경로가 올바르지 않은 경우 처리
             session.close(CloseStatus.BAD_DATA.withReason("Invalid path"));
         }
-
-        System.out.println("WebSocket 연결됨: " + session.getId());
+        log.info("WebSocket 연결됨: {}", session.getId());
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        sessionBuffers.remove(session.getId());
-        System.out.println("연결 종료: " + session.getId());
+        String sessionId = session.getId();
+
+        // 회의 종료 후, 회의 음성 파일 s3 업로드, AI 회의록 생성
+        meetingCommandService.processAfterMeeting(sessionBuffers.get(sessionId));
+
+        sessionBuffers.remove(sessionId);
+        sessionQueues.remove(sessionId);
+        log.info("연결 종료: {}", sessionId);
     }
 
     @Override
@@ -105,8 +121,9 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                     sessionBuffer.appendCurrentUtteranceBuffer(audioChunk);
                     sessionBuffer.setNoVoiceCount(0);
                     sessionBuffer.setIsTriggered(true);
+                    sessionBuffer.resetCurrentUtteranceBuffer();
 
-                    // todo: 음성이 시작된 시간 기록 (완료)
+                    // 발화가 시작된 시간 버퍼에 저장
                     sessionBuffer.setUtteranceStartTime(LocalDateTime.now());
 
                     log.info("isTriggered: {}", sessionBuffer.getIsTriggered());
@@ -131,7 +148,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                     // noVoiceCount 가 임계값에 도달한 경우, 음성의 끝이라고 판단
                     if (sessionBuffer.getNoVoiceCount() >= AudioSessionBuffer.NO_VOICE_COUNT_TARGET) {
 
-                        // 세션별 큐가 없으면 생성
+                        // 세션별 발화를 처리하기 위한 큐가 없으면 생성
                         sessionQueues.computeIfAbsent(sessionId, id ->
                             new AudioProcessingQueue(
                                     fastApiClient::sendRawBytesToFastAPI,
@@ -149,6 +166,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
                         sessionQueues.get(sessionId).enqueue(sessionBuffer.getCurrentUtteranceBuffer());
                         log.info("speech detected");
 
+                        // 현재 발화를 처리했으므로, 발화를 임시로 저장해놓는 버퍼 초기화
                         sessionBuffer.resetCurrentUtteranceBuffer();
                         sessionBuffer.setIsTriggered(false);
                     }
