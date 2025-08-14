@@ -1,8 +1,5 @@
 services:
   app-blue:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: andylee259/haru-app:latest
     container_name: app-blue
     ports:
@@ -16,9 +13,6 @@ services:
       - haru-network
 
   app-green:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: andylee259/haru-app:latest
     container_name: app-green
     ports:
@@ -33,4 +27,4 @@ services:
 
 networks:
   haru-network:
-    driver: bridge
+    external: true
