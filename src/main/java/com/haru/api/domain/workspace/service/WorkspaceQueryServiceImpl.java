@@ -15,11 +15,9 @@ import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.converter.WorkspaceConverter;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.entity.Workspace;
-import com.haru.api.domain.workspace.repository.WorkspaceRepository;
-import com.haru.api.global.apiPayload.code.status.ErrorStatus;
-import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,9 +71,9 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
         // 워크스페이스에 속하면서 생성 날짜가 startDate, endDate 사이인 문서 리스트 검색
-        List<Meeting> meetingList = meetingRepository.findAllDocumentForCalendars(workspace, startDateTime, endDateTime);
-        List<SnsEvent> snsEventList = snsEventRepository.findAllDocumentForCalendars(workspace, startDateTime, endDateTime);
-        List<MoodTracker> moodTrackerList = moodTrackerRepository.findAllDocumentForCalendars(workspace, startDateTime, endDateTime);
+        List<Meeting> meetingList = meetingRepository.findAllDocumentForCalendars(workspace.getId(), startDateTime, endDateTime);
+        List<SnsEvent> snsEventList = snsEventRepository.findAllDocumentForCalendars(workspace.getId(), startDateTime, endDateTime);
+        List<MoodTracker> moodTrackerList = moodTrackerRepository.findAllDocumentForCalendars(workspace.getId(), startDateTime, endDateTime);
 
         // 모든 문서 합치기
         return workspaceConverter.toDocumentCalendarList(meetingList, snsEventList, moodTrackerList);
@@ -84,12 +82,25 @@ public class WorkspaceQueryServiceImpl implements WorkspaceQueryService {
     @Override
     public WorkspaceResponseDTO.WorkspaceEditPage getEditPage(User user, Workspace workspace) {
 
-        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspaceRepository.findUsersByWorkspace(workspace).stream()
+        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspaceRepository.findUsersByWorkspaceId(workspace.getId()).stream()
                 .map(UserConverter::toMemberInfo)
                 .toList();
 
         String imageUrl = amazonS3Manager.generatePresignedUrl(workspace.getKeyName());
 
         return workspaceConverter.toWorkspaceEditPage(workspace, memberInfoList, imageUrl);
+    }
+
+    @Override
+    public WorkspaceResponseDTO.RecentDocumentList getRecentDocuments(User user, Workspace workspace) {
+
+        List<UserDocumentLastOpened> recentDocumentList = userDocumentLastOpenedRepository.findRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,8));
+
+        return workspaceConverter.toRecentDocumentList(
+                recentDocumentList.stream()
+                        .map(workspaceConverter::toRecentDocument)
+                        .toList()
+        );
+
     }
 }

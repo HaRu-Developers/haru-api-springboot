@@ -109,4 +109,12 @@ public class SnsEventResponseDTO {
     public static class WinnerResponse {
         private String account;
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ListDownLoadLinkResponse {
+        private String downloadLink;
+    }
 }

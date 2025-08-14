@@ -1,5 +1,7 @@
 package com.haru.api.domain.meeting.entity;
 
+import com.haru.api.domain.lastOpened.entity.Documentable;
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
@@ -8,6 +10,7 @@ import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +20,7 @@ import java.util.List;
 @DynamicUpdate
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Meeting extends BaseEntity {
+public class Meeting extends BaseEntity implements Documentable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -47,7 +50,15 @@ public class Meeting extends BaseEntity {
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MeetingKeyword> meetingKeywords = new ArrayList<>();
 
+    // 회의 시작 시간
+    private LocalDateTime startTime;
 
+    // s3 음성 파일 key
+    @Setter
+    private String audioFileKey;
+
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKeyName;
 
     private Meeting(String title, String agendaResult, User user, Workspace workspace) {
         this.title = title;
@@ -65,7 +76,9 @@ public class Meeting extends BaseEntity {
     public void updateProceeding(String proceeding) {
         this.proceeding = proceeding;
     }
-
+    public void initStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
 
     // 연관관계 편의 메서드
     public void addTag(Keyword keyword) {
@@ -74,5 +87,19 @@ public class Meeting extends BaseEntity {
                 .keyword(keyword)
                 .build();
         this.meetingKeywords.add(meetingKeyword);
+    }
+
+    public void initThumbnailKey(String thumbnailKey) {
+        this.thumbnailKeyName = thumbnailKey;
+    }
+
+    @Override
+    public Long getWorkspaceId() {
+        return this.workspace.getId();
+    }
+
+    @Override
+    public DocumentType getDocumentType() {
+        return DocumentType.AI_MEETING_MANAGER;
     }
 }

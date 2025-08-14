@@ -1,6 +1,9 @@
 #!/bin/bash
 
-cd /home/ubuntu/cicd
+cd /home/ubuntu/cicd/spring
+
+# 네트워크 보장
+  docker network inspect haru-network >/dev/null 2>&1 || docker network create haru-network
 
 APP_NAME="haru"
 

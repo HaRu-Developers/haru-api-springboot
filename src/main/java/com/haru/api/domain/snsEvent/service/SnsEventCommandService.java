@@ -14,5 +14,5 @@ public interface SnsEventCommandService {
 
     void deleteSnsEvent(Long userId, Long snsEventId);
 
-    byte[] downloadList(Long userId, Long snsEventId, ListType listType, Format format, SnsEventRequestDTO.DownloadListRequest request);
+    SnsEventResponseDTO.ListDownLoadLinkResponse downloadList(Long userId, Long snsEventId, ListType listType, Format format);
 }

@@ -1,5 +1,6 @@
 package com.haru.api.domain.lastOpened.service;
 
+import com.haru.api.domain.lastOpened.entity.Documentable;
 import com.haru.api.domain.lastOpened.entity.UserDocumentId;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +47,68 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
         userDocumentLastOpenedRepository.save(record);
 
         log.info("userDocumentLastOpened updated for userId: {}, documentId:{}, workspaceId:{}, title:{}", record.getUser().getId(), record.getId().getDocumentId(), workspaceId, title);
+    }
+
+    @Override
+    public void createInitialRecordsForWorkspaceUsers(List<User> usersInWorkspace, Documentable document) {
+
+        // 저장할 엔티티 리스트 생성
+        List<UserDocumentLastOpened> recordsToSave = recordsToProcess(usersInWorkspace, document);
+
+        // 전체 save
+        if (!recordsToSave.isEmpty()) {
+            userDocumentLastOpenedRepository.saveAll(recordsToSave);
+        }
+    }
+
+    @Override
+    public void deleteRecordsForWorkspaceUsers(Documentable documentable) {
+
+        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
+
+        if (!recordsToUpdate.isEmpty()) {
+            userDocumentLastOpenedRepository.deleteAllInBatch(recordsToUpdate);
+        }
+
+    }
+
+    @Override
+    public void updateRecordsForWorkspaceUsers(Documentable documentable) {
+
+        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
+
+        if (!recordsToUpdate.isEmpty()) {
+            for (UserDocumentLastOpened record : recordsToUpdate) {
+                record.updateTitle(documentable.getTitle());
+            }
+        }
+    }
+
+    private List<UserDocumentLastOpened> recordsToProcess(List<User> usersInWorkspace, Documentable document) {
+        // 처리할 엔티티들을 담을 리스트 생성
+        List<UserDocumentLastOpened> recordsToProcess = new ArrayList<>();
+
+        for (User user : usersInWorkspace) {
+            UserDocumentId documentId = new UserDocumentId(
+                    user.getId(),
+                    document.getId(),
+                    document.getDocumentType()
+            );
+
+            UserDocumentLastOpened newRecord = UserDocumentLastOpened.builder()
+                    .id(documentId)
+                    .user(user)
+                    .title(document.getTitle())
+                    .workspaceId(document.getWorkspaceId())
+                    .thumbnailKeyName(document.getThumbnailKeyName())
+                    .build();
+
+            recordsToProcess.add(newRecord);
+        }
+
+        return recordsToProcess;
     }
 
 }

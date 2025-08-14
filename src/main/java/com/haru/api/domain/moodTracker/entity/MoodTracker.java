@@ -1,5 +1,7 @@
 package com.haru.api.domain.moodTracker.entity;
 
+import com.haru.api.domain.lastOpened.entity.Documentable;
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
@@ -22,7 +24,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class MoodTracker extends BaseEntity {
+public class MoodTracker extends BaseEntity implements Documentable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 설문ID
@@ -46,6 +48,9 @@ public class MoodTracker extends BaseEntity {
     @Column(name = "due_date")
     private LocalDateTime dueDate; // 마감일
 
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKeyName;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
     private MoodTrackerVisibility visibility; // 공개범위 (PUBLIC, PRIVATE)
@@ -64,4 +69,18 @@ public class MoodTracker extends BaseEntity {
     }
 
     public void createReport(String report) { this.report = report; }
+
+    public void initThumbnailKey(String thumbnailKey) {
+        this.thumbnailKeyName = thumbnailKey;
+    }
+
+    @Override
+    public Long getWorkspaceId() {
+        return this.getWorkspace().getId();
+    }
+
+    @Override
+    public DocumentType getDocumentType() {
+        return DocumentType.TEAM_MOOD_TRACKER;
+    }
 }

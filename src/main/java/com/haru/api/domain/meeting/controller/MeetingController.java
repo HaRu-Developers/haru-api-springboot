@@ -116,8 +116,6 @@ public class MeetingController {
     }
 
 
-
-
     @Operation(summary = "AI회의록 proceeding 수정", description =
             "# [v1.1 (2025-08-05)](https://www.notion.so/AI-2265da7802c580e6b3aef0763bff0cf3)"+" meetingId와 수정된 Proceeding을 받아 회의록을 수정합니다. access token을 header에 입력해주세요."
     )
@@ -131,5 +129,20 @@ public class MeetingController {
         meetingCommandService.adjustProceeding(userId, Long.parseLong(meetingId), request);
 
         return ApiResponse.onSuccess("회의가 수정되었습니다.");
+    }
+
+    @Operation(summary = "회의 종료", description =
+            "# [v1.0 (2025-08-13)](https://www.notion.so/24e5da7802c5804f81b6e22f7b5106a1)" +
+                    "회의 종료를 요청하는 API입니다. 회의가 종료되면 웹소켓 연결 해제, 회의 음성 파일 s3에 업로드, AI 회의록 생성이 순서대로 이루어집니다."
+    )
+    @PostMapping("/{meetingId}/end")
+    public ApiResponse<String> endMeeting(
+            @PathVariable("meetindId") String meetingId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        meetingCommandService.endMeeting(userId, Long.parseLong(meetingId));
+
+        return ApiResponse.onSuccess("회의가 종료되었습니다");
     }
 }
