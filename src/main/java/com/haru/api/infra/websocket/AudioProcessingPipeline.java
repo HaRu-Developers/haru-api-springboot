@@ -44,7 +44,7 @@ public class AudioProcessingPipeline {
         );
         this.scoringProcessor = new ScoringProcessor(scoringFunction, audioSessionBuffer);
         this.aiQuestionProcessor = new AIQuestionProcessor(
-                chatGPTClient, aiQuestionRepository, audioSessionBuffer, notificationService, objectMapper
+                chatGPTClient, aiQuestionRepository, audioSessionBuffer, notificationService, speechSegmentRepository, objectMapper
         );
     }
 

@@ -14,6 +14,9 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -89,10 +92,15 @@ public class AmazonS3Manager{
     public String generatePresignedUrlForDownloadPdfAndWord(String keyName, String fileName) {
         if (keyName == null || keyName.isBlank()) return null;
 
+        // RFC 5987 인코딩
+        String encodedFilename = URLEncoder.encode(fileName, StandardCharsets.UTF_8)
+                .replace("+", "%20"); // 공백 처리
+        String contentDisposition = "attachment; filename*=UTF-8''" + encodedFilename;
+
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(amazonConfig.getBucket())
                 .key(keyName)
-                .responseContentDisposition("attachment; filename=\"" + fileName + "\"") // S3파일(PDF) 링크 클릭 시 즉시 다운가능,파일 다운로드 시 이름 설정
+                .responseContentDisposition(contentDisposition)
                 .build();
 
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()

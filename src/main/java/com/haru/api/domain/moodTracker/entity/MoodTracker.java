@@ -48,9 +48,6 @@ public class MoodTracker extends BaseEntity implements Documentable {
     @Column(name = "due_date")
     private LocalDateTime dueDate; // 마감일
 
-    @Column(columnDefinition = "TEXT")
-    private String thumbnailKeyName;
-
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
     private MoodTrackerVisibility visibility; // 공개범위 (PUBLIC, PRIVATE)
@@ -61,6 +58,15 @@ public class MoodTracker extends BaseEntity implements Documentable {
     @Min(0)
     private Integer respondentsNum; // 답변자 수
 
+    @Column(columnDefinition = "TEXT")
+    private String pdfReportKey;
+
+    @Column(columnDefinition = "TEXT")
+    private String wordReportKey;
+
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKey;
+
     @OneToMany(mappedBy = "moodTracker", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SurveyQuestion> surveyQuestionList = new ArrayList<>();
 
@@ -70,10 +76,6 @@ public class MoodTracker extends BaseEntity implements Documentable {
 
     public void createReport(String report) { this.report = report; }
 
-    public void initThumbnailKey(String thumbnailKey) {
-        this.thumbnailKeyName = thumbnailKey;
-    }
-
     @Override
     public Long getWorkspaceId() {
         return this.getWorkspace().getId();
@@ -82,5 +84,22 @@ public class MoodTracker extends BaseEntity implements Documentable {
     @Override
     public DocumentType getDocumentType() {
         return DocumentType.TEAM_MOOD_TRACKER;
+    }
+
+    @Override
+    public String getThumbnailKeyName() {
+        return this.thumbnailKey;
+    }
+
+    public void updateReportKeyName(
+            String pdfReportKey,
+            String wordReportKey
+            ) {
+        this.pdfReportKey = pdfReportKey;
+        this.wordReportKey = wordReportKey;
+    }
+
+    public void updateThumbnailKey(String thumbnailKey) {
+        this.thumbnailKey = thumbnailKey;
     }
 }

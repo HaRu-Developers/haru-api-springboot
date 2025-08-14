@@ -1,8 +1,5 @@
 package com.haru.api.domain.meeting.service;
 
-import com.haru.api.domain.lastOpened.entity.UserDocumentId;
-import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.meeting.converter.MeetingConverter;
@@ -22,8 +19,12 @@ import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.infra.api.client.ChatGPTClient;
+import com.haru.api.infra.api.entity.SpeechSegment;
+import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import com.haru.api.infra.mp3encoder.Mp3EncoderService;
 import com.haru.api.infra.s3.AmazonS3Manager;
+import com.haru.api.infra.s3.MarkdownFileUploader;
+import com.haru.api.infra.s3.MarkdownToPdfConverter;
 import com.haru.api.infra.websocket.AudioSessionBuffer;
 import com.haru.api.infra.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -63,8 +65,11 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final UserDocumentLastOpenedService userDocumentLastOpenedService;
     private final WebSocketSessionRegistry webSocketSessionRegistry;
+    private final SpeechSegmentRepository speechSegmentRepository;
+    private final MarkdownToPdfConverter markdownToPdfConverter;
+    private final MarkdownFileUploader markdownFileUploader;
 
-    private final AmazonS3Manager s3Manager;
+    private final AmazonS3Manager amazonS3Manager;
     private final Mp3EncoderService encoderService;
 
     @Override
@@ -246,7 +251,48 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
             // 3. 조회한 엔티티의 상태를 변경합니다.
             currentMeeting.setAudioFileKey(keyName);
 
-            // 4. todo: AI 회의록 생성
+            // 4. AI 회의록 생성
+            List<SpeechSegment> segments = speechSegmentRepository.findByMeeting(currentMeeting);
+
+            if (segments.isEmpty()) {
+                log.warn("meetingId: {}에 대한 대화 내용이 없어 AI 요약을 생략합니다.", currentMeeting.getId());
+                return;
+            }
+
+            // 2. 모든 대화 텍스트를 하나의 문자열로 조합
+            String documentText = segments.stream()
+                    .map(SpeechSegment::getText)
+                    .collect(Collectors.joining("\n"));
+
+            String agendaResult = currentMeeting.getAgendaResult();
+
+            // 동기적 분석 요청
+            String analysisResult = chatGPTClient.analyzeMeetingTranscript(documentText, agendaResult).block();
+
+            // 분석 결과 업데이트
+            if (analysisResult != null && !analysisResult.isBlank()) {
+                currentMeeting.updateProceeding(analysisResult);
+
+                // --- PDF 및 썸네일 생성/업데이트 로직 시작 ---
+                try {
+                    // 생성된 PDF를 S3에 업로드
+                    String pdfKey = markdownFileUploader.createOrUpdatePdf(analysisResult, "proceedings/", currentMeeting.getProceedingKeyName());
+                    currentMeeting.initProceedingKeyName(pdfKey);
+
+                    // 썸네일 생성 및 업데이트
+                    String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meetings/" + currentMeeting.getId(), currentMeeting.getThumbnailKey());
+                    currentMeeting.initThumbnailKey(newThumbnailKey); // Meeting 엔티티에 썸네일 키 저장
+                    log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
+
+                } catch (Exception e) {
+                    log.error("meetingId: {}의 PDF 또는 썸네일 생성/업로드 중 에러 발생", currentMeeting.getId(), e);
+                }
+                log.info("meetingId: {}의 AI 회의록 생성 및 저장 완료.", currentMeeting.getId());
+            } else {
+                log.warn("meetingId: {}의 AI 분석 결과가 비어있습니다.", currentMeeting.getId());
+            }
+
+
 
         } else {
             log.warn("meetingId: {}에 처리할 오디오 데이터가 없습니다.", currentMeeting.getId());
@@ -330,8 +376,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
                 return "";
             }
         } catch (Exception e) {
-            log.error("파일에서 텍스트를 추출하는 중 오류가 발생했습니다.", e);
-            throw new RuntimeException("파일 텍스트 추출에 실패했습니다.", e);
+            throw new MeetingHandler(ErrorStatus.MEETING_FILE_UPLOAD_FAIL);
         }
     }
 
@@ -352,8 +397,8 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
             byte[] mp3Data = encoderService.encodePcmToMp3(rawAudioData, channels, samplingRate, bitRate);
             log.info("MP3 인코딩 완료. 인코딩된 크기: {} bytes", mp3Data.length);
 
-            String keyName = s3Manager.generateKeyName("meeting/recording") + ".mp3";
-            s3Manager.uploadFile(keyName, mp3Data, "audio/mpeg");
+            String keyName = amazonS3Manager.generateKeyName("meeting/recording") + ".mp3";
+            amazonS3Manager.uploadFile(keyName, mp3Data, "audio/mpeg");
             log.info("S3 업로드 성공. Key: {}", keyName);
 
             return keyName;

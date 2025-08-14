@@ -4,8 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -84,7 +82,7 @@ public class MarkdownFileUploader {
         return thumbnailKeyToUse;
     }
 
-    public String createOrUpdateThumbnailForSnsEvent(byte[] pdfBytes, String featurePath, String existingThumbnailKey) {
+    public String createOrUpdateThumbnailWithPdfBytes(byte[] pdfBytes, String featurePath, String existingThumbnailKey) {
         // 1. 다운로드한 PDF로 새로운 썸네일 데이터 생성
         byte[] newThumbnailBytes = thumbnailGeneratorService.generate(pdfBytes);
 

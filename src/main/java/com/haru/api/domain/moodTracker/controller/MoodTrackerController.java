@@ -4,6 +4,7 @@ import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
 import com.haru.api.domain.moodTracker.service.MoodTrackerCommandService;
 import com.haru.api.domain.moodTracker.service.MoodTrackerQueryService;
+import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.global.apiPayload.code.status.SuccessStatus;
 import com.haru.api.global.util.HashIdUtil;
@@ -15,8 +16,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Validated
 @RestController
@@ -133,22 +132,6 @@ public class MoodTrackerController {
         return ApiResponse.of(SuccessStatus.MOOD_TRACKER_ANSWER_SUBMIT, null);
     }
 
-    @PostMapping("/{mood-tracker-hashed-Id}/report-test")
-    @Operation(
-            summary = "분위기 트래커 설문 리포트 즉시 생성 테스트 API",
-            description = "# [v1.0 (2025-07-26)](https://www.notion.so/23f5da7802c58080b4a5e6d24b47d924) 해당 ID의 분위기 트래커 설문 리포트를 즉시 생성합니다."
-    )
-    @Parameters({
-            @Parameter(name = "mood-tracker-hashed-Id", description = "해시된 16자 분위기 트래커 ID (Path Variable)", required = true)
-    })
-    public  ApiResponse<Void> generateMoodTrackerReportTest (
-            @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId
-    ) {
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        moodTrackerCommandService.generateReportTest(moodTrackerId);
-        return ApiResponse.of(SuccessStatus._OK, null);
-    }
-
     @GetMapping("/{mood-tracker-hashed-Id}/questions")
     @Operation(
             summary = "분위기 트래커 설문 문항 조회 API",
@@ -198,5 +181,55 @@ public class MoodTrackerController {
         Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
         MoodTrackerResponseDTO.ResponseResult result = moodTrackerQueryService.getResponseResult(userId, moodTrackerId);
         return ApiResponse.onSuccess(result);
+    }
+
+    @GetMapping("/{mood-tracker-hashed-Id}/download")
+    @Operation(
+            summary = "분위기 트래커 설문 리포트 다운로드 API",
+            description = "# [v1.0 (2025-08-13)](https://www.notion.so/2265da7802c580e3b53ddd8d181922b1) 분위기 트래커(moodTrackerId)에 대한 개별 리포트 다운로드 링크를 조회합니다."
+    )
+    @Parameters({
+            @Parameter(name = "mood-tracker-hashed-Id", description = "분위기 트래커 ID (Hashed, Path Variable)", required = true)
+    })
+    public ApiResponse<MoodTrackerResponseDTO.ReportDownLoadLinkResponse> downloadList(
+            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId,
+            @RequestParam Format format
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
+        MoodTrackerResponseDTO.ReportDownLoadLinkResponse result = moodTrackerCommandService.getDownloadLink(userId, moodTrackerId, format);
+        return ApiResponse.onSuccess(result);
+    }
+
+    @PostMapping("/{mood-tracker-hashed-Id}/report-test")
+    @Operation(
+            summary = "분위기 트래커 설문 리포트 즉시 생성 테스트 API",
+            description = "# [v1.0 (2025-07-26)](https://www.notion.so/23f5da7802c58080b4a5e6d24b47d924) 해당 ID의 분위기 트래커 설문 리포트를 즉시 생성합니다."
+    )
+    @Parameters({
+            @Parameter(name = "mood-tracker-hashed-Id", description = "해시된 16자 분위기 트래커 ID (Path Variable)", required = true)
+    })
+    public  ApiResponse<Void> generateMoodTrackerReportTest (
+            @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId
+    ) {
+        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
+        moodTrackerCommandService.generateReportTest(moodTrackerId);
+        return ApiResponse.of(SuccessStatus._OK, null);
+    }
+
+    @PostMapping("/{mood-tracker-hashed-Id}/report-file-thumbnail-test")
+    @Operation(
+            summary = "분위기 트래커 설문 리포트, 파일, 썸네일 즉시 생성 테스트 API",
+            description = "# [v1.0 (2025-08-14)](https://www.notion.so/24f5da7802c58019a1f7d9c8e882226e) 해당 ID의 분위기 트래커 설문 리포트를 즉시 생성합니다."
+    )
+    @Parameters({
+            @Parameter(name = "mood-tracker-hashed-Id", description = "해시된 16자 분위기 트래커 ID (Path Variable)", required = true)
+    })
+    public  ApiResponse<Void> generateMoodTrackerReportFileAndThumbnailTest (
+            @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId
+    ) {
+        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
+        moodTrackerCommandService.generateReportFileAndThumbnailTest(moodTrackerId);
+        return ApiResponse.of(SuccessStatus._OK, null);
     }
 }

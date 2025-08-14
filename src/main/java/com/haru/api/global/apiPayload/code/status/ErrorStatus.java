@@ -40,8 +40,10 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // AI회의 Meetings 관련 에러
     MEETING_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4001","회의를 찾을 수 없습니다."),
-    MEETING_FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4002", "안건지가 업로드되지 않았습니다."),
+    MEETING_AGENDAFILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4002", "안건지가 업로드되지 않았습니다."),
     MEETING_AUDIO_FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MEETING4003", "음성 파일을 s3에 업로드하는데 오류가 발생했습니다."),
+    MEETING_FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MEETING4004", "음성 파일을 s3에 업로드하는데 오류가 발생했습니다."),
+    MEETING_PROCEEDING_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4005", "AI회의록이 없습니다"),
 
     // 인가 관련 에러
     AUTHORIZATION_EXCEPTION(HttpStatus.UNAUTHORIZED, "AUTHORIZATION4001", "인증에 실패하였습니다."),
@@ -58,6 +60,9 @@ public enum ErrorStatus implements BaseErrorCode {
     SURVEY_ANSWER_REQUIRED(HttpStatus.BAD_REQUEST, "MOODTRACKER4004", "분위기 트래커 설문의 필수 응답이 누락되었습니다."),
     MOOD_TRACKER_NOT_FINISHED(HttpStatus.BAD_REQUEST, "MOODTRACKER4005", "분위기 트래커 설문 마감일 전입니다."),
     MOOD_TRACKER_ACCESS_DENIED(HttpStatus.BAD_REQUEST, "MOODTRACKER4006", "분위기 트래커 조회 권한이 없습니다."),
+    MOOD_TRACKER_WRONG_FORMAT(HttpStatus.BAD_REQUEST, "MOODTRACKER4007", "분위기 트래커의 잘못된 다운로드 파일 형식입니다."),
+    MOOD_TRACKER_DOWNLOAD_ERROR(HttpStatus.BAD_REQUEST, "MOODTRACKER4008", "분위기 트래커 다운로드중 오류가 발생했습니다."),
+    MOOD_TRACKER_KEYNAME_NOT_FOUND(HttpStatus.BAD_REQUEST, "MOODTRACKER4009", "분위기 트래커 다운로드중 키 이름이 존재하지 않습니다."),
 
     // 메일 관련 에러
     MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다."),
