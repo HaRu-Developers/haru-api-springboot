@@ -178,4 +178,19 @@ public class MeetingController {
     }
 
 
+
+    @Operation(summary = "회의록 음성파일 조회API", description =
+            "# [v1.0 (2025-08-14)](https://www.notion.so/AI-2265da7802c580ba8447f248745cf9e7)" +
+                    "회의록을 다운로드하는 API입니다. URL을 반환합니다."
+    )
+    @GetMapping("{meetingId}/ai-proceeding/voice")
+    public ApiResponse<MeetingResponseDTO.proceedingVoiceLinkResponse> MeetingvoiceFile(
+            @PathVariable("meetingId") String meetingId
+    ){
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        MeetingResponseDTO.proceedingVoiceLinkResponse response = meetingQueryService.MeetingVoiceFile(userId, Long.parseLong(meetingId));
+
+        return ApiResponse.onSuccess(response);
+    }
 }
