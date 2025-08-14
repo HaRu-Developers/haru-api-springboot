@@ -19,7 +19,7 @@ public interface SnsEventRepository extends JpaRepository<SnsEvent, Long> {
 
 
     @Query("SELECT mt FROM SnsEvent mt " +
-            "WHERE mt.workspace = :workspace " +
+            "WHERE mt.workspace.id = :workspaceId " +
             "AND mt.createdAt BETWEEN :startDate AND :endDate")
-    List<SnsEvent> findAllDocumentForCalendars(Workspace workspace, LocalDateTime startDate, LocalDateTime endDate);
+    List<SnsEvent> findAllDocumentForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
 }

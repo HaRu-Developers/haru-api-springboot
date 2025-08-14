@@ -3,6 +3,7 @@ package com.haru.api.domain.lastOpened.repository;
 import com.haru.api.domain.lastOpened.entity.UserDocumentId;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -13,6 +14,12 @@ public interface UserDocumentLastOpenedRepository extends JpaRepository<UserDocu
     Optional<UserDocumentLastOpened> findById(UserDocumentId id);
 
     List<UserDocumentLastOpened> findTop5ByWorkspaceIdAndUserIdOrderByLastOpenedDesc(Long workspaceId, Long userId);
+
+    @Query("SELECT udlo FROM UserDocumentLastOpened udlo " +
+            "WHERE udlo.user.id = :userId " +
+            "AND udlo.workspaceId = :workspaceId " +
+            "ORDER BY udlo.lastOpened DESC NULLS LAST, udlo.id.documentId DESC")
+    List<UserDocumentLastOpened> findRecentDocuments(Long userId, Long workspaceId, Pageable pageable);
 
     @Query("SELECT udlo " +
             "FROM UserDocumentLastOpened udlo " +
