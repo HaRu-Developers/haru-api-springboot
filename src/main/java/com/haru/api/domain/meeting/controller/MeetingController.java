@@ -145,4 +145,23 @@ public class MeetingController {
 
         return ApiResponse.onSuccess("회의가 종료되었습니다");
     }
+
+
+
+    @Operation(summary = "회의 STT목록과 AI 추천질문 조회", description =
+            "# [v1.0 (2025-08-14)](https://www.notion.so/AI-2265da7802c580e8a6cefdcafcd36259)" +
+                    "진행됐던 회의의 STT와 AI추천질문을 연관하여 조회하는 API입니다."
+    )
+    @GetMapping("/{meetingId}/transcript")
+    public ApiResponse<MeetingResponseDTO.TranscriptResponse> getMeetingTranscript(
+            @PathVariable("meetingId") Long meetingId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        MeetingResponseDTO.TranscriptResponse transcriptResponse = meetingQueryService.getTranscript(userId, meetingId);
+
+        return ApiResponse.onSuccess(transcriptResponse);
+    }
+
+
 }
