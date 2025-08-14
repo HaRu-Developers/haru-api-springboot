@@ -14,6 +14,7 @@ BLUE_CONF="blue.conf"
 GREEN_CONF="green.conf"
 DEFAULT_CONF="nginx.conf"
 MAX_RETRIES=3
+RETRY_SLEEP_SEC=5
 HEALTH_CHECK_PORT=""
 
 # 네트워크 존재 확인 및 생성
@@ -47,34 +48,39 @@ determine_target() {
   echo "OLD: $OLD"
 }
 
-# 헬스체크 실패 시 롤백 처리
+# docker ps 기반 헬스체크: 컨테이너 상태가 Up이면 성공으로 판단
 health_check() {
   local RETRIES=0
-    local URL="http://localhost:$HEALTH_CHECK_PORT/actuator/health"
-    echo "Starting health check for the new '$TARGET' container on port $HEALTH_CHECK_PORT..."
+  local CONTAINER_NAME="app-$TARGET"
 
-    # 새로운 컨테이너가 실행될 때까지 충분히 대기
-    sleep 10
+  echo "Starting docker-ps based health check for '$CONTAINER_NAME'..."
 
-    while [ $RETRIES -lt $MAX_RETRIES ]; do
-      echo "Attempt $((RETRIES + 1)) of $MAX_RETRIES: Checking $URL..."
+  # 초기 대기 (컨테이너 기동 시간 확보)
+  sleep 10
 
-      # curl 명령어로 애플리케이션의 헬스 체크 엔드포인트에 HTTP 요청
-      STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || true)
+  while [ $RETRIES -lt $MAX_RETRIES ]; do
+    echo "Attempt $((RETRIES + 1)) of $MAX_RETRIES: checking docker ps status..."
 
-      if [ "$STATUS_CODE" -eq 200 ]; then
-        echo "Health check succeeded! Container '$TARGET' is healthy."
-        return 0
-      else
-        echo "Health check failed with status code: $STATUS_CODE. Retrying in 5 seconds..."
-        sleep 5
-      fi
+    # docker ps에서 해당 컨테이너의 상태 문자열을 가져옴 (예: "Up 10 seconds")
+    local STATUS
+    STATUS=$(docker ps --filter "name=^${CONTAINER_NAME}$" --format '{{.Status}}' || true)
 
-      RETRIES=$((RETRIES + 1))
-    done
+    if [ -n "$STATUS" ] && [[ "$STATUS" == Up* ]]; then
+      echo "Health check succeeded! '$CONTAINER_NAME' is Up. (status: $STATUS)"
+      return 0
+    else
+      # 상태 디버깅용 출력
+      docker compose -f docker-compose.yml ps || true
+      docker logs --tail=50 "$CONTAINER_NAME" 2>/dev/null || true
+      echo "Current status: '${STATUS:-N/A}'. Retrying in ${RETRY_SLEEP_SEC}s..."
+      sleep "$RETRY_SLEEP_SEC"
+    fi
 
-    echo "Health check failed after $MAX_RETRIES attempts."
-    return 1 # 헬스 체크 실패 시 1을 반환하여 스크립트 롤백을 유도
+    RETRIES=$((RETRIES + 1))
+  done
+
+  echo "Health check failed after $MAX_RETRIES attempts."
+  return 1
 }
 
 # NGINX 설정 스위칭 함수
@@ -93,8 +99,8 @@ switch_nginx_conf() {
 down_old_container() {
   if [ "$OLD" != "none" ]; then
     echo "Stopping old container: $OLD"
-    docker compose -f docker-compose.yml stop "app-$OLD"
-    docker compose -f docker-compose.yml rm -f "app-$OLD"
+    docker compose -f docker-compose.yml stop "app-$OLD" || true
+    docker compose -f docker-compose.yml rm -f "app-$OLD" || true
   fi
 }
 
@@ -103,42 +109,46 @@ main() {
   ensure_network
   determine_target
 
-  # 컨테이너 충돌 방지를 위해, 동일한 이름의 컨테이너가 있을 경우 미리 삭제
-  echo "Removing any existing container with the name 'app-$TARGET'..."
-  docker rm -f "app-$TARGET" 2>/dev/null || true
+  local TARGET_SERVICE="app-$TARGET"
 
-  # 최신 이미지 풀
+  # 컨테이너 충돌 방지: compose/비compose 둘 다 제거 시도
+  echo "Removing any existing container with the name '$TARGET_SERVICE'..."
+  docker compose -f docker-compose.yml rm -f "$TARGET_SERVICE" 2>/dev/null || true
+  docker rm -f "$TARGET_SERVICE" 2>/dev/null || true
+
+  # 최신 이미지 pull
   echo "Pulling the latest image for '$TARGET' service..."
-  docker compose -f docker-compose.yml pull "app-$TARGET"
+  docker compose -f docker-compose.yml pull "$TARGET_SERVICE"
 
-  # 대상 컨테이너 실행
+  # 대상 컨테이너 실행 (강제 재생성)
   echo "Starting '$TARGET' container..."
-  docker compose -f docker-compose.yml up -d "app-$TARGET"
+  docker compose -f docker-compose.yml up -d --force-recreate "$TARGET_SERVICE"
 
+  # docker-ps 기반 헬스 체크 및 롤백
+  if ! health_check; then
+    echo "Health check failed. Initiating rollback..."
 
-  # 헬스 체크 및 롤백 로직
-    if ! health_check; then
-      echo "Health check failed. Initiating rollback..."
+    # 실패한 컨테이너를 중지하고 제거
+    echo "Removing failed container: '$TARGET_SERVICE'..."
+    docker compose -f docker-compose.yml stop "$TARGET_SERVICE" || true
+    docker compose -f docker-compose.yml rm -f "$TARGET_SERVICE" || true
+    docker rm -f "$TARGET_SERVICE" 2>/dev/null || true
 
-      # 실패한 컨테이너를 중지하고 제거
-      echo "Removing failed container: 'app-$TARGET'..."
-      docker compose -f docker-compose.yml down --remove-orphans "app-$TARGET" || true
+    echo "Rollback complete. The previous version remains active."
+    exit 1
+  fi
 
-      echo "Rollback complete. The previous version remains active."
-      exit 1 # 스크립트 종료
-    fi
+  # 헬스 체크 성공 시, NGINX 설정 스위칭
+  switch_nginx_conf
 
-    # 헬스 체크 성공 시, NGINX 설정 스위칭
-    switch_nginx_conf
+  # 이전 컨테이너 종료
+  down_old_container
 
-    # 이전 컨테이너 종료
-    down_old_container
+  echo "Deployment to '$TARGET' completed successfully!"
+  echo "Cleaning up dangling Docker images..."
+  docker image prune -f
 
-    echo "Deployment to '$TARGET' completed successfully!"
-    echo "Cleaning up dangling Docker images..."
-    docker image prune -f
-
-    echo "Deployment finished at $(date)"
+  echo "Deployment finished at $(date)"
 }
 
 # 스크립트 실행
