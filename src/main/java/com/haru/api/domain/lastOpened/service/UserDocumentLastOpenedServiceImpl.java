@@ -64,8 +64,8 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
     @Override
     public void deleteRecordsForWorkspaceUsers(Documentable documentable) {
 
-        // 해당 문서 id에 해당하는 last opened 튜플 검색
-        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findById_DocumentId(documentable.getId());
+        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
 
         if (!recordsToUpdate.isEmpty()) {
             userDocumentLastOpenedRepository.deleteAllInBatch(recordsToUpdate);
@@ -76,8 +76,8 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
     @Override
     public void updateRecordsForWorkspaceUsers(Documentable documentable) {
 
-        // 해당 문서 id에 해당하는 last opened 튜플 검색
-        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findById_DocumentId(documentable.getId());
+        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
 
         if (!recordsToUpdate.isEmpty()) {
             for (UserDocumentLastOpened record : recordsToUpdate) {

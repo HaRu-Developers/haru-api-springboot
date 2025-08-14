@@ -88,7 +88,7 @@ public class SnsEvent extends BaseEntity implements Documentable {
         this.keyNameWinnerWord = keyNameWinnerWord;
     }
 
-    public void initThumbnailKey(String thumbnailKey) {
+    public void initThumbnailKeyName(String thumbnailKey) {
         this.thumbnailKeyName = thumbnailKey;
     }
 

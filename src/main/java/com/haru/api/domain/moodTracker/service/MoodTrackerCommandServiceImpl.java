@@ -158,7 +158,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         moodTrackerRepository.delete(foundMoodTracker);
 
-        // meeting 삭제 시 워크스페이스에 속해있는 모든 유저에 대해
+        // mood tracker 삭제 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에서 해당 문서 id를 가지고 있는 튜플 모두 삭제
         userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(foundMoodTracker);
     }

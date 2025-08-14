@@ -2,6 +2,7 @@ package com.haru.api.domain.lastOpened.repository;
 
 import com.haru.api.domain.lastOpened.entity.UserDocumentId;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -20,5 +21,6 @@ public interface UserDocumentLastOpenedRepository extends JpaRepository<UserDocu
             "ORDER BY udlo.lastOpened DESC")
     List<UserDocumentLastOpened> findRecentDocumentsByTitle(Long workspaceId, Long userId, String title);
 
-    List<UserDocumentLastOpened> findById_DocumentId(Long documentId);
+    @Query("SELECT lo FROM UserDocumentLastOpened lo WHERE lo.id.documentId = :documentId AND lo.id.documentType = :documentType")
+    List<UserDocumentLastOpened> findByDocumentIdAndDocumentType(Long documentId, DocumentType documentType);
 }
