@@ -93,8 +93,7 @@ public class WorkspaceResponseDTO {
     @Getter
     @Builder
     public static class RecentDocument {
-        @JsonSerialize(using = ToStringSerializer.class)
-        private Long documentId;
+        private String documentId;
         private String title;
         private DocumentType documentType;
         private String thumbnailUrl;
