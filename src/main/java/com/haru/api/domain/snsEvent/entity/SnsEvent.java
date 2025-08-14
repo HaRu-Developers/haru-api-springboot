@@ -1,5 +1,7 @@
 package com.haru.api.domain.snsEvent.entity;
 
+import com.haru.api.domain.lastOpened.entity.Documentable;
+import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
@@ -19,7 +21,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class SnsEvent extends BaseEntity {
+public class SnsEvent extends BaseEntity implements Documentable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,7 +57,7 @@ public class SnsEvent extends BaseEntity {
     private String keyNameWinnerWord;
 
     @Column(columnDefinition = "TEXT")
-    private String thumbnailKey;
+    private String thumbnailKeyName;
 
     @OneToMany(mappedBy = "snsEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Participant> participantList = new ArrayList<>();
@@ -86,7 +88,17 @@ public class SnsEvent extends BaseEntity {
         this.keyNameWinnerWord = keyNameWinnerWord;
     }
 
-    public void updateThumbnailKey(String thumbnailKey) {
-        this.thumbnailKey = thumbnailKey;
+    public void initThumbnailKeyName(String thumbnailKey) {
+        this.thumbnailKeyName = thumbnailKey;
+    }
+
+    @Override
+    public Long getWorkspaceId() {
+        return this.workspace.getId();
+    }
+
+    @Override
+    public DocumentType getDocumentType() {
+        return DocumentType.SNS_EVENT_ASSISTANT;
     }
 }
