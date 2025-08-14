@@ -142,4 +142,10 @@ public class MoodTrackerResponseDTO {
         private String content;
         private Integer selectedNum;
     }
+
+    @Getter
+    @Builder
+    public static class ReportDownLoadLinkResponse {
+        private String downloadLink;
+    }
 }

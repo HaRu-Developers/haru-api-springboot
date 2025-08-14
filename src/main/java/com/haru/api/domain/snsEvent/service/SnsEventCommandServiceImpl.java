@@ -267,7 +267,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         );
 
         // SNS 이벤트 당첨자 PDF의 첫페이지 썸네일로 S3에 업로드
-        return markdownFileUploader.createOrUpdateThumbnailForSnsEvent(
+        return markdownFileUploader.createOrUpdateThumbnailWithPdfBytes(
                 pdfBytesWinner,
                 "sns-event",
                 null
