@@ -9,6 +9,7 @@ import com.haru.api.domain.user.dto.UserResponseDTO;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.util.HashIdUtil;
+import com.haru.api.infra.s3.AmazonS3Manager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class WorkspaceConverter {
 
     private final HashIdUtil hashIdUtil;
+    private final AmazonS3Manager s3Manager;
 
     public static WorkspaceResponseDTO.Workspace toWorkspaceDTO(Workspace workspace) {
         return WorkspaceResponseDTO.Workspace.builder()
@@ -143,6 +145,24 @@ public class WorkspaceConverter {
                 .title(workspace.getTitle())
                 .imageUrl(imageUrl)
                 .members(memberInfoList)
+                .build();
+    }
+
+    public WorkspaceResponseDTO.RecentDocument toRecentDocument(UserDocumentLastOpened userDocumentLastOpened) {
+        String thumbnailUrl = s3Manager.generatePresignedUrl(userDocumentLastOpened.getThumbnailKeyName());
+
+        return WorkspaceResponseDTO.RecentDocument.builder()
+                .documentId(userDocumentLastOpened.getId().getDocumentId())
+                .title(userDocumentLastOpened.getTitle())
+                .documentType(userDocumentLastOpened.getId().getDocumentType())
+                .thumbnailUrl(thumbnailUrl)
+                .lastOpened(userDocumentLastOpened.getLastOpened())
+                .build();
+    }
+
+    public WorkspaceResponseDTO.RecentDocumentList toRecentDocumentList(List<WorkspaceResponseDTO.RecentDocument> recentDocumentList) {
+        return WorkspaceResponseDTO.RecentDocumentList.builder()
+                .documents(recentDocumentList)
                 .build();
     }
 }
