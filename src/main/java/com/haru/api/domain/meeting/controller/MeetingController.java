@@ -49,7 +49,7 @@ public class MeetingController {
 
         // file업로드가 되지 않는 경우 controller단에서 요청 처리
         if (agendaFile == null || agendaFile.isEmpty()) {
-            throw new GeneralException(ErrorStatus.MEETING_FILE_NOT_FOUND);
+            throw new GeneralException(ErrorStatus.MEETING_AGENDAFILE_NOT_FOUND);
         }
         Long userId = SecurityUtil.getCurrentUserId();
 
@@ -144,5 +144,20 @@ public class MeetingController {
         meetingCommandService.endMeeting(userId, Long.parseLong(meetingId));
 
         return ApiResponse.onSuccess("회의가 종료되었습니다");
+    }
+
+    @Operation(summary = "회의록 다운로드", description =
+            "# [v1.0 (2025-08-14)](https://www.notion.so/AI-2265da7802c580ba8447f248745cf9e7)" +
+                    "회의록을 다운로드하는 API입니다. URL을 반환합니다."
+    )
+    @GetMapping("{meetingId}/ai-proceeding/download")
+    public ApiResponse<MeetingResponseDTO.proceedingDownLoadLinkResponse> downloadMeeting(
+            @PathVariable("meetingId") String meetingId
+    ){
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        MeetingResponseDTO.proceedingDownLoadLinkResponse response = meetingQueryService.downloadMeeting(userId, Long.parseLong(meetingId));
+
+        return ApiResponse.onSuccess(response);
     }
 }

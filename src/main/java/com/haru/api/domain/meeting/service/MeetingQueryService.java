@@ -10,4 +10,5 @@ public interface MeetingQueryService {
 
     public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, Long meetingId);
 
+    public MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(Long userId, Long meetingId);
 }

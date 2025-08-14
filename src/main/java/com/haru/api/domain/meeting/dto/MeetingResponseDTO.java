@@ -2,8 +2,11 @@ package com.haru.api.domain.meeting.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 
@@ -38,5 +41,13 @@ public class MeetingResponseDTO {
         private String title;
         private String proceeding;
         private LocalDateTime updatedAt;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class proceedingDownLoadLinkResponse {
+        private String downloadLink;
     }
 }
