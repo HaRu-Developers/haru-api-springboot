@@ -56,6 +56,15 @@ public class MoodTracker extends BaseEntity {
     @Min(0)
     private Integer respondentsNum; // 답변자 수
 
+    @Column(columnDefinition = "TEXT")
+    private String pdfReportKey;
+
+    @Column(columnDefinition = "TEXT")
+    private String wordReportKey;
+
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKey;
+
     @OneToMany(mappedBy = "moodTracker", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SurveyQuestion> surveyQuestionList = new ArrayList<>();
 
@@ -64,4 +73,16 @@ public class MoodTracker extends BaseEntity {
     }
 
     public void createReport(String report) { this.report = report; }
+
+    public void updateReportKeyName(
+            String pdfReportKey,
+            String wordReportKey
+            ) {
+        this.pdfReportKey = pdfReportKey;
+        this.wordReportKey = wordReportKey;
+    }
+
+    public void updateThumbnailKey(String thumbnailKey) {
+        this.thumbnailKey = thumbnailKey;
+    }
 }
