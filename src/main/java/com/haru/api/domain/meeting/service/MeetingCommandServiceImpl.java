@@ -22,6 +22,8 @@ import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.infra.api.client.ChatGPTClient;
+import com.haru.api.infra.api.entity.SpeechSegment;
+import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import com.haru.api.infra.mp3encoder.Mp3EncoderService;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.websocket.AudioSessionBuffer;
@@ -47,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -63,6 +66,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final UserDocumentLastOpenedService userDocumentLastOpenedService;
     private final WebSocketSessionRegistry webSocketSessionRegistry;
+    private final SpeechSegmentRepository speechSegmentRepository;
 
     private final AmazonS3Manager s3Manager;
     private final Mp3EncoderService encoderService;
@@ -246,7 +250,31 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
             // 3. 조회한 엔티티의 상태를 변경합니다.
             currentMeeting.setAudioFileKey(keyName);
 
-            // 4. todo: AI 회의록 생성
+            // 4. AI 회의록 생성
+            List<SpeechSegment> segments = speechSegmentRepository.findByMeeting(currentMeeting);
+
+            if (segments.isEmpty()) {
+                log.warn("meetingId: {}에 대한 대화 내용이 없어 AI 요약을 생략합니다.", currentMeeting.getId());
+                return;
+            }
+
+            // 2. 모든 대화 텍스트를 하나의 문자열로 조합
+            String documentText = segments.stream()
+                    .map(SpeechSegment::getText)
+                    .collect(Collectors.joining("\n"));
+
+            String agendaResult = currentMeeting.getAgendaResult();
+
+            // 동기적 분석 요청
+            String analysisResult = chatGPTClient.analyzeMeetingTranscript(documentText, agendaResult).block();
+
+            // 분석 결과 업데이트
+            if (analysisResult != null && !analysisResult.isBlank()) {
+                currentMeeting.updateProceeding(analysisResult);
+                log.info("meetingId: {}의 AI 회의록 생성 및 저장 완료.", currentMeeting.getId());
+            } else {
+                log.warn("meetingId: {}의 AI 분석 결과가 비어있습니다.", currentMeeting.getId());
+            }
 
         } else {
             log.warn("meetingId: {}에 처리할 오디오 데이터가 없습니다.", currentMeeting.getId());
