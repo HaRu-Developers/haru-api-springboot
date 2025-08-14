@@ -12,6 +12,7 @@ import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.ApiResponse;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.global.apiPayload.exception.handler.WorkspaceInvitationHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
@@ -83,7 +84,7 @@ public class WorkspaceController {
 
     @Operation(
             summary = "워크스페이스 초대 수락",
-            description = "# [v1.0 (2025-07-31)](https://www.notion.so/workspace-22e5da7802c580a3baf7c52a9fd8d45e)" +
+            description = "# [v1.1 (2025-08-14)](https://www.notion.so/workspace-22e5da7802c580a3baf7c52a9fd8d45e)" +
                     " 워크스페이스 초대 수락 API 입니다."
     )
     @GetMapping("/invite-accept")
@@ -93,23 +94,18 @@ public class WorkspaceController {
         try {
             WorkspaceResponseDTO.InvitationAcceptResult result = workspaceCommandService.acceptInvite(token);
 
-            String redirectUrl = null;
+            String redirectUrl;
             if (result.isSuccess()) {
-                if (result.isAlreadyRegistered()) {
-                    // 이미 가입된 사용자면, 로그인 후 워크스페이스 페이지로 이동
-                    redirectUrl = "https://haru.it.kr/auth/sign-in?redirect=/workspace/" + result.getWorkspaceId();
-                }
+                // 성공 = 이미 가입된 사용자 -> 로그인 페이지로
+                redirectUrl = "https://haru.it.kr/auth/login?redirect=/workspace/" + result.getWorkspaceId();
             } else {
-                if (!result.isAlreadyRegistered()) {
-                    // 미가입 사용자면 회원가입 페이지로 이동 (토큰 정보 포함)
-                    redirectUrl = "https://haru.it.kr/auth/sign-up?token=" + token;
-                } else {
-                    redirectUrl = "https://haru.it.kr/error-page";
-                }
+                // 실패 = 미가입 사용자 -> 회원가입 페이지로
+                redirectUrl = "https://haru.it.kr/auth/register?token=" + token;
             }
+            return new RedirectView(redirectUrl);
 
-            return redirectUrl!=null ? new RedirectView(redirectUrl) : new RedirectView("https://haru.it.kr/error-page");
-        } catch (WorkspaceHandler e) {
+        } catch (WorkspaceHandler | WorkspaceInvitationHandler e) {
+            // 초대장이 유효하지 않거나 이미 수락된 경우 등 예외 처리
             return new RedirectView("https://haru.it.kr/error-page");
         }
     }
