@@ -42,8 +42,6 @@ dependencies {
 
 	implementation 'org.springframework.ai:spring-ai-pdf-document-reader'
 
-	implementation 'org.springframework.boot:spring-boot-starter-amqp'
-	implementation 'org.springframework.amqp:spring-rabbit-stream'
 	compileOnly 'org.projectlombok:lombok'
 
 	// mysql jdbc
