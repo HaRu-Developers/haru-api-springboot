@@ -90,9 +90,6 @@ dependencies {
 	// JSON
 	implementation("org.json:json:20240303")
 
-	// acurator
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
 	// websocket
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
