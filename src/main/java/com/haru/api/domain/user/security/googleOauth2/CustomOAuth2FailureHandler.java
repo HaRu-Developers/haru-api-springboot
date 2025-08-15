@@ -21,8 +21,7 @@ public class CustomOAuth2FailureHandler implements AuthenticationFailureHandler 
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException {
-        String failureGoogleLoginUrl = "/auth/login/google/callback";
         // 프론트엔드 URL로 리다이렉트 (query param 전달)
-        response.sendRedirect(baseUrl + failureGoogleLoginUrl + "?status=fail");
+        response.sendRedirect(baseUrl + "?status=fail");
     }
 }

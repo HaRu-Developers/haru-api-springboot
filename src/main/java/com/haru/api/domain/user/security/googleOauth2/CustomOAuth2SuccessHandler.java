@@ -30,7 +30,6 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             Authentication authentication
     ) throws IOException {
         StringBuilder redirectUrl = new StringBuilder();
-        String successGoogleLoginUrl = "/auth/login/google/callback";
         CustomOauth2UserDetails userDetails = (CustomOauth2UserDetails) authentication.getPrincipal();
         // 회원가입이든 로그인이든 똑같이 프론트엔드로 리다이렉트
         Long userId = userDetails.getUser().getId();
@@ -39,7 +38,6 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         String refreshToken = userCommandService.generateAndSaveRefreshToken(key, refreshExpTime);
         // 프론트엔드 URL로 리다이렉트 (query param 전달)
         redirectUrl.append(baseUrl)
-                .append(successGoogleLoginUrl)
                 .append("?status=success")
                 .append("&userId=").append(userId)
                 .append("&profileImage=").append(userDetails.getUser().getProfileImage())
