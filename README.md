@@ -1,46 +1,38 @@
 # 프로젝트에 대한 간단한 설명
 ## 📌Project Overview
 
-- HaRu는 소규모 팀을 위한 All-In-One 운영 관리 플랫폼입니다.,
-- 보다 효율적인 팀 운영을 위한 고민에서 시작된 HaRu는, 각자의 자리에서 치열하게 움직이는 소규모 팀들의 하루를 돕고자 합니다.,
-- 회의 진행 보조, SNS 이벤트 진행 관리, 팀 분위기 체크까지.HaRu는 모든 팀이 더 가치 있는 순간에 집중할 수 있도록 돕습니다.,
+- HaRu는 소규모 팀을 위한 All-In-One 운영 관리 플랫폼입니다.
+- 보다 효율적인 팀 운영을 위한 고민에서 시작된 HaRu는, 각자의 자리에서 치열하게 움직이는 소규모 팀들의 하루를 돕고자 합니다.
+- 회의 진행 보조, SNS 이벤트 진행 관리, 팀 분위기 체크까지.HaRu는 모든 팀이 더 가치 있는 순간에 집중할 수 있도록 돕습니다.
 
 ## 🚀HaRu Key Features,
 
-- **AI 회의 진행 매니저**,
-    - 실시간 STT 변환,
-    - HaRu AI 회의 진행 질문 추천,
-    - 회의록 자동 생성,
-- **SNS 이벤트 어시스턴트**,
-    - Instagram 계정 연동,
-    - 이벤트 URL 등록,
-    - 이벤트 참여자 및 당첨자 리스트 추출,
-- **팀 분위기 트래커**,
-    - 설문지 작성 및 배포,
-    - 팀 분위기 리포트 자동 생성,
-    - 운영자 맞춤 HaRu 인사이트 제공,
-
+- **AI 회의 진행 매니저**
+    - 실시간 STT
+    - HaRu AI 회의 진행 질문 추천
+    - 회의록 자동 생성
+- **SNS 이벤트 어시스턴트**
+    - Instagram 계정 연동
+    - 이벤트 URL 등록
+    - 이벤트 참여자 및 당첨자 리스트 추출 및 pdf, word 다운로드
+- **팀 분위기 트래커**
+    - 설문지 작성 및 배포
+    - 팀 분위기 리포트 자동 생성
+    - 운영자 맞춤 HaRu 인사이트 제공
+---
 ## ⚒️Technical Overview,
 
 - **FrontEnd**: Next.js · React · TypeScript · Tailwind CSS · Storybook · Vercel,
 - **BackEnd**: Spring · FastAPI · Docker · MySQL · AWS(EC2, S3, RDS) · Redis
 ---
 
----
-
----
-
 # 사용한 브랜치 전략 및 기술 스택, 프로젝트 구조 등
 
 ## 브랜치 전략
 
-<img width="800" height="1038" alt="Untitled" src="https://github.com/user-attachments/assets/f3b578c9-bda0-4bc6-b676-fb4c8f15dc43" />
+<img width="1080" height="536" alt="github flow" src="https://github.com/user-attachments/assets/13defd1d-771e-4409-a26d-84234f269470" />
 
-- 위 git flow를 따름
-- release브랜치는 제외
-- dev 브랜치 왼편에 feature브랜치말고 refactor, fix브랜치도 존재
-    <img width="820" height="437" alt="Untitled (1)" src="https://github.com/user-attachments/assets/62985d01-810f-41e6-b35b-3690dee4cb35" />
-
+- 위 github flow를 따름
     
 - 브랜치
     - `main` - 배포용 브랜치
@@ -77,7 +69,7 @@
 | Version Control | Git |
 | Cloud Services | AWS Route53 / EC2 / RDS(MySQL) / S3 / Docker |
 | Database & Caches | MySQL / Redis |
-| Deployment Tools | Nginx (프록시 서버) |
+| Deployment Tools | Nginx (프록시 서버) / Github Actions |
 | Extra Library | Swagger / WebSockets / elevenlabs |
 
 ---
