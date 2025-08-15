@@ -19,6 +19,8 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     private int accessExpTime;
     @Value("${jwt.refresh-expiration}")
     private int refreshExpTime;
+    @Value("${google-login-frontend-url}")
+    String baseUrl;
     private final UserCommandService userCommandService;
 
     @Override
@@ -28,7 +30,6 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             Authentication authentication
     ) throws IOException {
         StringBuilder redirectUrl = new StringBuilder();
-        String baseUrl = "https://org.haru.it.kr"; // 프론트엔드 URL
         String successGoogleLoginUrl = "/auth/login/google/callback";
         CustomOauth2UserDetails userDetails = (CustomOauth2UserDetails) authentication.getPrincipal();
         // 회원가입이든 로그인이든 똑같이 프론트엔드로 리다이렉트
