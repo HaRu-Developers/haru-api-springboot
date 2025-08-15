@@ -128,4 +128,31 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
                 .build();
     }
 
+    @Override
+    public MeetingResponseDTO.proceedingVoiceLinkResponse MeetingVoiceFile(Long userId, Long meetingId){
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
+        Meeting foundMeeting = meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+
+        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
+                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+
+        String audioFileKeyName = foundMeeting.getAudioFileKey();
+
+        if (audioFileKeyName == null || audioFileKeyName.isBlank()) {
+            throw new MeetingHandler(ErrorStatus.MEETING_PROCEEDING_NOT_FOUND);
+        }
+
+        String presignedUrl = amazonS3Manager.generatePresignedUrl(audioFileKeyName);
+
+        return MeetingResponseDTO.proceedingVoiceLinkResponse.builder()
+                .voiceLink(presignedUrl)
+                .build();
+    }
+
 }

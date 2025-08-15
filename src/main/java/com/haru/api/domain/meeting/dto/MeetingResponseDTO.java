@@ -58,6 +58,14 @@ public class MeetingResponseDTO {
 
     @Getter
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class proceedingVoiceLinkResponse {
+        private String voiceLink;
+    }
+
+    @Getter
+    @Builder
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public static class TranscriptResponse {
