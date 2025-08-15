@@ -63,6 +63,10 @@
 
 ---
 
+## 서버 아키텍처
+<img width="1377" height="780" alt="HaRu drawio_1" src="https://github.com/user-attachments/assets/f8131cbf-0dcc-4348-929d-839d87466dc7" />
+
+
 ## 기술 스택
 <img width="491" height="321" alt="제목 없는 다이어그램 drawio (1) (1)" src="https://github.com/user-attachments/assets/cdb2e7e2-cbe0-4d92-a216-10d068aa905d" />
 
