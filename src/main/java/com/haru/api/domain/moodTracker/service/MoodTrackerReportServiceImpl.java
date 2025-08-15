@@ -1,6 +1,7 @@
 package com.haru.api.domain.moodTracker.service;
 
 import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.global.util.file.FileConvertHelper;
 import com.haru.api.infra.api.dto.SurveyReportResponse;
 import com.haru.api.domain.moodTracker.entity.*;
 import com.haru.api.domain.moodTracker.repository.*;
@@ -10,25 +11,23 @@ import com.haru.api.infra.api.client.ChatGPTClient;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.s3.MarkdownFileUploader;
 import com.lowagie.text.pdf.BaseFont;
-import com.lowagie.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import com.lowagie.text.Document;
-import com.lowagie.text.Font;
-import com.lowagie.text.Paragraph;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.thymeleaf.context.Context;
 
 import static com.haru.api.global.apiPayload.code.status.ErrorStatus.*;
 import static com.haru.api.global.apiPayload.code.status.ErrorStatus.MOOD_TRACKER_DOWNLOAD_ERROR;
@@ -47,6 +46,8 @@ public class MoodTrackerReportServiceImpl implements MoodTrackerReportService {
 
     private final AmazonS3Manager amazonS3Manager;
     private final MarkdownFileUploader markdownFileUploader;
+    private final SpringTemplateEngine templateEngine;
+    private final FileConvertHelper fileConvertHelper;
 
     @Async
     public void generateReport(Long moodTrackerId) {
@@ -211,72 +212,48 @@ public class MoodTrackerReportServiceImpl implements MoodTrackerReportService {
 
         byte[] pdfReportBytes;
         byte[] docxReportBytes;
+
         try {
-            // 폰트 경로
-            URL resource = getClass().getClassLoader().getResource("templates/NotoSansKR-Regular.ttf");
-            File reg = new File(resource.toURI());
-            try (ByteArrayOutputStream pdfOut = new ByteArrayOutputStream()) {
-                Document document = new Document();
-                PdfWriter.getInstance(document, pdfOut);
-                document.open();
-
-                // 한글 폰트 지정
-                BaseFont baseFont = BaseFont.createFont(reg.getAbsolutePath(), BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-                Font font = new Font(baseFont, 12);
-
-                document.add(new Paragraph("Mood Tracker Report", font));
-                document.add(new Paragraph("제목: " + foundMoodTracker.getTitle(), font));
-                document.add(new Paragraph("작성자: " + foundMoodTracker.getCreator().getName(), font));
-                document.add(new Paragraph("마감일: " + foundMoodTracker.getDueDate(), font));
-                document.add(new Paragraph("리포트 내용: " + foundMoodTracker.getReport(), font));
-
-                document.close();
-                pdfReportBytes = pdfOut.toByteArray();
+            Resource fontRes = new ClassPathResource("templates/NotoSansKR-Regular.ttf");
+            if (!fontRes.exists()) {
+                throw new IllegalStateException("Font not found: templates/NotoSansKR-Regular.ttf");
+            }
+            byte[] fontBytes;
+            try (InputStream fin = fontRes.getInputStream()) {
+                fontBytes = fin.readAllBytes();
             }
 
-            // ====== DOCX 생성 (Apache POI) ======
-            try (ByteArrayOutputStream docxOut = new ByteArrayOutputStream()) {
-                XWPFDocument doc = new XWPFDocument();
+            // PDF: 제목 + 메타(작성자/마감일) + 본문 마크다운
+            pdfReportBytes = createMoodTrackerPDFFromMarkdown(
+                    foundMoodTracker.getTitle(),
+                    foundMoodTracker.getCreator() != null ? foundMoodTracker.getCreator().getName() : null,
+                    foundMoodTracker.getDueDate(),
+                    foundMoodTracker.getReport(),
+                    fontBytes
+            );
 
-                // 제목
-                XWPFParagraph titlePara = doc.createParagraph();
-                XWPFRun titleRun = titlePara.createRun();
-                titleRun.setText("Mood Tracker Report");
-                titleRun.setBold(true);
-                titleRun.setFontFamily("Noto Sans KR");
-                titleRun.setFontSize(14);
-
-                // 내용
-                XWPFParagraph contentPara = doc.createParagraph();
-                XWPFRun contentRun = contentPara.createRun();
-                contentRun.setText("제목: " + foundMoodTracker.getTitle());
-                contentRun.addBreak();
-                contentRun.setText("작성자: " + foundMoodTracker.getCreator().getName());
-                contentRun.addBreak();
-                contentRun.setText("마감일: " + foundMoodTracker.getDueDate());
-                contentRun.addBreak();
-                contentRun.setText("리포트 내용: " + foundMoodTracker.getReport());
-
-                doc.write(docxOut);
-                docxReportBytes = docxOut.toByteArray();
-            }
+            // DOCX: 제목 + 메타(작성자/마감일) + 본문 마크다운
+            docxReportBytes = createMoodTrackerDocxFromMarkdown(
+                    foundMoodTracker.getTitle(),
+                    foundMoodTracker.getCreator() != null ? foundMoodTracker.getCreator().getName() : null,
+                    foundMoodTracker.getDueDate(),
+                    foundMoodTracker.getReport()
+            );
 
         } catch (Exception e) {
-            log.error("Error creating document: {}", e.getMessage());
+            log.error("Error creating document", e);
             throw new MoodTrackerHandler(MOOD_TRACKER_DOWNLOAD_ERROR);
         }
-        // PDF, DOCS파일, 썸네일 S3에 업로드 및 DB에 keyName저장
+
         String fullPath = "mood-tracker/" + moodTrackerId;
-        String pdfReportKey = amazonS3Manager.generateKeyName(fullPath) + "." + "pdf";
-        String wordReportKey = amazonS3Manager.generateKeyName(fullPath) + "." + "docx";
+        String pdfReportKey = amazonS3Manager.generateKeyName(fullPath) + ".pdf";
+        String wordReportKey = amazonS3Manager.generateKeyName(fullPath) + ".docx";
+
         amazonS3Manager.uploadFile(pdfReportKey, pdfReportBytes, "application/pdf");
         amazonS3Manager.uploadFile(wordReportKey, docxReportBytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-        // 분위기 트래커에 keyName 저장
-        foundMoodTracker.updateReportKeyName(
-                pdfReportKey,
-                wordReportKey
-        );
-        // 분위기 트래커 리포트의 PDF 첫페이지를 썸네일로 저장
+
+        foundMoodTracker.updateReportKeyName(pdfReportKey, wordReportKey);
+
         String thumbnailKey = markdownFileUploader.createOrUpdateThumbnailWithPdfBytes(
                 pdfReportBytes,
                 "mood-tracker",
@@ -285,10 +262,102 @@ public class MoodTrackerReportServiceImpl implements MoodTrackerReportService {
         foundMoodTracker.updateThumbnailKey(thumbnailKey);
     }
 
-    // 파일명 인코딩
-    private String buildEncodedContentDisposition(String originalFilename) {
-        String encodedFilename = URLEncoder.encode(originalFilename, StandardCharsets.UTF_8)
-                .replaceAll("\\+", "%20"); // 공백 처리
-        return "attachment; filename*=UTF-8''" + encodedFilename;
+    /* ========================= 헬퍼들 ========================= */
+
+    // PDF: 제목 + 메타(작성자/마감일) + 본문(마크다운) → 템플릿 렌더링 후 HTML→PDF 변환
+    private byte[] createMoodTrackerPDFFromMarkdown(
+            String title,
+            String creator,
+            Object dueDate,
+            String markdown,
+            byte[] fontBytes
+    ) {
+        try {
+            // 템플릿 변수 구성
+            Context ctx = new Context(java.util.Locale.KOREA);
+            ctx.setVariable("title", (title == null || title.isBlank()) ? "팀 분위기 조사" : title);
+            ctx.setVariable("creator", creator);
+            ctx.setVariable("dueDate", fileConvertHelper.formatDueDate(dueDate));
+            ctx.setVariable("reportHtml", fileConvertHelper.markdownToHtml(markdown));
+
+            // 템플릿 렌더링
+            String html = templateEngine.process("mood-tracker-report-template", ctx);
+
+            // 스타일 주입
+            html = fileConvertHelper.injectStyle(html);
+
+            // HTML → PDF 변환 (OpenHTMLtoPDF 사용, 'NotoSansKR'로 등록)
+            return fileConvertHelper.convertHtmlToPdf(html, fontBytes);
+        } catch (Exception e) {
+            log.error("createMoodTrackerPDFFromMarkdown failed", e);
+            throw new MoodTrackerHandler(MOOD_TRACKER_DOWNLOAD_ERROR);
+        }
+    }
+
+    // DOCX 생성: 제목 + 메타 + 마크다운 본문
+    private byte[] createMoodTrackerDocxFromMarkdown(
+            String title,
+            String creator,
+            Object dueDate,
+            String markdown
+    ) throws Exception {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+             XWPFDocument doc = new XWPFDocument()) {
+
+            // 제목
+            XWPFParagraph t = doc.createParagraph();
+            t.setAlignment(ParagraphAlignment.CENTER);
+            XWPFRun tr = t.createRun();
+            tr.setFontFamily("Noto Sans KR");
+            tr.setText(title != null ? title : "Mood Tracker Report");
+            tr.setBold(true);
+            tr.setFontSize(22);
+            tr.addBreak();
+
+            // 메타(작성자 · 마감일)
+            String metaCreator = (creator != null && !creator.isBlank()) ? ("작성자: " + creator) : null;
+            String metaDue = fileConvertHelper.formatDueDate(dueDate);
+            if (metaCreator != null || metaDue != null) {
+                XWPFParagraph meta = doc.createParagraph();
+                meta.setAlignment(ParagraphAlignment.CENTER);
+                XWPFRun mr = meta.createRun();
+                mr.setFontSize(12);
+                StringBuilder sb = new StringBuilder();
+                if (metaCreator != null) sb.append(metaCreator);
+                if (metaCreator != null && metaDue != null) sb.append(" / ");
+                if (metaDue != null) sb.append("마감일: ").append(metaDue);
+                mr.setText(sb.toString());
+                mr.setFontFamily("Noto Sans KR");
+                mr.addBreak();
+            }
+
+            // 본문(마크다운 경량 파서)
+            if (markdown == null) markdown = "";
+            String[] lines = markdown.replace("\r\n", "\n").split("\n");
+
+            for (String raw : lines) {
+                String line = raw.trim();
+
+                if (line.startsWith("### ")) {
+                    // 시그니처 예) addHeading(XWPFDocument, String, int, String wordFontFamily)
+                    fileConvertHelper.addHeading(doc, line.substring(4), 14, "Noto Sans KR");
+                } else if (line.startsWith("## ")) {
+                    fileConvertHelper.addHeading(doc, line.substring(3), 16, "Noto Sans KR");
+                } else if (line.startsWith("# ")) {
+                    fileConvertHelper.addHeading(doc, line.substring(2), 18, "Noto Sans KR");
+                } else if (line.startsWith("- ")) {
+                    // 예) addDocsBullet(XWPFDocument, String, String wordFontFamily)
+                    fileConvertHelper.addDocsBullet(doc, line.substring(2), "Noto Sans KR");
+                } else if (line.matches("^\\d+\\.\\s+.*")) {
+                    fileConvertHelper.addDocsBullet(doc, line, "Noto Sans KR");
+                } else {
+                    // 예) addParagraph(XWPFDocument, String, int, boolean, String wordFontFamily)
+                    fileConvertHelper.addParagraph(doc, line, 12, false, "Noto Sans KR");
+                }
+            }
+
+            doc.write(out);
+            return out.toByteArray();
+        }
     }
 }
