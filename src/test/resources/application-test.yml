@@ -48,6 +48,8 @@ invite-url: invite-url
 
 survey-url: survey-url
 
+google-login-frontend-url: google-login-frontend-url
+
 instagram:
   client:
     id: "dummy-client-id"
