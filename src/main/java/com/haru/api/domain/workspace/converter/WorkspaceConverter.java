@@ -151,8 +151,16 @@ public class WorkspaceConverter {
     public WorkspaceResponseDTO.RecentDocument toRecentDocument(UserDocumentLastOpened userDocumentLastOpened) {
         String thumbnailUrl = s3Manager.generatePresignedUrl(userDocumentLastOpened.getThumbnailKeyName());
 
+        String documentId;
+
+        if(userDocumentLastOpened.getId().getDocumentType().equals(DocumentType.TEAM_MOOD_TRACKER)) {
+            documentId = hashIdUtil.encode(userDocumentLastOpened.getId().getDocumentId());
+        } else {
+            documentId = String.valueOf(userDocumentLastOpened.getId().getDocumentId());
+        }
+
         return WorkspaceResponseDTO.RecentDocument.builder()
-                .documentId(userDocumentLastOpened.getId().getDocumentId())
+                .documentId(documentId)
                 .title(userDocumentLastOpened.getTitle())
                 .documentType(userDocumentLastOpened.getId().getDocumentType())
                 .thumbnailUrl(thumbnailUrl)
