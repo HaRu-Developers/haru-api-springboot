@@ -18,6 +18,6 @@ public class CustomOAuth2FailureHandler implements AuthenticationFailureHandler 
     ) throws IOException {
         String failureGoogleLoginUrl = "/auth/login/google/callback";
         // 프론트엔드 URL로 리다이렉트 (query param 전달)
-        response.sendRedirect("http://localhost:3000" + failureGoogleLoginUrl + "?status=fail");
+        response.sendRedirect("https://org.haru.it.kr" + failureGoogleLoginUrl + "?status=fail");
     }
 }
