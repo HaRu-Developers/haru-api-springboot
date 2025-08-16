@@ -14,6 +14,7 @@ import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.infra.api.client.ChatGPTClient;
@@ -144,6 +145,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     @Override
     @Transactional
+    @DeleteDocument
     public void deleteMeeting(User user, Meeting meeting) {
 
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), meeting.getWorkspace().getId())
@@ -154,10 +156,6 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         }
 
         meetingRepository.delete(meeting);
-
-        // meeting 삭제 시 워크스페이스에 속해있는 모든 유저에 대해
-        // last opened 테이블에서 해당 문서 id를 가지고 있는 튜플 모두 삭제
-        userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(meeting);
     }
 
     @Override
