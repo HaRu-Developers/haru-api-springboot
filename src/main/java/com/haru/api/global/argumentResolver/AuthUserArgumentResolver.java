@@ -1,8 +1,9 @@
-package com.haru.api.global.annotation;
+package com.haru.api.global.argumentResolver;
 
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
+import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import lombok.RequiredArgsConstructor;

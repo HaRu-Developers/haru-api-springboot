@@ -1,10 +1,11 @@
-package com.haru.api.global.annotation;
+package com.haru.api.global.aspect;
 
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
+import com.haru.api.global.annotation.TrackLastOpened;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

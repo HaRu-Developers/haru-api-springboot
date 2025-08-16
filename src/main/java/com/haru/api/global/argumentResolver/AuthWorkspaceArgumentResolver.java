@@ -1,7 +1,8 @@
-package com.haru.api.global.annotation;
+package com.haru.api.global.argumentResolver;
 
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import jakarta.servlet.http.HttpServletRequest;
