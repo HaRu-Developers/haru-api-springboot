@@ -6,17 +6,9 @@ import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.user.repository.UserRepository;
-import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
-import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
-import com.haru.api.domain.workspace.entity.Workspace;
-import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.annotation.TrackLastOpened;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
-import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
-import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
-import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.api.entity.SpeechSegment;
 import com.haru.api.infra.api.repository.SpeechSegmentRepository;
@@ -33,89 +25,48 @@ import java.util.stream.Collectors;
 public class MeetingQueryServiceImpl implements MeetingQueryService{
 
     private final MeetingRepository meetingRepository;
-    private final WorkspaceRepository workspaceRepository;
-    private final UserRepository userRepository;
-    private final UserWorkspaceRepository userWorkspaceRepository;
     private final AmazonS3Manager amazonS3Manager;
     private final SpeechSegmentRepository speechSegmentRepository;
 
     @Override
-    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(Long userId, Long workspaceId) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(User user, Meeting meeting) {
 
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        List<Meeting> foundMeetings = meetingRepository.findByWorkspaceOrderByUpdatedAtDesc(foundWorkspace);
+        List<Meeting> foundMeetings = meetingRepository.findByWorkspaceOrderByUpdatedAtDesc(meeting.getWorkspace());
 
         return foundMeetings.stream()
-                .map(meeting -> MeetingConverter.toGetMeetingResponse(meeting, userId))
+                .map(eachMeeting -> MeetingConverter.toGetMeetingResponse(eachMeeting, user.getId()))
                 .collect(Collectors.toList());
     }
 
     @Override
     @TrackLastOpened(type = DocumentType.AI_MEETING_MANAGER)
-    public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(Long userId, Long meetingId){
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(User user, Meeting meeting){
 
-        Meeting foundMeeting = meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+        User foundMeetingCreator = meeting.getCreator();
 
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
-                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
-
-        User foundMeetingCreator = foundMeeting.getCreator();
-
-        return MeetingConverter.toGetMeetingProceedingResponse(foundMeetingCreator, foundMeeting);
+        return MeetingConverter.toGetMeetingProceedingResponse(foundMeetingCreator, meeting);
     }
 
     @Override
-    public MeetingResponseDTO.TranscriptResponse getTranscript(Long userId, Long meetingId) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
-
-        Meeting foundMeeting = meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
-
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
-                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+    public MeetingResponseDTO.TranscriptResponse getTranscript(User user, Meeting meeting) {
 
         // Repository를 통해 SpeechSegment와 연관된 AIQuestion을 함께 조회 (N+1 문제 해결)
-        List<SpeechSegment> segments = speechSegmentRepository.findAllByMeetingIdWithAIQuestions(meetingId);
+        List<SpeechSegment> segments = speechSegmentRepository.findAllByMeetingIdWithAIQuestions(meeting.getId());
 
         List<MeetingResponseDTO.Transcript> transcriptList = segments.stream()
                 .map(MeetingResponseDTO.Transcript::from)
                 .collect(Collectors.toList());
 
         return MeetingResponseDTO.TranscriptResponse.builder()
-                .meetingStartTime(foundMeeting.getStartTime())
+                .meetingStartTime(meeting.getStartTime())
                 .transcripts(transcriptList)
                 .build();
     }
 
     @Override
-    public MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(Long userId, Long meetingId){
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    public MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(User user, Meeting meeting){
 
-        Meeting foundMeeting = meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
-
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
-                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
-
-        String proceedingKeyName = foundMeeting.getProceedingKeyName();
+        String proceedingKeyName = meeting.getProceedingKeyName();
 
         if (proceedingKeyName == null || proceedingKeyName.isBlank()) {
             throw new MeetingHandler(ErrorStatus.MEETING_PROCEEDING_NOT_FOUND);
@@ -129,20 +80,9 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
     }
 
     @Override
-    public MeetingResponseDTO.proceedingVoiceLinkResponse MeetingVoiceFile(Long userId, Long meetingId){
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    public MeetingResponseDTO.proceedingVoiceLinkResponse getMeetingVoiceFile(User user, Meeting meeting){
 
-        Meeting foundMeeting = meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
-
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
-                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
-
-        String audioFileKeyName = foundMeeting.getAudioFileKey();
+        String audioFileKeyName = meeting.getAudioFileKey();
 
         if (audioFileKeyName == null || audioFileKeyName.isBlank()) {
             throw new MeetingHandler(ErrorStatus.MEETING_PROCEEDING_NOT_FOUND);

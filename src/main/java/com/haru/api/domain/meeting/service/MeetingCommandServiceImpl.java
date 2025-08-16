@@ -62,11 +62,9 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final MeetingRepository meetingRepository;
     private final KeywordRepository keywordRepository;
     private final ChatGPTClient chatGPTClient;
-    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final UserDocumentLastOpenedService userDocumentLastOpenedService;
     private final WebSocketSessionRegistry webSocketSessionRegistry;
     private final SpeechSegmentRepository speechSegmentRepository;
-    private final MarkdownToPdfConverter markdownToPdfConverter;
     private final MarkdownFileUploader markdownFileUploader;
 
     private final AmazonS3Manager amazonS3Manager;
@@ -139,89 +137,60 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     @Override
     @Transactional
-    public void updateMeetingTitle(Long userId, Long meetingId, String newTitle) {
-
-
-        Meeting foundMeeting = meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
-
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    public void updateMeetingTitle(User user, Meeting meeting, MeetingRequestDTO.updateTitle request) {
 
         // 회의 생성자 권한 확인
-        if (!foundMeeting.getCreator().getId().equals(userId)) {
+        if (!meeting.getCreator().getId().equals(user.getId())) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
 
-        foundMeeting.updateTitle(newTitle);
+        meeting.updateTitle(request.getTitle());
+        meetingRepository.save(meeting);
 
         // meeting 수정 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에서 해당 문서 정보 업데이트
-        userDocumentLastOpenedService.updateRecordsForWorkspaceUsers(foundMeeting);
+        userDocumentLastOpenedService.updateRecordsForWorkspaceUsers(meeting);
     }
 
     @Override
     @Transactional
-    public void deleteMeeting(Long userId, Long meetingId) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    public void deleteMeeting(User user, Meeting meeting) {
 
-        Meeting foundMeeting = meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
-
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), meeting.getWorkspace().getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
-        if (!foundMeeting.getCreator().getId().equals(userId) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
+        if (!meeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
 
-        meetingRepository.delete(foundMeeting);
+        meetingRepository.delete(meeting);
 
         // meeting 삭제 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에서 해당 문서 id를 가지고 있는 튜플 모두 삭제
-        userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(foundMeeting);
+        userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(meeting);
     }
 
     @Override
     @Transactional
-    public void adjustProceeding(Long userId, Long meetingId, MeetingRequestDTO.meetingProceedingRequest newProceeding){
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    public void adjustProceeding(User user, Meeting meeting, MeetingRequestDTO.meetingProceedingRequest newProceeding){
 
-        Meeting foundMeeting = meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
-
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), meeting.getWorkspace().getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
-        if (!foundMeeting.getCreator().getId().equals(userId) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
+        if (!meeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
-        foundMeeting.updateProceeding(newProceeding.getProceeding());
+
+        meeting.updateProceeding(newProceeding.getProceeding());
+        meetingRepository.save(meeting);
 
     }
 
     @Override
     @Transactional
-    public void endMeeting(Long userId, Long meetingId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    public void endMeeting(User user, Meeting meeting) {
 
-        meetingRepository.findById(meetingId)
-                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
-
-        Workspace foundWorkspace = meetingRepository.findWorkspaceByMeetingId(meetingId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        userWorkspaceRepository.findByUserIdAndWorkspaceId(userId, foundWorkspace.getId())
-                .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+        Long meetingId = meeting.getId();
 
         // 웹소켓 연결 종료 및 세션 삭제
         try {
@@ -248,10 +217,10 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
             // 파일 업로드 후, key name을 반환
             String keyName = uploadAudioFile(audioBuffer);
 
-            // 3. 조회한 엔티티의 상태를 변경합니다.
+            // audio file key name 엔티티에 저장
             currentMeeting.setAudioFileKey(keyName);
 
-            // 4. AI 회의록 생성
+            // AI 회의록 생성
             List<SpeechSegment> segments = speechSegmentRepository.findByMeeting(currentMeeting);
 
             if (segments.isEmpty()) {
@@ -259,7 +228,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
                 return;
             }
 
-            // 2. 모든 대화 텍스트를 하나의 문자열로 조합
+            // 모든 대화 텍스트를 하나의 문자열로 조합
             String documentText = segments.stream()
                     .map(SpeechSegment::getText)
                     .collect(Collectors.joining("\n"));
@@ -296,25 +265,6 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         } else {
             log.warn("meetingId: {}에 처리할 오디오 데이터가 없습니다.", currentMeeting.getId());
-        }
-    }
-
-    private List<String> convertFileToImages(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        String filename = file.getOriginalFilename();
-        try {
-            if (filename != null && filename.toLowerCase().endsWith(".pdf")) {
-                return convertPdfToImages(file.getInputStream());
-            } else if (filename != null && filename.toLowerCase().endsWith(".docx")) {
-                return convertDocxToImages(file.getInputStream());
-            } else {
-                return Collections.emptyList();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("파일을 이미지로 변환하는 중 오류가 발생했습니다.", e);
         }
     }
 
