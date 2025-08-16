@@ -6,7 +6,6 @@ import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.service.MeetingCommandService;
 import com.haru.api.domain.meeting.service.MeetingQueryService;
 import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.global.annotation.AuthMeeting;
 import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.apiPayload.ApiResponse;
@@ -50,15 +49,16 @@ public class MeetingController {
     )
     public ApiResponse<MeetingResponseDTO.createMeetingResponse> createMeeting(
             @RequestPart("agendaFile") MultipartFile agendaFile,
-            @RequestPart("request") MeetingRequestDTO.createMeetingRequest request) {
+            @RequestPart("request") MeetingRequestDTO.createMeetingRequest request,
+            @Parameter(hidden = true) @AuthUser User user
+    ) {
 
         // file업로드가 되지 않는 경우 controller단에서 요청 처리
         if (agendaFile == null || agendaFile.isEmpty()) {
             throw new GeneralException(ErrorStatus.MEETING_AGENDAFILE_NOT_FOUND);
         }
-        Long userId = SecurityUtil.getCurrentUserId();
 
-        MeetingResponseDTO.createMeetingResponse response = meetingCommandService.createMeeting(userId, agendaFile, request);
+        MeetingResponseDTO.createMeetingResponse response = meetingCommandService.createMeeting(user, agendaFile, request);
 
         return ApiResponse.onSuccess(response);
     }

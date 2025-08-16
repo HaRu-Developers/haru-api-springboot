@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface MeetingCommandService {
 
-    MeetingResponseDTO.createMeetingResponse createMeeting(Long userId, MultipartFile agendaFile, MeetingRequestDTO.createMeetingRequest request);
+    MeetingResponseDTO.createMeetingResponse createMeeting(User user, MultipartFile agendaFile, MeetingRequestDTO.createMeetingRequest request);
 
     void updateMeetingTitle(User user, Meeting meeting, MeetingRequestDTO.updateTitle request);
 

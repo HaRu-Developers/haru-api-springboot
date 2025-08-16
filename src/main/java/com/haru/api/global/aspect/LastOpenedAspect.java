@@ -1,10 +1,10 @@
 package com.haru.api.global.aspect;
 
+import com.haru.api.domain.lastOpened.entity.Documentable;
+import com.haru.api.domain.lastOpened.entity.UserDocumentId;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
-import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
-import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
-import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
+import com.haru.api.domain.user.entity.User;
 import com.haru.api.global.annotation.TrackLastOpened;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -33,33 +33,18 @@ public class LastOpenedAspect {
         // 메서드의 인자에서 userId와 documentId 추출
         Object[] args = joinPoint.getArgs();
 
-        // 인덱스를 사용하여 userId와 documentId 추출
-        Long userId = (Long) args[userIdIndex];
-        Long documentId = (Long) args[documentIdIndex];
+        // 인덱스를 사용하여 user와 document 추출
+        User user = (User)args[userIdIndex];
+        Documentable document = (Documentable)args[documentIdIndex];
 
-        if (userId != null && documentId != null) {
-            // document type에 따라 조회하는 repository 구분하여 workspaceId, title 추출
-            Long workspaceId = null;
-            String title = null;
+        if (user != null && document != null) {
 
-            if(result instanceof MeetingResponseDTO.getMeetingProceeding meetingResponseDTO) {
-                workspaceId = meetingResponseDTO.getWorkspaceId();
-                title = meetingResponseDTO.getTitle();
-            } else if(result instanceof SnsEventResponseDTO.GetSnsEventRequest snsEventResponseDTO) {
-                workspaceId = snsEventResponseDTO.getWorkspaceId();
-                title = snsEventResponseDTO.getTitle();
-            } else if(result instanceof MoodTrackerResponseDTO.QuestionResult moodTrackerResponseDTO) {
-                workspaceId = moodTrackerResponseDTO.getWorkspaceId();
-                title = moodTrackerResponseDTO.getTitle();
-            } else if(result instanceof MoodTrackerResponseDTO.ResponseResult moodTrackerResponseDTO) {
-                workspaceId = moodTrackerResponseDTO.getWorkspaceId();
-                title = moodTrackerResponseDTO.getTitle();
-            } else if(result instanceof MoodTrackerResponseDTO.ReportResult moodTrackerResponseDTO) {
-                workspaceId = moodTrackerResponseDTO.getWorkspaceId();
-                title = moodTrackerResponseDTO.getTitle();
-            }
+            Long workspaceId = document.getWorkspaceId();
+            String title = document.getTitle();
 
-            userDocumentLastOpenedService.updateLastOpened(userId, type, documentId, workspaceId, title);
+            UserDocumentId userDocumentId = new UserDocumentId(user.getId(), document.getId(), document.getDocumentType());
+
+            userDocumentLastOpenedService.updateLastOpened(userDocumentId, workspaceId, title);
         }
 
         return result;

@@ -28,15 +28,14 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
 
     @Override
     @Transactional
-    public void updateLastOpened(Long userId, DocumentType documentType, Long documentId, Long workspaceId, String title) {
-        UserDocumentId id = new UserDocumentId(userId, documentId, documentType);
+    public void updateLastOpened(UserDocumentId userDocumentId, Long workspaceId, String title) {
 
-        UserDocumentLastOpened record = userDocumentLastOpenedRepository.findById(id)
+        UserDocumentLastOpened record = userDocumentLastOpenedRepository.findById(userDocumentId)
                 .orElseGet(() -> {
-                    User foundUser = userRepository.findById(userId)
+                    User foundUser = userRepository.findById(userDocumentId.getUserId())
                             .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
                     return UserDocumentLastOpened.builder()
-                            .id(id)
+                            .id(userDocumentId)
                             .user(foundUser)
                             .workspaceId(workspaceId)
                             .title(title)

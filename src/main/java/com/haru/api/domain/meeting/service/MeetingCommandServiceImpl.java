@@ -1,6 +1,5 @@
 package com.haru.api.domain.meeting.service;
 
-import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
@@ -10,7 +9,6 @@ import com.haru.api.domain.meeting.entity.Keyword;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.meeting.repository.KeywordRepository;
 import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
 import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
@@ -24,15 +22,12 @@ import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import com.haru.api.infra.mp3encoder.Mp3EncoderService;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.s3.MarkdownFileUploader;
-import com.haru.api.infra.s3.MarkdownToPdfConverter;
 import com.haru.api.infra.websocket.AudioSessionBuffer;
 import com.haru.api.infra.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.docx4j.Docx4J;
 import org.docx4j.TextUtils;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.springframework.scheduling.annotation.Async;
@@ -41,12 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.socket.CloseStatus;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,7 +46,6 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MeetingCommandServiceImpl implements MeetingCommandService {
 
-    private final UserRepository userRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
     private final WorkspaceRepository workspaceRepository;
     private final MeetingRepository meetingRepository;
@@ -73,22 +62,23 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     @Override
     @Transactional
     public MeetingResponseDTO.createMeetingResponse createMeeting(
-            Long userId,
+            User user,
             MultipartFile agendaFile,
             MeetingRequestDTO.createMeetingRequest request)
     {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         Workspace foundWorkspace = workspaceRepository.findById(request.getWorkspaceId())
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        if (!userWorkspaceRepository.existsByUserIdAndWorkspaceId(user.getId(), foundWorkspace.getId()))
+            throw new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND);
+
 
         String extractedText = extractTextFromFile(agendaFile);
 
         // agendaFile을 openAi 활용하여 요약
         String agendaResult = chatGPTClient.summarizeDocument(extractedText)
                 .block();
-
 
         String agendaKeywords = "";
         String agendaSummary = "요약 생성에 실패했습니다.";
@@ -106,7 +96,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         Meeting newMeeting = Meeting.createInitialMeeting(
                 request.getTitle(),
                 agendaSummary,
-                foundUser,
+                user,
                 foundWorkspace
         );
 
@@ -249,8 +239,8 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
                     currentMeeting.initProceedingKeyName(pdfKey);
 
                     // 썸네일 생성 및 업데이트
-                    String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meetings/" + currentMeeting.getId(), currentMeeting.getThumbnailKey());
-                    currentMeeting.initThumbnailKey(newThumbnailKey); // Meeting 엔티티에 썸네일 키 저장
+                    String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meetings/" + currentMeeting.getId(), currentMeeting.getThumbnailKeyName());
+                    currentMeeting.initThumbnailKeyName(newThumbnailKey); // Meeting 엔티티에 썸네일 키 저장
                     log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
 
                 } catch (Exception e) {
@@ -266,36 +256,6 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         } else {
             log.warn("meetingId: {}에 처리할 오디오 데이터가 없습니다.", currentMeeting.getId());
         }
-    }
-
-    /**
-     * PDF 스트림을 이미지(Base64) 리스트로 변환
-     */
-    private List<String> convertPdfToImages(InputStream inputStream) throws IOException {
-        List<String> base64Images = new ArrayList<>();
-        try (PDDocument document = PDDocument.load(inputStream)) {
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
-            for (int i = 0; i < document.getNumberOfPages(); i++) {
-                BufferedImage bufferedImage = pdfRenderer.renderImageWithDPI(i, 300);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(bufferedImage, "png", baos);
-                base64Images.add(Base64.getEncoder().encodeToString(baos.toByteArray()));
-            }
-        }
-        return base64Images;
-    }
-
-    /**
-     * DOCX 스트림을 이미지(Base64) 리스트로 변환 (내부적으로 PDF로 변환 후 처리)
-     * docx의 폰트들을 서버에 다운로드해야지 사용가능 (CI) - 현재 불가능
-     */
-    private List<String> convertDocxToImages(InputStream inputStream) throws Exception {
-        // docx -> pdf 변환
-        WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(inputStream);
-        ByteArrayOutputStream pdfOutputStream = new ByteArrayOutputStream();
-        Docx4J.toPDF(wordMLPackage, pdfOutputStream);
-
-        return convertPdfToImages(new ByteArrayInputStream(pdfOutputStream.toByteArray()));
     }
 
     /**
