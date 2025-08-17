@@ -15,6 +15,7 @@ import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.annotation.DeleteDocument;
+import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.infra.api.client.ChatGPTClient;
@@ -128,6 +129,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
     @Override
     @Transactional
+    @UpdateDocumentTitle
     public void updateMeetingTitle(User user, Meeting meeting, MeetingRequestDTO.updateTitle request) {
 
         // 회의 생성자 권한 확인
@@ -137,10 +139,6 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         meeting.updateTitle(request.getTitle());
         meetingRepository.save(meeting);
-
-        // meeting 수정 시 워크스페이스에 속해있는 모든 유저에 대해
-        // last opened 테이블에서 해당 문서 정보 업데이트
-        userDocumentLastOpenedService.updateRecordsForWorkspaceUsers(meeting);
     }
 
     @Override
