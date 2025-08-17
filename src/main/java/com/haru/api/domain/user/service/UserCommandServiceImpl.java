@@ -161,4 +161,24 @@ public class UserCommandServiceImpl implements UserCommandService{
     public UserResponseDTO.CheckOriginalPasswordResponse checkOriginalPassword(UserRequestDTO.CheckOriginalPasswordRequest request, User user) {
         return UserConverter.toCheckOriginalPassword(passwordEncoder.matches(request.getRequestPassword(), user.getPassword()));
     }
+
+    @Override
+    public UserResponseDTO.LoginResponse signupAndLogin(UserRequestDTO.SignUpRequest request) {
+
+        String password = passwordEncoder.encode(request.getPassword());
+
+        User foundUser = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+        if (foundUser != null) {
+            throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
+        } else {
+            User user = UserConverter.toUsers(request, password);
+            userRepository.save(user);
+
+            return login(UserRequestDTO.LoginRequest.builder()
+                            .email(request.getEmail())
+                            .password(request.getPassword())
+                            .build());
+        }
+    }
 }

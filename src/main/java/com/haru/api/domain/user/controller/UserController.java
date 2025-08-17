@@ -87,7 +87,7 @@ public class UserController {
 
     @Operation(summary = "회원 정보 조회", description =
             "# 회원 정보 조회 API 입니다. \n" +
-                    "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
+                    "access token을 header에 입력해주세요."
     )
     @GetMapping("/info")
     public ApiResponse<UserResponseDTO.User> getUserInfo(
@@ -100,7 +100,7 @@ public class UserController {
 
     @Operation(summary = "회원 정보 수정", description =
             "# 회원 정보 수정 API 입니다. \n" +
-                    "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
+                    "access token을 header에 입력해주세요."
     )
     @PatchMapping("/info")
     public ApiResponse<UserResponseDTO.User> updateUserInfo(
@@ -114,8 +114,7 @@ public class UserController {
 
     @Operation(summary = "이메일로 회원 리스트 조회", description =
             "# 유사한 이메일을 가진 회원을 최대 4명까지 조회하는 API 입니다. \n" +
-                    "workspace에서 회원을 초대할 때 사용할 기능입니다. \n" +
-                    "현재는 jwt token을 구현하지 않아 pathvariable로 userId를 넣어주세요.추후 jwt token이 구현되면 수정하겠습니다."
+                    "workspace에서 회원을 초대할 때 사용할 기능입니다. \n"
     )
     @GetMapping("/search")
     public ApiResponse<List<UserResponseDTO.User>> searchUsers(
@@ -152,5 +151,18 @@ public class UserController {
             @Parameter(hidden = true) @AuthUser User user
     ) {
         return ApiResponse.onSuccess(userCommandService.checkOriginalPassword(request, user));
+    }
+
+    @Operation(summary = "회원가입 후 로그인", description =
+            "# [v1.0 (2025-08-15)](https://www.notion.so/2505da7802c5808583b9d0b08087b8e5)" +
+                    " 회원가입 후 로그인까지 진행하는 API입니다."
+    )
+    @PostMapping("/signup-and-login")
+    public ApiResponse<UserResponseDTO.LoginResponse> signUpAndLogin(
+            @RequestBody @Valid UserRequestDTO.SignUpRequest request
+    ) {
+        UserResponseDTO.LoginResponse response = userCommandService.signupAndLogin(request);
+
+        return ApiResponse.onSuccess(response);
     }
 }
