@@ -1,8 +1,5 @@
 package com.haru.api.domain.snsEvent.service;
 
-import com.haru.api.domain.lastOpened.entity.UserDocumentId;
-import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
@@ -24,17 +21,15 @@ import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
-import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
-import com.haru.api.global.apiPayload.exception.handler.UserDocumentLastOpenedHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.global.util.file.FileConvertHelper;
 import com.haru.api.infra.api.restTemplate.InstagramOauth2RestTemplate;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.s3.MarkdownFileUploader;
 import com.lowagie.text.Element;
 import com.lowagie.text.pdf.*;
-import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,10 +44,6 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.io.*;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -85,6 +76,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final int PER_COL = WORD_TABLE_SIZE/ 2; // 한쪽 컬럼에 들어갈 개수
     private final AmazonS3Manager amazonS3Manager;
     private final MarkdownFileUploader markdownFileUploader;
+    private final FileConvertHelper fileConvertHelper;
 
     @Override
     @Transactional
@@ -246,10 +238,10 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 //            // 폰트 경로
 //            URL resource = getClass().getClassLoader().getResource("templates/NotoSansKR-Regular.ttf");
 //            File reg = new File(resource.toURI()); // catch에서 Exception 따로 처리해주기
-            listHtmlParticipant = injectPageMarginStyle(listHtmlParticipant);
-            listHtmlWinner = injectPageMarginStyle(listHtmlWinner);
-            byte[] shiftedPdfBytesParticipant = convertHtmlToPdf(listHtmlParticipant, fontBytes);
-            byte[] shiftedPdfBytesWinner = convertHtmlToPdf(listHtmlWinner, fontBytes);
+            listHtmlParticipant = fileConvertHelper.injectPageMarginStyle(listHtmlParticipant);
+            listHtmlWinner = fileConvertHelper.injectPageMarginStyle(listHtmlWinner);
+            byte[] shiftedPdfBytesParticipant = fileConvertHelper.convertHtmlToPdf(listHtmlParticipant, fontBytes);
+            byte[] shiftedPdfBytesWinner = fileConvertHelper.convertHtmlToPdf(listHtmlWinner, fontBytes);
             pdfBytesParticipant =  addPdfTitle(shiftedPdfBytesParticipant, request.getTitle(), fontBytes);
             pdfBytesWinner =  addPdfTitle(shiftedPdfBytesWinner, request.getTitle(), fontBytes);
             docxBytesParticipant =  createWord(ListType.PARTICIPANT, request.getTitle(), snsEvent);
@@ -515,47 +507,6 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             // head가 없으면 생성
             return html.replaceFirst("(?i)<html>", "<html><head>" + fontCss + "</head>");
         }
-    }
-
-    private String injectPageMarginStyle(String html) {
-        String styleBlock = """
-        <style>
-            @page {
-                size: A4;
-                margin-top: 80pt;
-                margin-bottom: 80pt;
-            }
-            @page :first {
-                margin-top: 90pt; /* 첫 페이지만 위 여백 크게 */
-            }
-        </style>
-        """;
-        String lowerHtml = html.toLowerCase();
-        if (lowerHtml.contains("<head>")) {
-            // <head> 태그가 있는 경우 → 바로 뒤에 스타일 삽입
-            return html.replaceFirst("(?i)<head>", "<head>" + styleBlock);
-        } else {
-            // <head> 태그가 없는 경우 → <html> 다음에 <head> 생성 후 스타일 삽입
-            return html.replaceFirst("(?i)<html>", "<html><head>" + styleBlock + "</head>");
-        }
-    }
-
-    private byte[] convertHtmlToPdf(String listHtml, byte[] fontBytes) throws Exception {
-        // Openhtmltopdf/Flying Saucer를 사용하여 PDF 변환
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PdfRendererBuilder builder = new PdfRendererBuilder();
-        builder.useFastMode();
-        builder.withHtmlContent(listHtml, null); // ex) "file:/opt/app/static/" or "https://your.cdn/", // base url 설정, 직접css파일 가져오거나 프론트엔드 배포 후 적용
-        builder.toStream(baos);
-        // 한글 폰트 임베딩
-        // byte[] → 임시 파일
-        if (fontBytes != null && fontBytes.length > 0) {
-            Path tmpFont = Files.createTempFile("NotoSansKR-", ".ttf");
-            Files.write(tmpFont, fontBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            builder.useFont(tmpFont.toFile(), "NotoSansKR");
-        }
-        builder.run();
-        return baos.toByteArray();
     }
 
     private byte[] addPdfTitle(byte[] pdfBytes, String text, byte[] fontBytes) throws Exception {

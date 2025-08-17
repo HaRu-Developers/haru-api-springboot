@@ -4,6 +4,7 @@ import com.haru.api.domain.moodTracker.service.MoodTrackerReportService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,8 @@ public class RedisReportConsumer {
     private final StringRedisTemplate redisTemplate;
     private final MoodTrackerReportService moodTrackerReportService;
 
-    private static final String QUEUE_KEY = "MOOD_TRACKER_REPORT_GPT_QUEUE";
+    @Value("${queue-name}")
+    private String QUEUE_KEY;
     private static final long BATCH_SIZE = 20;
 
     @Transactional

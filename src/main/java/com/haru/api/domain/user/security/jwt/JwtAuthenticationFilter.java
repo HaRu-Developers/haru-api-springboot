@@ -41,8 +41,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/terms",
             "/api/v1/sns/oauth/callback",
             "/api/v1/users/signup/same",
-            "/favicon.ico"
-
+            "/favicon.ico",
+            "/api/v1//mood-trackers/*/questions",
+            "/api/v1//mood-trackers/*/responses"
     };
     private final JwtUtils jwtUtils;
     private final RedisTemplate<String, String> redisTemplate;
