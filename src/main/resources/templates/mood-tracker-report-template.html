@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="${title}">팀 분위기 조사</title>
+    <style>
+        /* 기본 */
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body { font-family: 'NotoSansKR', Arial, sans-serif; color: #000; }
+
+        /* 레이아웃 */
+        .report-container {
+            width: 668px;               /* 본문 최대 폭 */
+            margin: 0 auto;             /* 가운데 정렬 */
+        }
+        .block { padding: 12px 0; }
+
+        /* 제목 영역 (스크린샷 스타일) */
+        .title {
+            text-align: center;
+            margin: 0;
+            font-weight: 800;
+            font-size: 30px;            /* 크게 */
+            letter-spacing: -0.2px;
+        }
+        .meta {
+            text-align: center;
+            margin: 14px 0 30px 0;      /* 제목과 본문 사이 여백 */
+            font-size: 13px;
+        }
+
+        /* 제목-본문 사이 3px 간격(필요시) */
+        .title-body-gap { height: 3px; }
+
+        /* 본문 박스 */
+        .body-box {
+            max-width: 628px;           /* Body 최대 폭 */
+            padding: 2px 0;             /* 상하 padding 2px */
+            margin: 0 auto;             /* 가운데 배치 */
+            overflow-wrap: anywhere;
+            word-break: keep-all;
+            white-space: normal;
+        }
+
+        /* 마크다운 변환된 HTML 스타일 */
+        .body-box h1, .body-box h2, .body-box h3 {
+            font-weight: 700;
+            line-height: 1.45;
+            margin: 24px 0 10px 0;
+        }
+        .body-box h1 { font-size: 20px; }
+        .body-box h2 { font-size: 18px; }
+        .body-box h3 { font-size: 16px; }   /* 섹션 제목 크기 */
+
+        .body-box p {
+            font-size: 13px;
+            line-height: 1.7;           /* 문단 줄간격 */
+            margin: 0 0 10px 0;
+        }
+
+        /* 리스트 공통 (간격 유지) */
+        .body-box ul, .body-box ol {
+            padding-left: 20px;
+            padding-right: 14px;
+            margin: 0 0 12px 0;
+        }
+        .body-box li { font-size: 13px; line-height: 1.7; }
+        .body-box li + li { margin-top: 6px; }
+
+        /* 불릿(ul)만 작게 보이도록 커스텀 */
+        .body-box ul { list-style: none; }            /* 기본 불릿 제거 */
+        .body-box ul li {
+            position: relative;
+            padding-left: 12px;                       /* 사용자 정의 불릿 여백 */
+        }
+        .body-box ul li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            top: 0.6em;                                /* 줄 높이 기준 수직 중앙 정렬 */
+            transform: translateY(-50%);
+            font-size: 10px;                           /* 불릿을 글자보다 작게 */
+            font-weight: 700;
+        }
+
+        /* 코드 등(있을 때만) */
+        .body-box code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+            background: #f5f5f5;
+            padding: 0 3px;
+            border-radius: 3px;
+        }
+        .body-box pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+            background: #f5f5f5;
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<div class="report-container">
+    <div class="block">
+        <!-- 제목 (가운데, 크게) -->
+        <h1 class="title" th:text="${title}">팀 분위기 조사</h1>
+
+        <!-- 메타 (작성자 / 마감일) -->
+        <p class="meta" th:if="${creator != null or dueDate != null}">
+            <span th:if="${creator != null}" th:text="'작성자: ' + ${creator}">작성자: 이호근</span>
+            <span th:if="${creator != null and dueDate != null}"> / </span>
+            <span th:if="${dueDate != null}" th:text="'마감일: ' + ${dueDate}">마감일: 2025-07-29 01:30</span>
+        </p>
+
+        <div class="title-body-gap"></div>
+
+        <!-- 마크다운 변환 HTML 삽입 -->
+        <div class="body-box" th:utext="${reportHtml}">
+            <!-- 예: <h3>1. 팀 분위기 조사 리포트</h3><ul><li>...</li></ul> -->
+        </div>
+    </div>
+</div>
+</body>
+</html>
