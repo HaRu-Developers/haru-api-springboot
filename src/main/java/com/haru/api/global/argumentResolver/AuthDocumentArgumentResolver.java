@@ -86,6 +86,6 @@ public class AuthDocumentArgumentResolver implements HandlerMethodArgumentResolv
                 return annotation.annotationType().getAnnotation(AuthDocument.class);
             }
         }
-        throw new IllegalStateException("AuthDocument 어노테이션을 찾을 수 없습니다.");
+        return null;
     }
 }

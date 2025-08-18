@@ -2,17 +2,20 @@ package com.haru.api.domain.snsEvent.controller;
 
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
+import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.domain.snsEvent.entity.enums.ListType;
 import com.haru.api.domain.snsEvent.service.SnsEventCommandService;
 import com.haru.api.domain.snsEvent.service.SnsEventQueryService;
-import com.haru.api.domain.user.security.jwt.SecurityUtil;
+import com.haru.api.domain.user.entity.User;
+import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.global.annotation.AuthSnsEvent;
+import com.haru.api.global.annotation.AuthUser;
+import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,10 +34,12 @@ public class SnsEventController {
     @PostMapping("/{workspaceId}")
     public ApiResponse<SnsEventResponseDTO.CreateSnsEventResponse> instagramOauthRedirectUri(
             @PathVariable String workspaceId,
-            @RequestBody SnsEventRequestDTO.CreateSnsRequest request
+            @RequestBody SnsEventRequestDTO.CreateSnsRequest request,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
         return ApiResponse.onSuccess(
-                snsEventCommandService.createSnsEvent(Long.parseLong(workspaceId), request)
+                snsEventCommandService.createSnsEvent(user, workspace, request)
         );
     }
 
@@ -58,11 +63,12 @@ public class SnsEventController {
     @PostMapping("/{workspaceId}/link-instagram")
     public ApiResponse<SnsEventResponseDTO.LinkInstagramAccountResponse> linkInstagramAccount(
             @RequestHeader("code") String code,
-            @PathVariable String workspaceId
+            @PathVariable String workspaceId,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
         System.out.println("Received accessToken: " + code);
         return ApiResponse.onSuccess(
-                snsEventCommandService.getInstagramAccessTokenAndAccount(code, Long.parseLong(workspaceId))
+                snsEventCommandService.getInstagramAccessTokenAndAccount(code, workspace)
         );
     }
 
@@ -73,11 +79,13 @@ public class SnsEventController {
     )
     @GetMapping("/{workspaceId}/list")
     public ApiResponse<SnsEventResponseDTO.GetSnsEventListRequest> getSnsEventList(
-            @PathVariable String workspaceId
+            @PathVariable String workspaceId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
+
         return ApiResponse.onSuccess(
-                snsEventQueryService.getSnsEventList(userId, Long.parseLong(workspaceId))
+                snsEventQueryService.getSnsEventList(user, workspace)
         );
     }
 
@@ -86,14 +94,18 @@ public class SnsEventController {
             description = "# [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=22a5da7802c580d3bed7c57de0b88492&pm=s)" +
                     " SNS 이벤트명 수정 API입니다. Header에 access token을 넣고 Path Variable에는 snsEvnetId를 Request Body에 SNS 이벤트 수정 정보(title)를 담아 요청해주세요."
     )
-    @PatchMapping("/{snsEvnetId}")
+    @PatchMapping("/{snsEventId}")
     public ApiResponse<?> updateSnsEventTitle(
-            @PathVariable String snsEvnetId,
-            @RequestBody SnsEventRequestDTO.UpdateSnsEventRequest request
+            @PathVariable String snsEventId,
+            @RequestBody SnsEventRequestDTO.UpdateSnsEventRequest request,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthSnsEvent SnsEvent snsEvent
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        snsEventCommandService.updateSnsEventTitle(userId, Long.parseLong(snsEvnetId), request);
+
+        snsEventCommandService.updateSnsEventTitle(user, snsEvent, request);
+
         return ApiResponse.onSuccess("");
+
     }
 
     @Operation(
@@ -101,13 +113,18 @@ public class SnsEventController {
             description = "# [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=2265da7802c5809b84d3d8c09f95c36b&pm=s)" +
                     " SNS 이벤트 삭제 API입니다. Header에 access token을 넣고 Path Variable에는 삭제할 SNS Event의 snsEvnetId를 담아 요청해주세요."
     )
-    @DeleteMapping("/{snsEvnetId}")
+    @DeleteMapping("/{snsEventId}")
     public ApiResponse<?> deleteSnsEvent(
-            @PathVariable String snsEvnetId
+            @PathVariable String snsEventId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthSnsEvent SnsEvent snsEvent
+
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        snsEventCommandService.deleteSnsEvent(userId, Long.parseLong(snsEvnetId));
+
+        snsEventCommandService.deleteSnsEvent(user, snsEvent);
+
         return ApiResponse.onSuccess("");
+
     }
 
     @Operation(
@@ -117,11 +134,12 @@ public class SnsEventController {
     )
     @GetMapping("/{snsEventId}")
     public ApiResponse<SnsEventResponseDTO.GetSnsEventRequest> getSnsEvent(
-            @PathVariable String snsEventId
+            @PathVariable String snsEventId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthSnsEvent SnsEvent snsEvent
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.onSuccess(
-                snsEventQueryService.getSnsEvent(userId, Long.parseLong(snsEventId))
+                snsEventQueryService.getSnsEvent(user, snsEvent)
         );
     }
 
@@ -134,27 +152,18 @@ public class SnsEventController {
     public ApiResponse<SnsEventResponseDTO.ListDownLoadLinkResponse> downloadList(
             @PathVariable String snsEventId,
             @RequestParam ListType listType,
-            @RequestParam Format format
+            @RequestParam Format format,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthSnsEvent SnsEvent snsEvent
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.onSuccess(
                 snsEventCommandService.downloadList(
-                        userId,
-                        Long.parseLong(snsEventId),
+                        user,
+                        snsEvent,
                         listType,
                         format
                 )
         );
-
-//        String listTypefileName = listType == ListType.PARTICIPANT ? "참여자" : "당첨자";
-//        String filename = format == Format.PDF ? listTypefileName + ".pdf" : listTypefileName + ".docx";
-//        String contentType = format == Format.PDF
-//                ? MediaType.APPLICATION_PDF_VALUE
-//                : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-//
-//        return ResponseEntity.ok()
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-//                .contentType(MediaType.parseMediaType(contentType))
-//                .body(fileBytes);
     }
+
 }

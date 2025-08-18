@@ -2,6 +2,7 @@ package com.haru.api.global.interceptor;
 
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
+import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
@@ -9,6 +10,7 @@ import com.haru.api.global.annotation.AuthDocument;
 import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
+import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
     private final UserRepository userRepository;
 
     private final MeetingRepository meetingRepository;
+    private final SnsEventRepository snsEventRepository;
 
     @Override
     public boolean preHandle(final HttpServletRequest request, final HttpServletResponse response, final Object handler) throws Exception {
@@ -59,6 +62,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
             }
         }
 
+        // AuthUser, AuthDocument가 모두 존재하는 경우
         if (hasAuthUserParam && authDocumentInfo != null) {
 
             // AuthDocument에서 DocumentType, pathVariableName 추출
@@ -80,10 +84,16 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
 
             Object foundDocument = null;
 
+            // 유저가 해당 문서가 속한 워크스페이스에 속해있는지 확인하고, 해당 객체를 반환함
             switch (documentType) {
                 case AI_MEETING_MANAGER:
                     foundDocument = meetingRepository.findMeetingByIdIfUserHasAccess(userId, documentId)
                             .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_HAS_NO_ACCESS_TO_MEETING));
+                    break;
+
+                case SNS_EVENT_ASSISTANT:
+                    foundDocument = snsEventRepository.findSnsEventByIdIfUserHasAccess(userId, documentId)
+                            .orElseThrow(() -> new SnsEventHandler(ErrorStatus.SNS_EVENT_NOT_FOUND));
                     break;
             }
 

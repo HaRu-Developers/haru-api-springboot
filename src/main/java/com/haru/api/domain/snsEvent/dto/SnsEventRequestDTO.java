@@ -1,5 +1,6 @@
 package com.haru.api.domain.snsEvent.dto;
 
+import com.haru.api.global.common.entity.TitleHolder;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -33,7 +34,7 @@ public class SnsEventRequestDTO {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class UpdateSnsEventRequest {
+    public static class UpdateSnsEventRequest implements TitleHolder {
         private String title;
     }
 }

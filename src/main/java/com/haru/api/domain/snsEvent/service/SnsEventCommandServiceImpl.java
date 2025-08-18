@@ -1,6 +1,5 @@
 package com.haru.api.domain.snsEvent.service;
 
-import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
@@ -14,13 +13,13 @@ import com.haru.api.domain.snsEvent.repository.ParticipantRepository;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.snsEvent.repository.WinnerRepository;
 import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.user.repository.UserRepository;
-import com.haru.api.domain.user.security.jwt.SecurityUtil;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
 import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.global.annotation.DeleteDocument;
+import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
@@ -34,7 +33,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
@@ -56,20 +54,13 @@ import static com.haru.api.global.apiPayload.code.status.ErrorStatus.*;
 public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
     private final SpringTemplateEngine templateEngine;
-    @Value("${instagram.client.id}")
-    private String instagramClientId;
-    @Value("${instagram.client.secret}")
-    private String instagramClientSecret;
-    @Value("${instagram.redirect.uri}")
-    private String instagramRedirectUri;
+
     private final SnsEventRepository snsEventRepository;
-    private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
     private final ParticipantRepository participantRepository;
     private final WinnerRepository winnerRepository;
     private final RestTemplate restTemplate;
-    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final UserDocumentLastOpenedService userDocumentLastOpenedService;
     private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
     private final int WORD_TABLE_SIZE = 40; // 페이지당 총 아이디 수
@@ -81,22 +72,16 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     @Override
     @Transactional
     public SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(
-            Long workspaceId,
+            User user,
+            Workspace workspace,
             SnsEventRequestDTO.CreateSnsRequest request
     ) {
         // SNS 이벤트 생성 및 저장
-        Long userId = SecurityUtil.getCurrentUserId();
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
-        UserWorkspace foundUserWorkSapce = userWorkspaceRepository.findByUserAndWorkspace(foundUser, foundWorkspace)
-                .orElseThrow(() -> new MemberHandler(NOT_BELONG_TO_WORKSPACE));
-        SnsEvent createdSnsEvent = SnsEventConverter.toSnsEvent(request, foundUser);
-        createdSnsEvent.setWorkspace(foundWorkspace);
+        SnsEvent createdSnsEvent = SnsEventConverter.toSnsEvent(request, user);
+        createdSnsEvent.setWorkspace(workspace);
 
-        // Instagarm API 호출 후 참여라 리스트, 당첨자 리스트 생성 및 저장
-        String accessToken = foundWorkspace.getInstagramAccessToken();
+        // Instagram API 호출 후 참여자 리스트, 당첨자 리스트 생성 및 저장
+        String accessToken = workspace.getInstagramAccessToken();
         if (accessToken == null || accessToken.isEmpty()) {
             throw new SnsEventHandler(SNS_EVENT_NO_ACCESS_TOKEN);
         }
@@ -171,11 +156,136 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
         // sns event 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(savedSnsEvent.getId());
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(workspace.getId());
         userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedSnsEvent);
 
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
                 .snsEventId(createdSnsEvent.getId())
+                .build();
+    }
+
+
+    @Override
+    @Transactional
+    public SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(
+            String code,
+            Workspace workspace
+    ) {
+        String shortLivedAccessToken;
+        String longLivedAccessToken;
+        Map<String, Object> userInfo;
+        try {
+            // 1. Access Token 요청
+            shortLivedAccessToken = instagramOauth2RestTemplate.getShortLivedAccessTokenUrl(code);
+            // 2. 단기 토큰을 장기(Long-Lived) 토큰으로 교환
+            longLivedAccessToken = instagramOauth2RestTemplate.getLongLivedAccessToken(shortLivedAccessToken);
+            // 3. 장기 토큰으로 사용자 계정 정보 요청
+            userInfo = instagramOauth2RestTemplate.getInstagramAccountInfo(longLivedAccessToken);
+        } catch (Exception e) {
+            log.error("Instagram OAuth2 처리 중 오류 발생: {}", e.getMessage());
+            throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_API_ERROR);
+        }
+        // 4. 워크스페이스에 인스타그램 계정 정보 저장
+        String instagramId = (String) userInfo.get("user_id");
+        Workspace foundWorkspace = workspaceRepository.findById(workspace.getId())
+                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
+        if (foundWorkspace.getInstagramId() != null && foundWorkspace.getInstagramId().equals(instagramId)) {
+            throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_ALREADY_LINKED);
+        }
+        foundWorkspace.saveInstagramId(instagramId);
+        foundWorkspace.saveInstagramAccessToken(longLivedAccessToken);
+        foundWorkspace.saveInstagramAccountName((String) userInfo.get("username"));
+        return SnsEventConverter.toLinkInstagramAccountResponse((String) userInfo.get("username"));
+    }
+  
+    @Override
+    @Transactional
+    @UpdateDocumentTitle
+    public void updateSnsEventTitle(
+            User user,
+            SnsEvent snsEvent,
+            SnsEventRequestDTO.UpdateSnsEventRequest request
+    ) {
+
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(snsEvent.getWorkspace(), Auth.ADMIN)
+                .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
+
+        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 수정 가능)
+        if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !snsEvent.getCreator().getId().equals(user.getId())) {
+            throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
+        }
+
+        snsEvent.updateTitle(request.getTitle());
+        snsEventRepository.save(snsEvent);
+
+    }
+
+    @Override
+    @Transactional
+    @DeleteDocument
+    public void deleteSnsEvent(
+            User user,
+            SnsEvent snsEvent
+    ) {
+
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(snsEvent.getWorkspace(), Auth.ADMIN)
+                .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
+
+        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)
+        if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !snsEvent.getCreator().getId().equals(user.getId())) {
+            throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
+        }
+        snsEventRepository.delete(snsEvent);
+
+    }
+
+    @Override
+    public SnsEventResponseDTO.ListDownLoadLinkResponse downloadList(
+            User user,
+            SnsEvent snsEvent,
+            ListType listType,
+            Format format
+    ) {
+        String downloadLink = "";
+
+        String snsEventTitle = snsEvent.getTitle();
+        if (listType == ListType.PARTICIPANT) {
+            if (format == Format.PDF) {
+                String keyName = snsEvent.getKeyNameParticipantPdf();
+                if (keyName == null || keyName.isEmpty()) {
+                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
+                }
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_participnat_list.pdf");
+            } else if (format == Format.DOCX) {
+                String keyName = snsEvent.getKeyNameParticipantWord();
+                if (keyName == null || keyName.isEmpty()) {
+                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
+                }
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_participnat_list.docx");
+            } else {
+                throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
+            }
+        } else if (listType == ListType.WINNER) {
+            if (format == Format.PDF) {
+                String keyName = snsEvent.getKeyNameWinnerPdf();
+                if (keyName == null || keyName.isEmpty()) {
+                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
+                }
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_winner_list.pdf");
+            } else if (format == Format.DOCX) {
+                String keyName = snsEvent.getKeyNameWinnerWord();
+                if (keyName == null || keyName.isEmpty()) {
+                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
+                }
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_winner_list.docx");
+            } else {
+                throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
+            }
+        } else {
+            throw new SnsEventHandler(SNS_EVENT_WRONG_LIST_TYPE);
+        }
+        return SnsEventResponseDTO.ListDownLoadLinkResponse.builder()
+                .downloadLink(downloadLink)
                 .build();
     }
 
@@ -305,7 +415,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     }
 
 
-    public List<SnsEventResponseDTO.Comment> getComments(
+    private List<SnsEventResponseDTO.Comment> getComments(
             String mediaId,
             String accessToken
     ) {
@@ -347,7 +457,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         return count;
     }
 
-    public List<String> pickWinners(Set<String> participants, int n) {
+    private List<String> pickWinners(Set<String> participants, int n) {
         List<String> list = new ArrayList<>(participants); // Set → List로 변환
         Collections.shuffle(list); // 무작위 섞기
 
@@ -356,157 +466,6 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         }
 
         return list.subList(0, n); // 앞에서 n개만 추출
-    }
-
-    @Override
-    @Transactional
-    public SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(
-            String code,
-            Long workspaceId
-    ) {
-        String shortLivedAccessToken;
-        String longLivedAccessToken;
-        Map<String, Object> userInfo;
-        try {
-            // 1. Access Token 요청
-            shortLivedAccessToken = instagramOauth2RestTemplate.getShortLivedAccessTokenUrl(code);
-            // 2. 단기 토큰을 장기(Long-Lived) 토큰으로 교환
-            longLivedAccessToken = instagramOauth2RestTemplate.getLongLivedAccessToken(shortLivedAccessToken);
-            // 3. 장기 토큰으로 사용자 계정 정보 요청
-            userInfo = instagramOauth2RestTemplate.getInstagramAccountInfo(longLivedAccessToken);
-        } catch (Exception e) {
-            log.error("Instagram OAuth2 처리 중 오류 발생: {}", e.getMessage());
-            throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_API_ERROR);
-        }
-        // 4. 워크스페이스에 인스타그램 계정 정보 저장
-        String instagramId = (String) userInfo.get("user_id");
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
-        if (foundWorkspace.getInstagramId() != null && foundWorkspace.getInstagramId().equals(instagramId)) {
-            throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_ALREADY_LINKED);
-        }
-        foundWorkspace.saveInstagramId(instagramId);
-        foundWorkspace.saveInstagramAccessToken(longLivedAccessToken);
-        foundWorkspace.saveInstagramAccountName((String) userInfo.get("username"));
-        return SnsEventConverter.toLinkInstagramAccountResponse((String) userInfo.get("username"));
-    }
-  
-    @Override
-    @Transactional
-    public void updateSnsEventTitle(
-            Long userId,
-            Long snsEventId,
-            SnsEventRequestDTO.UpdateSnsEventRequest request
-    ) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
-                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
-                .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
-        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 수정 가능)
-        if (!foundUserWorkspace.getUser().getId().equals(foundUser.getId()) || !foundSnsEvent.getCreator().getId().equals(foundUser.getId())) {
-            throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
-        }
-        foundSnsEvent.updateTitle(request.getTitle());
-        snsEventRepository.save(foundSnsEvent);
-
-        // sns event 수정 시 워크스페이스에 속해있는 모든 유저에 대해
-        // last opened 테이블에서 해당 문서 정보 업데이트
-        userDocumentLastOpenedService.updateRecordsForWorkspaceUsers(foundSnsEvent);
-    }
-
-    @Override
-    @Transactional
-    public void deleteSnsEvent(
-            Long userId,
-            Long snsEventId
-    ) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
-                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(foundSnsEvent.getWorkspace(), Auth.ADMIN)
-                .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
-        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)
-        if (!foundUserWorkspace.getUser().getId().equals(foundUser.getId()) || !foundSnsEvent.getCreator().getId().equals(foundUser.getId())) {
-            throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
-        }
-        snsEventRepository.delete(foundSnsEvent);
-
-        // sns event 삭제 시 워크스페이스에 속해있는 모든 유저에 대해
-        // last opened 테이블에서 해당 문서 id를 가지고 있는 튜플 모두 삭제
-        userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(foundSnsEvent);
-    }
-
-    @Override
-    public SnsEventResponseDTO.ListDownLoadLinkResponse downloadList(
-            Long userId,
-            Long snsEventId,
-            ListType listType,
-            Format format
-    ) {
-        String downloadLink = "";
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-        SnsEvent foundSnsEvent = snsEventRepository.findById(snsEventId)
-                .orElseThrow(() -> new SnsEventHandler(SNS_EVENT_NOT_FOUND));
-        String snsEventTitle = foundSnsEvent.getTitle();
-        if (listType == ListType.PARTICIPANT) {
-            if (format == Format.PDF) {
-                String keyName = foundSnsEvent.getKeyNameParticipantPdf();
-                if (keyName == null || keyName.isEmpty()) {
-                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
-                }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_participnat_list.pdf");
-            } else if (format == Format.DOCX) {
-                String keyName = foundSnsEvent.getKeyNameParticipantWord();
-                if (keyName == null || keyName.isEmpty()) {
-                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
-                }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_participnat_list.docx");
-            } else {
-                throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
-            }
-        } else if (listType == ListType.WINNER) {
-            if (format == Format.PDF) {
-                String keyName = foundSnsEvent.getKeyNameWinnerPdf();
-                if (keyName == null || keyName.isEmpty()) {
-                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
-                }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_winner_list.pdf");
-            } else if (format == Format.DOCX) {
-                String keyName = foundSnsEvent.getKeyNameWinnerWord();
-                if (keyName == null || keyName.isEmpty()) {
-                    throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
-                }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_winner_list.docx");
-            } else {
-                throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
-            }
-        } else {
-            throw new SnsEventHandler(SNS_EVENT_WRONG_LIST_TYPE);
-        }
-        return SnsEventResponseDTO.ListDownLoadLinkResponse.builder()
-                .downloadLink(downloadLink)
-                .build();
-    }
-
-    private String injectHead(String html) {
-        String fontCss = """
-        <style>
-            body {
-                font-family: 'NotoSansKR', sans-serif;
-            }
-        </style>
-        """;
-        if (html.toLowerCase().contains("<head>")) {
-            // <head> 바로 뒤에 스타일 삽입
-            return html.replaceFirst("(?i)<head>", "<head>" + fontCss);
-        } else {
-            // head가 없으면 생성
-            return html.replaceFirst("(?i)<html>", "<html><head>" + fontCss + "</head>");
-        }
     }
 
     private byte[] addPdfTitle(byte[] pdfBytes, String text, byte[] fontBytes) throws Exception {
