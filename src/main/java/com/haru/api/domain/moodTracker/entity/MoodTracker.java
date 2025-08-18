@@ -30,7 +30,7 @@ public class MoodTracker extends BaseEntity implements Documentable {
     private Long id; // 설문ID
 
     // 🔹 만든 사람 (User)와 N:1 관계
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User creator;
 
