@@ -6,8 +6,10 @@ import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.service.MeetingCommandService;
 import com.haru.api.domain.meeting.service.MeetingQueryService;
 import com.haru.api.domain.user.entity.User;
+import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.annotation.AuthMeeting;
 import com.haru.api.global.annotation.AuthUser;
+import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.ApiResponse;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.GeneralException;
@@ -71,10 +73,10 @@ public class MeetingController {
     public ApiResponse<List<MeetingResponseDTO.getMeetingResponse>> getMeetings(
             @PathVariable("workspaceId") String workspaceId,
             @Parameter(hidden = true) @AuthUser User user,
-            @Parameter(hidden = true) @AuthMeeting Meeting meeting
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
 
-        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryService.getMeetings(user, meeting);
+        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryService.getMeetings(user, workspace);
 
         return ApiResponse.onSuccess(response);
     }
