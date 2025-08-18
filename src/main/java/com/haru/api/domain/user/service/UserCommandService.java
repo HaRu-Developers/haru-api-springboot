@@ -22,5 +22,5 @@ public interface UserCommandService {
 
     UserResponseDTO.CheckOriginalPasswordResponse checkOriginalPassword(UserRequestDTO.CheckOriginalPasswordRequest request, User user);
 
-    UserResponseDTO.LoginResponse signupAndLogin(UserRequestDTO.SignUpRequest request);
+    UserResponseDTO.LoginResponse signupAndLoginAndInviteAccept(UserRequestDTO.SignUpRequest request, String token);
 }

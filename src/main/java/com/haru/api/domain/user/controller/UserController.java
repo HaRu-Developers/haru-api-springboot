@@ -154,14 +154,15 @@ public class UserController {
     }
 
     @Operation(summary = "회원가입 후 로그인", description =
-            "# [v1.0 (2025-08-15)](https://www.notion.so/2505da7802c5808583b9d0b08087b8e5)" +
-                    " 회원가입 후 로그인까지 진행하는 API입니다."
+            "# [v1.1 (2025-08-18)](https://www.notion.so/2505da7802c5808583b9d0b08087b8e5)" +
+                    " 회원가입 후 로그인까지 진행하는 API입니다. query string으로 token을 넘기면 워크스페이스에 초대됩니다."
     )
     @PostMapping("/signup-and-login")
     public ApiResponse<UserResponseDTO.LoginResponse> signUpAndLogin(
-            @RequestBody @Valid UserRequestDTO.SignUpRequest request
+            @RequestBody @Valid UserRequestDTO.SignUpRequest request,
+            @RequestParam(required = false) String token
     ) {
-        UserResponseDTO.LoginResponse response = userCommandService.signupAndLogin(request);
+        UserResponseDTO.LoginResponse response = userCommandService.signupAndLoginAndInviteAccept(request, token);
 
         return ApiResponse.onSuccess(response);
     }
