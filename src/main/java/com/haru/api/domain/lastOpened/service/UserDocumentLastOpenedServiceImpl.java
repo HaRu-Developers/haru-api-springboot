@@ -49,6 +49,7 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
     }
 
     @Override
+    @Transactional
     public void createInitialRecordsForWorkspaceUsers(List<User> usersInWorkspace, Documentable document) {
 
         // 저장할 엔티티 리스트 생성
