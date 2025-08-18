@@ -37,6 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/v3/**",
             "/users/admin/**",
             "/ws/audio/**",
+            "/ws/test",
             "/api/v1/workspaces/invite-accept",
             "/api/v1/terms",
             "/api/v1/sns/oauth/callback",
