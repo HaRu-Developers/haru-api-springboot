@@ -26,16 +26,12 @@ public class LastOpenedAspect {
         // 실제 메서드 실행
         Object result = joinPoint.proceed();
 
-        DocumentType type = trackLastOpened.type();
-        int userIdIndex = trackLastOpened.userIdIndex();
-        int documentIdIndex = trackLastOpened.documentIdIndex();
-
-        // 메서드의 인자에서 userId와 documentId 추출
+        // 메서드의 인자에서 user와 document 추출
         Object[] args = joinPoint.getArgs();
 
         // 인덱스를 사용하여 user와 document 추출
-        User user = (User)args[userIdIndex];
-        Documentable document = (Documentable)args[documentIdIndex];
+        User user = (User)args[0];
+        Documentable document = (Documentable)args[1];
 
         if (user != null && document != null) {
 

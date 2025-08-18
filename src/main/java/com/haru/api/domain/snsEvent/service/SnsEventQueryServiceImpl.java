@@ -1,6 +1,5 @@
 package com.haru.api.domain.snsEvent.service;
 
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
 import com.haru.api.domain.snsEvent.entity.Participant;
@@ -35,7 +34,7 @@ public class SnsEventQueryServiceImpl implements SnsEventQueryService {
     }
 
     @Override
-    @TrackLastOpened(type = DocumentType.SNS_EVENT_ASSISTANT)
+    @TrackLastOpened
     public SnsEventResponseDTO.GetSnsEventRequest getSnsEvent(User user, SnsEvent snsEvent) {
 
         List<Participant> participantList = participantRepository.findAllBySnsEvent(snsEvent);
