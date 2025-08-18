@@ -8,6 +8,7 @@ import com.haru.api.domain.user.entity.enums.EmailStatus;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.user.security.jwt.JwtUtils;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
+import com.haru.api.domain.workspace.service.WorkspaceCommandService;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import jakarta.transaction.Transactional;
@@ -34,7 +35,9 @@ public class UserCommandServiceImpl implements UserCommandService{
     private int accessExpTime;
     @Value("${jwt.refresh-expiration}")
     private int refreshExpTime;
+
     private final UserRepository userRepository;
+    private final WorkspaceCommandService workspaceCommandService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtUtils jwtUtils;
@@ -163,7 +166,8 @@ public class UserCommandServiceImpl implements UserCommandService{
     }
 
     @Override
-    public UserResponseDTO.LoginResponse signupAndLogin(UserRequestDTO.SignUpRequest request) {
+    @Transactional
+    public UserResponseDTO.LoginResponse signupAndLoginAndInviteAccept(UserRequestDTO.SignUpRequest request, String token) {
 
         String password = passwordEncoder.encode(request.getPassword());
 
@@ -174,6 +178,8 @@ public class UserCommandServiceImpl implements UserCommandService{
         } else {
             User user = UserConverter.toUsers(request, password);
             userRepository.save(user);
+
+            workspaceCommandService.acceptInvite(token);
 
             return login(UserRequestDTO.LoginRequest.builder()
                             .email(request.getEmail())
