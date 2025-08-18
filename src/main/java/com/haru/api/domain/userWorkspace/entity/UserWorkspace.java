@@ -35,4 +35,11 @@ public class UserWorkspace extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Auth auth;
 
+    // existsBy에서 join이 발생하여 추가
+    @Column(name = "user_id", insertable = false, updatable = false)
+    private Long userId;
+
+    // existsBy에서 join이 발생하여 추가
+    @Column(name = "workspace_id", insertable = false, updatable = false)
+    private Long workspaceId;
 }

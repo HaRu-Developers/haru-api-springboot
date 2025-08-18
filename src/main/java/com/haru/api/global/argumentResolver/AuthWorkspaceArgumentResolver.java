@@ -1,7 +1,8 @@
-package com.haru.api.global.annotation;
+package com.haru.api.global.argumentResolver;
 
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,17 +33,28 @@ public class AuthWorkspaceArgumentResolver implements HandlerMethodArgumentResol
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-        final HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
+        Object isValidated = webRequest.getAttribute("isValidated", NativeWebRequest.SCOPE_REQUEST);
 
-        // URL pathVariable에서 workspaceId 추출
-        final Map<String, String> pathVariables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+        if (isValidated instanceof Boolean) {
 
-        if (pathVariables == null) throw new RuntimeException("empty path variables");
+            // 이미 interceptor에서 검증된 workspace 경우, 넘겨받은 workspace 반환
+            return webRequest.getAttribute("validatedWorkspace", NativeWebRequest.SCOPE_REQUEST);
 
-        final String workspaceId = pathVariables.get("workspaceId");
+        } else {
 
-        // workspace 존재하는지 확인하고, 존재한다면 해당 workspace 객체 반환
-        return workspaceRepository.findById(Long.parseLong(workspaceId))
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+            final HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
+
+            // URL pathVariable에서 workspaceId 추출
+            final Map<String, String> pathVariables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+
+            if (pathVariables == null) throw new RuntimeException("empty path variables");
+
+            final String workspaceId = pathVariables.get("workspaceId");
+
+            // workspace 존재하는지 확인하고, 존재한다면 해당 workspace 객체 반환
+            return workspaceRepository.findById(Long.parseLong(workspaceId))
+                    .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
+        }
     }
 }
