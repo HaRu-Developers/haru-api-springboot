@@ -6,6 +6,7 @@ import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.user.entity.User;
+import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.annotation.TrackLastOpened;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
@@ -29,9 +30,9 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
     private final SpeechSegmentRepository speechSegmentRepository;
 
     @Override
-    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(User user, Meeting meeting) {
+    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(User user, Workspace workspace) {
 
-        List<Meeting> foundMeetings = meetingRepository.findByWorkspaceOrderByUpdatedAtDesc(meeting.getWorkspace());
+        List<Meeting> foundMeetings = meetingRepository.findByWorkspaceOrderByUpdatedAtDesc(workspace);
 
         return foundMeetings.stream()
                 .map(eachMeeting -> MeetingConverter.toGetMeetingResponse(eachMeeting, user.getId()))
