@@ -74,19 +74,6 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
     }
 
     @Override
-    public void updateRecordsForWorkspaceUsers(Documentable documentable) {
-
-        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
-        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
-
-        if (!recordsToUpdate.isEmpty()) {
-            for (UserDocumentLastOpened record : recordsToUpdate) {
-                record.updateTitle(documentable.getTitle());
-            }
-        }
-    }
-
-    @Override
     @Transactional
     public void updateRecordsForWorkspaceUsers(Documentable documentable, TitleHolder titleHolder) {
 
