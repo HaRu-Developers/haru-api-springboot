@@ -34,7 +34,7 @@ public class Workspace extends BaseEntity {
 
     private String instagramId;
 
-    @Column(length = 200)
+    @Column(columnDefinition="TEXT")
     private String instagramAccessToken;
 
     @Column(length = 50)

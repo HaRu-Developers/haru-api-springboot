@@ -1,13 +1,11 @@
 package com.haru.api.domain.workspace.service;
 
 import com.haru.api.domain.lastOpened.converter.UserDocumentLastOpenedConverter;
+import com.haru.api.domain.lastOpened.entity.Documentable;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
-import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
-import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
@@ -107,7 +105,6 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         return WorkspaceConverter.toWorkspaceDTO(workspace);
     }
 
-    @Transactional
     @Override
     public WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token) {
 
@@ -175,8 +172,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
                 .auth(Auth.MEMBER)
                 .build());
 
-        // 각 문서 조회
-        // 각 문서 UserDocumentLastOpened로 변환
+        // 각 문서 조회 후, UserDocumentLastOpened로 변환
         List<UserDocumentLastOpened> userDocumentLastOpenedList = addDocumentsToUserLastOpened(foundWorkspace, signedUser);
 
         // 워크스페이스에 속해있는 모든 문서를 user_document_last_opened에 추가
@@ -223,17 +219,16 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     }
 
     private List<UserDocumentLastOpened> addDocumentsToUserLastOpened(Workspace workspace, User user) {
-        List<Meeting> meetingList = meetingRepository.findAllByWorkspaceId(workspace.getId());
-        List<SnsEvent> snsEventList = snsEventRepository.findAllByWorkspaceId(workspace.getId());
-        List<MoodTracker> moodTrackerList = moodTrackerRepository.findAllByWorkspaceId(workspace.getId());
+
+        List<Documentable> documentList = new ArrayList<>();
+
+        documentList.addAll(meetingRepository.findAllByWorkspaceId(workspace.getId()));
+        documentList.addAll(snsEventRepository.findAllByWorkspaceId(workspace.getId()));
+        documentList.addAll(moodTrackerRepository.findAllByWorkspaceId(workspace.getId()));
 
         List<UserDocumentLastOpened> userDocumentLastOpenedList = new ArrayList<>();
-        for(Meeting meeting : meetingList)
-            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(meeting, user));
-        for(SnsEvent snsEvent : snsEventList)
-            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(snsEvent, user));
-        for(MoodTracker moodTracker : moodTrackerList)
-            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(moodTracker, user));
+        for(Documentable documentable : documentList)
+            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(documentable, user));
 
         userDocumentLastOpenedRepository.saveAll(userDocumentLastOpenedList);
 
