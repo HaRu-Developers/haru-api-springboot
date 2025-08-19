@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 public class MarkdownFileUploader {
 
     private final MarkdownToPdfConverter markdownToPdfConverter;
+    private final MarkdownToWordConverter markdownToWordConverter;
     private final ThumbnailGeneratorService thumbnailGeneratorService;
     private final AmazonS3Manager amazonS3Manager;
 
@@ -46,6 +47,29 @@ public class MarkdownFileUploader {
 
         // 4. 사용된 PDF의 key를 반환
         return pdfKeyToUse;
+    }
+
+    public String createOrUpdateWord(String markdownText, String featurePath, String existingWordKey, String fileTitle) {
+        // 1. Markdown을 Word 데이터로 변환
+        byte[] wordBytes = markdownToWordConverter.convert(markdownText);
+
+        // 2. 사용할 Word 키 결정
+        String wordKeyToUse;
+        if (existingWordKey != null && !existingWordKey.isBlank()) {
+            wordKeyToUse = existingWordKey;
+            log.info("기존 Word 파일 갱신을 시작합니다. Key: {}", wordKeyToUse);
+        } else {
+            wordKeyToUse = amazonS3Manager.generateKeyName(featurePath) + ".docx";
+            log.info("새로운 Word 파일 생성을 시작합니다. New Key: {}", wordKeyToUse);
+        }
+
+        // 3. 결정된 키로 Word 파일을 S3에 업로드
+        String contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        amazonS3Manager.uploadFileWithTitle(wordKeyToUse, wordBytes, contentType, fileTitle);
+        log.info("Word 파일 업로드/갱신 성공. Key: {}", wordKeyToUse);
+
+        // 4. 사용된 Word의 key를 반환
+        return wordKeyToUse;
     }
 
     /**
