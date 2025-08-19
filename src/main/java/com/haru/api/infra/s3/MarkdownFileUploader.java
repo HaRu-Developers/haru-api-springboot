@@ -105,4 +105,18 @@ public class MarkdownFileUploader {
         // 4. 사용된 썸네일의 key를 반환
         return thumbnailKeyToUse;
     }
+
+
+    public void deleteFileAndThumbnail(String existingFileKeyName, String existingThumbnailKey){
+
+        if (existingFileKeyName != null && !existingFileKeyName.isBlank()) {
+            amazonS3Manager.deleteFile(existingFileKeyName);
+            log.info("기존 파일을 삭제합니다. Key: {}", existingFileKeyName);
+        }
+        if (existingThumbnailKey != null && !existingThumbnailKey.isBlank()) {
+            amazonS3Manager.deleteFile(existingThumbnailKey);
+            log.info("기존 썸네일을 삭제합니다. Key: {}", existingThumbnailKey);
+        }
+    }
+
 }
