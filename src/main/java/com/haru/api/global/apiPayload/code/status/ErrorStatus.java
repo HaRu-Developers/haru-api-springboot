@@ -45,6 +45,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEETING_AUDIO_FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MEETING4003", "음성 파일을 s3에 업로드하는데 오류가 발생했습니다."),
     MEETING_FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MEETING4004", "음성 파일을 s3에 업로드하는데 오류가 발생했습니다."),
     MEETING_PROCEEDING_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4005", "AI회의록이 없습니다"),
+    MEETING_INVALID_FILE_FORMAT(HttpStatus.BAD_REQUEST, "MEETING4006", "잘못된 다운로드 파일 형식입니다."),
 
     // 인가 관련 에러
     AUTHORIZATION_EXCEPTION(HttpStatus.UNAUTHORIZED, "AUTHORIZATION4001", "인증에 실패하였습니다."),
