@@ -23,7 +23,6 @@ public class MoodTrackerMailServiceImpl implements MoodTrackerMailService {
 
     private final HashIdUtil hashIdUtil;
 
-    // 예시
     @Value("${survey-url}")
     private String surveyBaseUrl;
 
@@ -48,28 +47,24 @@ public class MoodTrackerMailServiceImpl implements MoodTrackerMailService {
         }
     }
 
-    private String buildHtmlEmail(
-            String description,
-            String link
-    ) {
-        return """
-        <html>
-            <body style="font-family: sans-serif;">
-                <p style="color: #212121;">%s</p>
-                <a href="%s" style="
-                    display: inline-block;
-                    margin-top: 10px;
-                    padding: 10px 20px;
-                    background-color: #E65787;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    font-weight: bold;
-                ">
-                    설문 참여하러 가기
-                </a>
-            </body>
-        </html>
-    """.formatted(description, link);
+    private String buildHtmlEmail(String description, String link) {
+        return String.format(
+                "<html>" +
+                        "<head></head>" +
+                        "<body style=\"font-family: sans-serif;\">" +
+                        "  <p>안녕하세요,</p>" +
+                        "  <p>%s</p>" +
+                        "  <p>아래 버튼을 클릭하여 설문에 참여해 주세요!</p>" +
+                        "  <p style=\"margin-top: 20px;\">" +
+                        "    <a href=\"%s\" " +
+                        "       style=\"display: inline-block; padding: 10px 20px; font-size: 16px; color: white; background-color: #E65787; text-decoration: none; border-radius: 5px; font-weight: bold;\">" +
+                        "      설문 참여하기" +
+                        "    </a>" +
+                        "  </p>" +
+                        "  <p style=\"margin-top: 30px;\">감사합니다.<br/><b>Team HaRu 드림</b></p>" +
+                        "</body>" +
+                        "</html>",
+                description, link
+        );
     }
 }
