@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/users/signup/same",
             "/favicon.ico",
             "/api/v1/mood-trackers/*/questions",
-            "/api/v1/mood-trackers/*/responses",
+            "/api/v1/mood-trackers/*/answer",
             "/api/v1/mood-trackers/*/bases"
     };
     private final JwtUtils jwtUtils;
