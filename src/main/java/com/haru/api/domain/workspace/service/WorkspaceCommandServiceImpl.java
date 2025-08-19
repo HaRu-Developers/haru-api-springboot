@@ -65,7 +65,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         if (image != null) {
             // s3에 사진 추가하는 메서드
             String path = amazonS3Manager.generateKeyName("workspace/image");
-            keyName = amazonS3Manager.uploadFile(path, image);
+            keyName = amazonS3Manager.uploadMultipartFile(path, image);
         }
 
         // workspace entity 생성
@@ -99,7 +99,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
 
         // 이미지 수정
         if (image != null) {
-            amazonS3Manager.uploadFile(workspace.getKeyName(), image);
+            amazonS3Manager.uploadMultipartFile(workspace.getKeyName(), image);
         }
 
         return WorkspaceConverter.toWorkspaceDTO(workspace);

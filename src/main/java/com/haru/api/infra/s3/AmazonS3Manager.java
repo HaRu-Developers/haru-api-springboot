@@ -28,7 +28,7 @@ public class AmazonS3Manager{
     private final AmazonConfig amazonConfig;
 
     //MultipartFile S3에 비공개 업로드
-    public String uploadFile(String keyName, MultipartFile file) {
+    public String uploadMultipartFile(String keyName, MultipartFile file) {
         try {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(amazonConfig.getBucket())
