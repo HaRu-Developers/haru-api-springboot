@@ -139,7 +139,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         meeting.updateTitle(request.getTitle());
 
-        markdownFileUploader.updateFileTitle(meeting.getProceedingKeyName(), request.getTitle());
+        markdownFileUploader.updateFileTitle(meeting.getProceedingPdfKeyName(), request.getTitle());
 
         meetingRepository.save(meeting);
     }
