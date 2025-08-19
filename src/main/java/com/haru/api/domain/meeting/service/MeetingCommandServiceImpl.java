@@ -153,6 +153,9 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
 
+        markdownFileUploader.deleteFileAndThumbnail(meeting.getProceedingKeyName(), meeting.getThumbnailKeyName());
+        markdownFileUploader.deleteS3File(meeting.getAudioFileKey());
+
         meetingRepository.delete(meeting);
     }
 

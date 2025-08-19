@@ -3,9 +3,7 @@ package com.haru.api.infra.s3;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
-import software.amazon.awssdk.services.s3.model.MetadataDirective;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+
 
 @Slf4j
 @Service
@@ -127,6 +125,14 @@ public class MarkdownFileUploader {
         if (existingThumbnailKey != null && !existingThumbnailKey.isBlank()) {
             amazonS3Manager.deleteFile(existingThumbnailKey);
             log.info("기존 썸네일을 삭제합니다. Key: {}", existingThumbnailKey);
+        }
+    }
+
+    public void deleteS3File(String audioFileKeyName){
+
+        if (audioFileKeyName != null && !audioFileKeyName.isBlank()) {
+            amazonS3Manager.deleteFile(audioFileKeyName);
+            log.info("음성 파일을 삭제합니다. Key: {}", audioFileKeyName);
         }
     }
 
