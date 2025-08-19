@@ -4,6 +4,7 @@ import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
+import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.annotation.TrackLastOpened;
@@ -64,9 +65,18 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
     }
 
     @Override
-    public MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(User user, Meeting meeting){
-
-        String proceedingKeyName = meeting.getProceedingKeyName();
+    public MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(User user, Meeting meeting, Format format){
+        String proceedingKeyName;
+        switch (format) {
+            case PDF:
+                proceedingKeyName = meeting.getProceedingPdfKeyName();
+                break;
+            case DOCX:
+                proceedingKeyName = meeting.getProceedingWordKeyName();
+                break;
+            default:
+                throw new MeetingHandler(ErrorStatus.MEETING_INVALID_FILE_FORMAT);
+        }
 
         if (proceedingKeyName == null || proceedingKeyName.isBlank()) {
             throw new MeetingHandler(ErrorStatus.MEETING_PROCEEDING_NOT_FOUND);
