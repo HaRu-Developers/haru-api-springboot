@@ -30,7 +30,7 @@ public class MarkdownToPdfConverter {
                 PdfRendererBuilder builder = new PdfRendererBuilder();
                 builder.useFastMode();
 
-                try (InputStream fontStream = getClass().getClassLoader().getResourceAsStream("/templates/NotoSansKR-Regular.ttf")) {
+                try (InputStream fontStream = getClass().getClassLoader().getResourceAsStream("templates/NotoSansKR-Regular.ttf")) {
                     if (fontStream == null) {
                         throw new IOException("폰트 파일을 찾을 수 없습니다.");
                     }
