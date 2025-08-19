@@ -1,6 +1,5 @@
 package com.haru.api.domain.moodTracker.service;
 
-import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
@@ -14,6 +13,7 @@ import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
 import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -56,6 +56,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     private final HashIdUtil hashIdUtil;
 
     private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+    private final WorkspaceRepository workspaceRepository;
 
     /**
      * 분위기 트래커 생성
@@ -68,8 +69,11 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             MoodTrackerRequestDTO.CreateRequest request
     ) {
 
+        Workspace foundWorkspace = workspaceRepository.findById(workspace.getId())
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
         // 분위기 트래커 생성 및 저장
-        MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, user, workspace);
+        MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, user, foundWorkspace);
         MoodTracker savedMoodTracker = moodTrackerRepository.save(moodTracker);
 
         // 선택지 생성 및 저장
@@ -91,7 +95,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         // mood tracker 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(workspace.getId());
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
         userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
 
         return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
@@ -108,7 +112,6 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             MoodTracker moodTracker,
             MoodTrackerRequestDTO.UpdateTitleRequest request
     ) {
-
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
@@ -117,8 +120,17 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
                 || moodTracker.getCreator().getId().equals(user.getId())))
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
+        // 엔티티 업데이트
         moodTracker.updateTitle(request.getTitle());
+        moodTrackerRepository.save(moodTracker);
 
+        // 마감일 이후 && 썸네일이 생성된 시점이라면,
+        if(moodTracker.getDueDate().isBefore(LocalDateTime.now()) && moodTracker.getThumbnailKey()!=null) {
+            // 기존 썸네일 및 다운로드 파일 삭제
+            moodTrackerReportService.deleteReportFileAndThumbnail(moodTracker.getId());
+            // S3에서 썸네일 및 다운로드 파일 업데이트
+            moodTrackerReportService.updateAndUploadReportFileAndThumbnail(moodTracker.getId());
+        }
     }
 
     /**
@@ -131,7 +143,6 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             User user,
             MoodTracker moodTracker
     ) {
-
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
@@ -140,8 +151,14 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
                 || moodTracker.getCreator().getId().equals(user.getId())))
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
-        moodTrackerRepository.delete(moodTracker);
+        // 마감일 이후 && 썸네일이 생성된 시점이라면,
+        if(moodTracker.getDueDate().isBefore(LocalDateTime.now()) && moodTracker.getThumbnailKey()!=null) {
+            // S3에서 썸네일 및 다운로드 파일 삭제
+            moodTrackerReportService.deleteReportFileAndThumbnail(moodTracker.getId());
+        }
 
+        // 엔티티 삭제
+        moodTrackerRepository.delete(moodTracker);
     }
 
     /**
@@ -168,15 +185,23 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     @Override
     @Transactional
     public void submitSurveyAnswers(
-            MoodTracker moodTracker,
+            Long moodTrackerId,
             MoodTrackerRequestDTO.SurveyAnswerList request
     ) {
+        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
+                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
+
+        // 마감일 이후이면 답변 불가능
+        if(foundMoodTracker.getDueDate().isBefore(LocalDateTime.now())){
+            throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_FINISHED);
+        }
+
         List<SubjectiveAnswer> subjectiveAnswers = new ArrayList<>();
         List<MultipleChoiceAnswer> multipleChoiceAnswers = new ArrayList<>();
         List<CheckboxChoiceAnswer> checkboxChoiceAnswers = new ArrayList<>();
 
         // 전체 질문을 미리 조회 및 맵에 캐싱
-        List<SurveyQuestion> foundQuestions = surveyQuestionRepository.findAllByMoodTrackerId(moodTracker.getId());
+        List<SurveyQuestion> foundQuestions = surveyQuestionRepository.findAllByMoodTrackerId(foundMoodTracker.getId());
         Map<Long, SurveyQuestion> questionMap = foundQuestions.stream()
                 .collect(Collectors.toMap(SurveyQuestion::getId, q -> q));
 
@@ -193,16 +218,25 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
             switch (dto.getType()) {
                 case MULTIPLE_CHOICE -> {
-                    // 선택지 엔티티 조회 후 추가
-                    MultipleChoice foundMultipleChoice = multipleChoiceRepository.findById(dto.getMultipleChoiceId())
-                            .orElseThrow();
+                    // 질문 id와 선택지 id 함께 객관식 선택지 엔티티 조회 후 추가
+                    MultipleChoice foundMultipleChoice = multipleChoiceRepository
+                            .findByIdAndSurveyQuestionId(dto.getMultipleChoiceId(), dto.getQuestionId())
+                            .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.INVALID_CHOICE_FOR_QUESTION));
+
                     multipleChoiceAnswers.add(
                             MoodTrackerConverter.toMultipleChoiceAnswer(foundMultipleChoice)
                     );
                 }
                 case CHECKBOX_CHOICE -> {
-                    // 체크박스 선택지 엔티티 목록 조회 후 추가
-                    List<CheckboxChoice> foundCheckboxChoices = checkboxChoiceRepository.findAllById(dto.getCheckboxChoiceIdList());
+                    // 질문 id와 선택지 id 함께 체크박스 선택지 엔티티 목록 조회 후 추가
+                    List<CheckboxChoice> foundCheckboxChoices = checkboxChoiceRepository
+                            .findAllByIdInAndSurveyQuestionId(dto.getCheckboxChoiceIdList(), dto.getQuestionId());
+
+                    // 요청 개수와 조회 개수가 다르면 → 유효하지 않은 선택지 포함
+                    if (foundCheckboxChoices.size() != dto.getCheckboxChoiceIdList().size()) {
+                        throw new MoodTrackerHandler(ErrorStatus.INVALID_CHOICE_FOR_QUESTION);
+                    }
+
                     checkboxChoiceAnswers.addAll(
                             MoodTrackerConverter.toCheckboxChoiceAnswerList(foundCheckboxChoices)
                     );
@@ -233,7 +267,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         subjectiveAnswerRepository.saveAll(subjectiveAnswers);
 
         // 답변자 수 증가
-        moodTrackerRepository.addRespondentsNum(moodTracker.getId());
+        moodTrackerRepository.addRespondentsNum(foundMoodTracker.getId());
     }
 
     @Override

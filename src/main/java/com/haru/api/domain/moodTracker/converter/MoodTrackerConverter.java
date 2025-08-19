@@ -159,6 +159,23 @@ public class MoodTrackerConverter {
     }
 
     /**
+     *  분위기 트래커 설문 Base 정보 변환
+     */
+    public static MoodTrackerResponseDTO.BaseResult toBaseResultDTO(MoodTracker moodTracker, HashIdUtil hashIdUtil) {
+        return MoodTrackerResponseDTO.BaseResult.builder()
+                .workspaceId(moodTracker.getWorkspace().getId())
+                .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
+                .title(moodTracker.getTitle())
+                .creatorId(moodTracker.getCreator().getId())
+                .creatorName(moodTracker.getCreator().getName())
+                .updatedAt(moodTracker.getUpdatedAt())
+                .dueDate(moodTracker.getDueDate())
+                .respondentsNum(moodTracker.getRespondentsNum())
+                .build();
+    }
+
+
+    /**
      *  분위기 트래커 리포트 DTO 변환
      */
     public static MoodTrackerResponseDTO.ReportResult toReportResultDTO(MoodTracker moodTracker, List<String> suggestionList, HashIdUtil hashIdUtil) {

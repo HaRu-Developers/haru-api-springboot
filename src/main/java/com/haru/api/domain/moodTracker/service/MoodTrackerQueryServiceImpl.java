@@ -38,7 +38,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
     private final SurveyQuestionRepository surveyQuestionRepository;
 
     @Override
-    public MoodTrackerResponseDTO.PreviewList getMoodTrackerPreviewList(User user, Workspace workspace) {
+    public MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace) {
 
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
@@ -66,12 +66,22 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
 
     @Override
     @Transactional(readOnly = true)
-    @TrackLastOpened
-    public MoodTrackerResponseDTO.QuestionResult getQuestionResult(User user, MoodTracker moodTracker) {
+    public MoodTrackerResponseDTO.BaseResult getBaseResult(Long moodTrackerId) {
+        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
+                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
-        List<SurveyQuestion> questionList = surveyQuestionRepository.findAllByMoodTrackerId(moodTracker.getId());
+        return MoodTrackerConverter.toBaseResultDTO(foundMoodTracker, hashIdUtil);
+    }
 
-        return MoodTrackerConverter.toQuestionResultDTO(moodTracker, questionList, hashIdUtil);
+    @Override
+    @Transactional(readOnly = true)
+    public MoodTrackerResponseDTO.QuestionResult getQuestionResult(Long moodTrackerId) {
+        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
+                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
+
+        List<SurveyQuestion> questionList = surveyQuestionRepository.findAllByMoodTrackerId(foundMoodTracker.getId());
+
+        return MoodTrackerConverter.toQuestionResultDTO(foundMoodTracker, questionList, hashIdUtil);
     }
 
     @Override

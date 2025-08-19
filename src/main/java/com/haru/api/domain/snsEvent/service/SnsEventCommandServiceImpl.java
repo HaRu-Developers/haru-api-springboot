@@ -76,12 +76,16 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             Workspace workspace,
             SnsEventRequestDTO.CreateSnsRequest request
     ) {
+
+        Workspace foundWorkspace = workspaceRepository.findById(workspace.getId())
+                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
+
         // SNS 이벤트 생성 및 저장
         SnsEvent createdSnsEvent = SnsEventConverter.toSnsEvent(request, user);
-        createdSnsEvent.setWorkspace(workspace);
+        createdSnsEvent.setWorkspace(foundWorkspace);
 
         // Instagram API 호출 후 참여자 리스트, 당첨자 리스트 생성 및 저장
-        String accessToken = workspace.getInstagramAccessToken();
+        String accessToken = foundWorkspace.getInstagramAccessToken();
         if (accessToken == null || accessToken.isEmpty()) {
             throw new SnsEventHandler(SNS_EVENT_NO_ACCESS_TOKEN);
         }
@@ -146,17 +150,14 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         SnsEvent savedSnsEvent = snsEventRepository.save(createdSnsEvent);
 
         // PDF, DOCX파일 바이트 배열로 생성 및 썸네일 생성 & 업로드 / DB에 keyName저장
-        String thumbnailKeyName = createAndUploadListFileAndThumbnail(
-                request,
-                savedSnsEvent
-        );
+        String thumbnailKeyName = createAndUploadListFileAndThumbnail(savedSnsEvent);
 
         // sns event 썸네일 key name 초기화
         savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
 
         // sns event 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(workspace.getId());
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
         userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedSnsEvent);
 
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
@@ -216,8 +217,13 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         }
 
         snsEvent.updateTitle(request.getTitle());
-        snsEventRepository.save(snsEvent);
+        SnsEvent savedSnsEvent = snsEventRepository.save(snsEvent);
 
+        // S3문서 제목, S3 문서내 제목, 썸네일 이미지의 제목 변경
+        deleteS3FileAndThumnailImage(savedSnsEvent);
+        String thumbnailKeyName = createAndUploadListFileAndThumbnail(savedSnsEvent);
+        // sns event 썸네일 key name 초기화
+        savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
     }
 
     @Override
@@ -235,6 +241,10 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !snsEvent.getCreator().getId().equals(user.getId())) {
             throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
         }
+
+        // S3의 문서 및 썸네일 이미지 삭제
+        deleteS3FileAndThumnailImage(snsEvent);
+
         snsEventRepository.delete(snsEvent);
 
     }
@@ -255,13 +265,13 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                 if (keyName == null || keyName.isEmpty()) {
                     throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
                 }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_participnat_list.pdf");
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_참여자_리스트.pdf");
             } else if (format == Format.DOCX) {
                 String keyName = snsEvent.getKeyNameParticipantWord();
                 if (keyName == null || keyName.isEmpty()) {
                     throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
                 }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_participnat_list.docx");
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_참여자_리스트.docx");
             } else {
                 throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
             }
@@ -271,13 +281,13 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                 if (keyName == null || keyName.isEmpty()) {
                     throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
                 }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_winner_list.pdf");
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_당첨자_리스트.pdf");
             } else if (format == Format.DOCX) {
                 String keyName = snsEvent.getKeyNameWinnerWord();
                 if (keyName == null || keyName.isEmpty()) {
                     throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
                 }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_winner_list.docx");
+                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_당첨자_리스트.docx");
             } else {
                 throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
             }
@@ -324,13 +334,9 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         } else {
             throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
         }
-
     }
 
-    private String createAndUploadListFileAndThumbnail(
-            SnsEventRequestDTO.CreateSnsRequest request,
-            SnsEvent snsEvent
-    ){
+    private String createAndUploadListFileAndThumbnail(SnsEvent snsEvent){
         String listHtmlParticipant = createListHtml(snsEvent, ListType.PARTICIPANT);
         String listHtmlWinner = createListHtml(snsEvent, ListType.WINNER);
         byte[] pdfBytesParticipant;
@@ -352,10 +358,10 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             listHtmlWinner = fileConvertHelper.injectPageMarginStyle(listHtmlWinner);
             byte[] shiftedPdfBytesParticipant = fileConvertHelper.convertHtmlToPdf(listHtmlParticipant, fontBytes);
             byte[] shiftedPdfBytesWinner = fileConvertHelper.convertHtmlToPdf(listHtmlWinner, fontBytes);
-            pdfBytesParticipant =  addPdfTitle(shiftedPdfBytesParticipant, request.getTitle(), fontBytes);
-            pdfBytesWinner =  addPdfTitle(shiftedPdfBytesWinner, request.getTitle(), fontBytes);
-            docxBytesParticipant =  createWord(ListType.PARTICIPANT, request.getTitle(), snsEvent);
-            docxBytesWinner =  createWord(ListType.WINNER, request.getTitle(), snsEvent );
+            pdfBytesParticipant =  addPdfTitle(shiftedPdfBytesParticipant, snsEvent.getTitle() + " 참여자 리스트", fontBytes);
+            pdfBytesWinner =  addPdfTitle(shiftedPdfBytesWinner, snsEvent.getTitle() + " 당첨자 리스트", fontBytes);
+            docxBytesParticipant =  createWord(ListType.PARTICIPANT, snsEvent.getTitle() + " 참여자 리스트", snsEvent);
+            docxBytesWinner =  createWord(ListType.WINNER, snsEvent.getTitle() + " 당첨자 리스트", snsEvent );
         } catch (Exception e) {
             log.error("Error creating document: {}", e.getMessage());
             throw new SnsEventHandler(SNS_EVENT_DOWNLOAD_LIST_ERROR);
@@ -487,7 +493,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         for (int i = 1; i <= totalPages; i++) {
             PdfContentByte over = stamper.getOverContent(i);
             over.beginText();
-            over.setFontAndSize(bf, 28f); // 글씨 크게 (28pt)
+            over.setFontAndSize(bf, 26f); // 글씨 크게 (28pt)
             // 페이지 폭 중앙 계산
             float x = reader.getPageSize(i).getWidth() / 2;
             // 페이지 상단에서 약간 내려오게 (70pt 여백)
@@ -630,5 +636,13 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         run.setFontSize(fontSize);  // 전달받은 크기로 설정
         run.setBold(true);             // 굵게
         run.addBreak();                // 제목과 표 사이 한 줄 띄움
+    }
+
+    private void deleteS3FileAndThumnailImage(SnsEvent snsEvent) {
+        amazonS3Manager.deleteFile(snsEvent.getKeyNameParticipantPdf());
+        amazonS3Manager.deleteFile(snsEvent.getKeyNameParticipantWord());
+        amazonS3Manager.deleteFile(snsEvent.getKeyNameWinnerPdf());
+        amazonS3Manager.deleteFile(snsEvent.getKeyNameWinnerWord());
+        amazonS3Manager.deleteFile(snsEvent.getThumbnailKeyName());
     }
 }

@@ -106,6 +106,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     }
 
     @Override
+    @Transactional
     public WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token) {
 
         WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findByToken(token)
