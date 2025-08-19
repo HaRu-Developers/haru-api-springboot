@@ -14,8 +14,9 @@ public class SecurityUtil {
     public static Long getCurrentUserId() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || authentication.getName() == null) {
-            throw  new RuntimeException("Security Context 에 인증 정보가 없습니다.");
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getPrincipal().equals("anonymousUser")) {
+            return null; // 또는 Optional.empty()
         }
 
         return Long.parseLong(authentication.getName());

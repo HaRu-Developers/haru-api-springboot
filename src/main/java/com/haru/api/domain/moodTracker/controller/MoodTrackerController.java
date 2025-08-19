@@ -12,6 +12,7 @@ import com.haru.api.global.annotation.AuthMoodTracker;
 import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.code.status.SuccessStatus;
+import com.haru.api.global.util.HashIdUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -32,6 +33,7 @@ public class MoodTrackerController {
 
     // 읽기 전용
     private final MoodTrackerQueryService moodTrackerQueryService;
+    private final HashIdUtil hashIdUtil;
 
 
     @GetMapping("/workspaces/{workspaceId}")
@@ -137,39 +139,36 @@ public class MoodTrackerController {
 
     @PostMapping("/{mood-tracker-hashed-Id}/answer")
     @Operation(
-            summary = "분위기 트래커 설문 답변 제출 API",
-            description = "# [v1.1 (2025-08-05)](https://www.notion.so/2265da7802c580c58d36e73639e41291) 해당 ID의 분위기 트래커 설문 답변을 제출합니다."
+            summary = "분위기 트래커 설문 답변 제출 API (비인증)",
+            description = "# [v1.2 (2025-08-19)](https://www.notion.so/2265da7802c580c58d36e73639e41291) 해당 ID의 분위기 트래커 설문 답변을 제출합니다."
     )
     @Parameters({
             @Parameter(name = "mood-tracker-hashed-Id", description = "해시된 16자 분위기 트래커 ID (Path Variable)", required = true)
     })
     public  ApiResponse<Void> submitMoodTrackerSurveyAnswers(
             @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId,
-            @Valid @RequestBody MoodTrackerRequestDTO.SurveyAnswerList request,
-            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
+            @Valid @RequestBody MoodTrackerRequestDTO.SurveyAnswerList request
     ) {
 
-        moodTrackerCommandService.submitSurveyAnswers(moodTracker, request);
+        moodTrackerCommandService.submitSurveyAnswers(hashIdUtil.decode(moodTrackerHashedId), request);
 
         return ApiResponse.of(SuccessStatus.MOOD_TRACKER_ANSWER_SUBMIT, null);
 
     }
 
-    @GetMapping("/{mood-tracker-hashed-Id}")
+    @GetMapping("/{mood-tracker-hashed-Id}/bases")
     @Operation(
-            summary = "분위기 트래커 설문 팀분위기 베이스 정보 조회 API",
-            description = "# [v1.0 (2025-08-19)](https://www.notion.so/2545da7802c580dd9742d971d3a4bc08?source=copy_link) 분위기 트래커(moodTrackerId)에 대한 베이스 정보를 조회합니다."
+            summary = "분위기 트래커 설문 팀분위기 베이스 정보 조회 API (비인증)",
+            description = "# [v1.1 (2025-08-19)](https://www.notion.so/2545da7802c580dd9742d971d3a4bc08?source=copy_link) 분위기 트래커(moodTrackerId)에 대한 베이스 정보를 조회합니다."
     )
     @Parameters({
             @Parameter(name = "mood-tracker-hashed-Id", description = "분위기 트래커 ID (Hashed, Path Variable)", required = true)
     })
     public ApiResponse<MoodTrackerResponseDTO.BaseResult> getMoodTrackerBaseResult(
-            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId,
-            @Parameter(hidden = true) @AuthUser User user,
-            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
+            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId
     ) {
 
-        MoodTrackerResponseDTO.BaseResult result = moodTrackerQueryService.getBaseResult(user, moodTracker);
+        MoodTrackerResponseDTO.BaseResult result = moodTrackerQueryService.getBaseResult(hashIdUtil.decode(moodTrackerHashedId));
 
         return ApiResponse.onSuccess(result);
 
@@ -177,19 +176,17 @@ public class MoodTrackerController {
 
     @GetMapping("/{mood-tracker-hashed-Id}/questions")
     @Operation(
-            summary = "분위기 트래커 설문 문항 조회 API",
-            description = "# [v1.2 (2025-08-05)](https://www.notion.so/2295da7802c580dbb88aee8687b69e32) 분위기 트래커(moodTrackerId)에 해당하는 설문 문항들을 조회합니다."
+            summary = "분위기 트래커 설문 문항 조회 API (비인증)",
+            description = "# [v1.3 (2025-08-19)](https://www.notion.so/2295da7802c580dbb88aee8687b69e32) 분위기 트래커(moodTrackerId)에 해당하는 설문 문항들을 조회합니다."
     )
     @Parameters({
             @Parameter(name = "mood-tracker-hashed-Id", description = "분위기 트래커 ID (Hashed, Path Variable)", required = true)
     })
     public ApiResponse<MoodTrackerResponseDTO.QuestionResult> getMoodTrackerQuestionResult(
-            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId,
-            @Parameter(hidden = true) @AuthUser User user,
-            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
+            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId
     ) {
 
-        MoodTrackerResponseDTO.QuestionResult result = moodTrackerQueryService.getQuestionResult(user, moodTracker);
+        MoodTrackerResponseDTO.QuestionResult result = moodTrackerQueryService.getQuestionResult(hashIdUtil.decode(moodTrackerHashedId));
 
         return ApiResponse.onSuccess(result);
 

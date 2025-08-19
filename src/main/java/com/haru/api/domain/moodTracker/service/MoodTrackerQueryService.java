@@ -8,9 +8,9 @@ import com.haru.api.domain.workspace.entity.Workspace;
 public interface MoodTrackerQueryService {
     MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace);
 
-    MoodTrackerResponseDTO.BaseResult getBaseResult(User user, MoodTracker moodTracker);
+    MoodTrackerResponseDTO.BaseResult getBaseResult(Long moodTrackerId);
 
-    MoodTrackerResponseDTO.QuestionResult getQuestionResult(User user, MoodTracker moodTracker);
+    MoodTrackerResponseDTO.QuestionResult getQuestionResult(Long moodTrackerId);
 
     MoodTrackerResponseDTO.ReportResult getReportResult(User user, MoodTracker moodTracker);
 
