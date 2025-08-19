@@ -26,7 +26,7 @@ public interface MoodTrackerCommandService {
             MoodTracker moodTracker
     );
     void submitSurveyAnswers(
-            MoodTracker moodTracker,
+            Long moodTrackerId,
             MoodTrackerRequestDTO.SurveyAnswerList request
     );
     MoodTrackerResponseDTO.ReportDownLoadLinkResponse getDownloadLink(
