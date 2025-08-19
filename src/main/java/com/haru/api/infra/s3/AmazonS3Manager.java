@@ -153,6 +153,28 @@ public class AmazonS3Manager{
         }
     }
 
+    public void updateFileTitle(String keyName, String newDisplayName) {
+
+        try {
+            String contentDisposition = createContentDisposition(newDisplayName);
+
+            CopyObjectRequest copyRequest = CopyObjectRequest.builder()
+                    .sourceBucket(amazonConfig.getBucket())
+                    .sourceKey(keyName)
+                    .destinationBucket(amazonConfig.getBucket())
+                    .destinationKey(keyName)
+                    .metadataDirective(MetadataDirective.REPLACE)
+                    .contentDisposition(contentDisposition)
+                    .build();
+
+            s3Client.copyObject(copyRequest);
+            log.info("S3 파일의 표시 이름 수정에 성공했습니다. Key: {}", keyName);
+        } catch (S3Exception e) {
+            log.error("S3 파일 표시 이름 수정 중 에러가 발생했습니다. Key: {}", keyName, e);
+            throw new RuntimeException("S3 파일 표시 이름 수정에 실패했습니다.", e);
+        }
+    }
+
     public void deleteFile(String keyName) {
         // keyName이 비어있거나 null인 경우, 삭제 작업을 수행하지 않고 경고 로그를 남깁니다.
         if (keyName == null || keyName.isBlank()) {

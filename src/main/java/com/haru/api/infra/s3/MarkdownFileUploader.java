@@ -3,6 +3,9 @@ package com.haru.api.infra.s3;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.MetadataDirective;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Slf4j
 @Service
@@ -106,6 +109,14 @@ public class MarkdownFileUploader {
         return thumbnailKeyToUse;
     }
 
+
+    public void updateFileTitle(String keyName, String newFileTitle) {
+        if (keyName == null || keyName.isBlank()) {
+            log.warn("파일명을 수정할 S3 파일의 keyName이 유효하지 않습니다.");
+            return;
+        }
+        amazonS3Manager.updateFileTitle(keyName, newFileTitle);
+    }
 
     public void deleteFileAndThumbnail(String existingFileKeyName, String existingThumbnailKey){
 
