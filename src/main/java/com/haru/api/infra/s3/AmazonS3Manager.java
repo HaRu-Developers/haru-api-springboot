@@ -8,10 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
@@ -130,6 +128,30 @@ public class AmazonS3Manager{
             throw new RuntimeException("S3 file download failed", e);
         }
     }
+
+    public void deleteFile(String keyName) {
+        // keyName이 비어있거나 null인 경우, 삭제 작업을 수행하지 않고 경고 로그를 남깁니다.
+        if (keyName == null || keyName.isBlank()) {
+            log.warn("삭제할 S3 파일의 keyName이 유효하지 않습니다.");
+            return;
+        }
+
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(amazonConfig.getBucket())
+                .key(keyName)
+                .build();
+
+        try {
+            // S3 클라이언트를 통해 삭제 요청을 보냅니다.
+            s3Client.deleteObject(deleteObjectRequest);
+            log.info("S3 파일 삭제에 성공했습니다. Key: {}", keyName);
+        } catch (S3Exception e) {
+            // S3 API 호출 중 에러가 발생하면 로그를 남기고 런타임 예외를 발생시킵니다.
+            log.error("S3 파일 삭제 중 에러가 발생했습니다. Key: {}", keyName, e);
+            throw new RuntimeException("S3 파일 삭제에 실패했습니다.", e);
+        }
+    }
+
 
     public String generateKeyName(String path) {
         return path + '/' +UUID.randomUUID();
