@@ -153,7 +153,9 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
 
-        markdownFileUploader.deleteFileAndThumbnail(meeting.getProceedingKeyName(), meeting.getThumbnailKeyName());
+        markdownFileUploader.deleteS3File(meeting.getProceedingPdfKeyName());
+        markdownFileUploader.deleteS3File(meeting.getThumbnailKeyName());
+        markdownFileUploader.deleteS3File(meeting.getProceedingWordKeyName());
         markdownFileUploader.deleteS3File(meeting.getAudioFileKey());
 
         meetingRepository.delete(meeting);
@@ -234,11 +236,13 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
                 // --- PDF 및 썸네일 생성/업데이트 로직 시작 ---
                 try {
                     // 생성된 PDF를 S3에 업로드
-                    String pdfKey = markdownFileUploader.createOrUpdatePdf(analysisResult, "proceedings/", currentMeeting.getProceedingKeyName(), currentMeeting.getTitle());
-                    currentMeeting.initProceedingKeyName(pdfKey);
+                    String pdfKey = markdownFileUploader.createOrUpdatePdf(analysisResult, "meeting/pdf", currentMeeting.getProceedingPdfKeyName(), currentMeeting.getTitle());
+                    String wordKey = markdownFileUploader.createOrUpdateWord(analysisResult, "meeting/word", currentMeeting.getProceedingWordKeyName(), currentMeeting.getTitle());
+                    currentMeeting.initProceedingPdfKeyName(pdfKey);
+                    currentMeeting.initProceedingWordKeyName(wordKey);
 
                     // 썸네일 생성 및 업데이트
-                    String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meetings/" + currentMeeting.getId(), currentMeeting.getThumbnailKeyName());
+                    String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meeting" + currentMeeting.getId(), currentMeeting.getThumbnailKeyName());
                     currentMeeting.initThumbnailKeyName(newThumbnailKey); // Meeting 엔티티에 썸네일 키 저장
                     log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
 
