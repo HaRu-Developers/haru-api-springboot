@@ -139,7 +139,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         meeting.updateTitle(request.getTitle());
 
-        markdownFileUploader.updateFileTitle(meeting.getProceedingKeyName(), request.getTitle());
+        markdownFileUploader.updateFileTitle(meeting.getProceedingPdfKeyName(), request.getTitle());
 
         meetingRepository.save(meeting);
     }
@@ -148,18 +148,22 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     @Transactional
     @DeleteDocument
     public void deleteMeeting(User user, Meeting meeting) {
+        Meeting foundMeeting = meetingRepository.findById(meeting.getId())
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), meeting.getWorkspace().getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), foundMeeting.getWorkspace().getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
-        if (!meeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
+        if (!foundMeeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
 
-        markdownFileUploader.deleteFileAndThumbnail(meeting.getProceedingKeyName(), meeting.getThumbnailKeyName());
-        markdownFileUploader.deleteS3File(meeting.getAudioFileKey());
+        markdownFileUploader.deleteS3File(foundMeeting.getProceedingPdfKeyName());
+        markdownFileUploader.deleteS3File(foundMeeting.getThumbnailKeyName());
+        markdownFileUploader.deleteS3File(foundMeeting.getProceedingWordKeyName());
+        markdownFileUploader.deleteS3File(foundMeeting.getAudioFileKey());
 
-        meetingRepository.delete(meeting);
+        meetingRepository.delete(foundMeeting);
     }
 
     @Override
@@ -237,11 +241,13 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
                 // --- PDF 및 썸네일 생성/업데이트 로직 시작 ---
                 try {
                     // 생성된 PDF를 S3에 업로드
-                    String pdfKey = markdownFileUploader.createOrUpdatePdf(analysisResult, "proceedings/", currentMeeting.getProceedingKeyName(), currentMeeting.getTitle());
-                    currentMeeting.initProceedingKeyName(pdfKey);
+                    String pdfKey = markdownFileUploader.createOrUpdatePdf(analysisResult, "meeting/pdf", currentMeeting.getProceedingPdfKeyName(), currentMeeting.getTitle());
+                    String wordKey = markdownFileUploader.createOrUpdateWord(analysisResult, "meeting/word", currentMeeting.getProceedingWordKeyName(), currentMeeting.getTitle());
+                    currentMeeting.initProceedingPdfKeyName(pdfKey);
+                    currentMeeting.initProceedingWordKeyName(wordKey);
 
                     // 썸네일 생성 및 업데이트
-                    String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meetings/" + currentMeeting.getId(), currentMeeting.getThumbnailKeyName());
+                    String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meeting" + currentMeeting.getId(), currentMeeting.getThumbnailKeyName());
                     currentMeeting.initThumbnailKeyName(newThumbnailKey); // Meeting 엔티티에 썸네일 키 저장
                     log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
 
