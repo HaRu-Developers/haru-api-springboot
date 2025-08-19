@@ -2,6 +2,7 @@ package com.haru.api.domain.meeting.service;
 
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.meeting.entity.Meeting;
+import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 
@@ -15,7 +16,7 @@ public interface MeetingQueryService {
 
     MeetingResponseDTO.TranscriptResponse getTranscript(User user, Meeting meeting);
 
-    MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(User user, Meeting meeting);
+    MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(User user, Meeting meeting, Format format);
 
     MeetingResponseDTO.proceedingVoiceLinkResponse getMeetingVoiceFile(User user, Meeting meeting);
 }

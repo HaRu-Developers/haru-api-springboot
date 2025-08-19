@@ -5,6 +5,8 @@ import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.service.MeetingCommandService;
 import com.haru.api.domain.meeting.service.MeetingQueryService;
+import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.domain.snsEvent.entity.enums.ListType;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.annotation.AuthMeeting;
@@ -170,11 +172,12 @@ public class MeetingController {
     @GetMapping("{meetingId}/ai-proceeding/download")
     public ApiResponse<MeetingResponseDTO.proceedingDownLoadLinkResponse> downloadMeeting(
             @PathVariable("meetingId") String meetingId,
+            @RequestParam Format format,
             @Parameter(hidden = true) @AuthUser User user,
             @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ){
 
-        MeetingResponseDTO.proceedingDownLoadLinkResponse response = meetingQueryService.downloadMeeting(user, meeting);
+        MeetingResponseDTO.proceedingDownLoadLinkResponse response = meetingQueryService.downloadMeeting(user, meeting, format);
 
         return ApiResponse.onSuccess(response);
 
