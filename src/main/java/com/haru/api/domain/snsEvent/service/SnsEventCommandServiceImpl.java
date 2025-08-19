@@ -76,12 +76,16 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             Workspace workspace,
             SnsEventRequestDTO.CreateSnsRequest request
     ) {
+
+        Workspace foundWorkspace = workspaceRepository.findById(workspace.getId())
+                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
+
         // SNS 이벤트 생성 및 저장
         SnsEvent createdSnsEvent = SnsEventConverter.toSnsEvent(request, user);
-        createdSnsEvent.setWorkspace(workspace);
+        createdSnsEvent.setWorkspace(foundWorkspace);
 
         // Instagram API 호출 후 참여자 리스트, 당첨자 리스트 생성 및 저장
-        String accessToken = workspace.getInstagramAccessToken();
+        String accessToken = foundWorkspace.getInstagramAccessToken();
         if (accessToken == null || accessToken.isEmpty()) {
             throw new SnsEventHandler(SNS_EVENT_NO_ACCESS_TOKEN);
         }
@@ -153,7 +157,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
         // sns event 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(workspace.getId());
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
         userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedSnsEvent);
 
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
@@ -237,9 +241,12 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !snsEvent.getCreator().getId().equals(user.getId())) {
             throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
         }
-        snsEventRepository.delete(snsEvent);
+
         // S3의 문서 및 썸네일 이미지 삭제
         deleteS3FileAndThumnailImage(snsEvent);
+
+        snsEventRepository.delete(snsEvent);
+
     }
 
     @Override
