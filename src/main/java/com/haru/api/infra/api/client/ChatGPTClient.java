@@ -97,15 +97,16 @@ public class ChatGPTClient {
 
     public String getMoodTrackerReportRaw(String userMessageContent) {
         StringBuilder sb = new StringBuilder();
-        sb.append("너는 팀 심리 및 조직 문화 분석가야. 아래의 설문 응답을 통해 전체 설문을 종합한 마크다운 형식의 분석 리포트를 작성하고, 설문 질문 별로 개선 제안을 각 1개씩 제시해줘.\n\n");
+        sb.append("너는 팀 심리 및 조직 문화 분석가야. 아래의 설문 응답을 통해 전체 설문을 종합한 마크다운 형식의 분석 리포트를 작성하고, 설문 질문 별로 개선 제안을 각 1개씩 제시해줘. 아래의 형식에서 ###이 붙은 제목은 고정이고, 내용은 너가 채워주면 돼.\n\n");
 
-        sb.append("💡 최종 리포트 형식은 다음과 같아야 합니다:\n");
-        sb.append("1. {title} + 리포트\n");
+        sb.append("💡 최종 리포트 형식은 무조건 다음과 같은 마크다운 형식이어야만 합니다:\n");
+        sb.append("### 1. 팀 분위기 트래커 리포트\n");
         sb.append("   - 대상과 목적, 분석 방식 등을 간단히 정리\n");
-        sb.append("2. 주요 인사이트 요약 (AI가 뽑은 핵심 요약)\n");
+        sb.append("### 2. 주요 인사이트 요약 (HaRu AI가 뽑은 핵심 요약)\n");
         sb.append("   - 사용자의 응답 중 반복되거나 주목할 만한 인사이트를 요약\n");
         sb.append("   - 전체 응답자의 몇 %가 어떤 패턴을 보였는지도 서술\n");
-        sb.append("3. 자유 응답 기반 주요 키워드 정리 (많이 등장한 순서대로)\n");
+        sb.append("   - 서술시에 질문 숫자 id가 아닌 질문 내용 텍스트 기반으로 설명\n");
+        sb.append("### 3. 자유 응답 기반 주요 키워드 정리\n");
         sb.append("   - 예: 잦힌 (37건), 말은 덜 불분명 (29건) 등\n\n");
 
         sb.append("응답은 반드시 다음 JSON 형식으로 해줘. 형식만 따르고, 값은 생성한 값을 넣어줘야해. 질문에 대한 제안은 입력받은 질문 Id와 해당 질문에 매칭되는 제안 내용을 넣어줘. : \n");
@@ -142,10 +143,10 @@ public class ChatGPTClient {
 
     public Mono<SurveyReportResponse> getMoodTrackerReport(String userMessageContent) {
         StringBuilder sb = new StringBuilder();
-        sb.append("너는 팀 심리 및 조직 문화 분석가야. 아래의 설문 응답을 통해 전체 설문을 종합한 마크다운 형식의 분석 리포트를 작성하고, 설문 질문 별로 개선 제안을 각 1개씩 제시해줘.\n\n");
+        sb.append("너는 팀 심리 및 조직 문화 분석가야. 아래의 설문 응답을 통해 전체 설문을 종합한 마크다운 형식의 분석 리포트를 작성하고, 설문 질문 별로 개선 제안을 각 1개씩 제시해줘. 아래의 형식에서 ###이 붙은 제목은 고정이고, 내용은 너가 채워주면 돼.\n\n");
 
         sb.append("💡 최종 리포트 형식은 무조건 다음과 같은 마크다운 형식이어야만 합니다:\n");
-        sb.append("### 1. {title} + 리포트\n");
+        sb.append("### 1. 팀 분위기 트래커 리포트\n");
         sb.append("   - 대상과 목적, 분석 방식 등을 간단히 정리\n");
         sb.append("### 2. 주요 인사이트 요약 (HaRu AI가 뽑은 핵심 요약)\n");
         sb.append("   - 사용자의 응답 중 반복되거나 주목할 만한 인사이트를 요약\n");
@@ -154,7 +155,7 @@ public class ChatGPTClient {
         sb.append("### 3. 자유 응답 기반 주요 키워드 정리\n");
         sb.append("   - 예: 잦힌 (37건), 말은 덜 불분명 (29건) 등\n\n");
 
-        sb.append("주요 인사이트 요약은 핵심을 요약해주고, 자유 응답 기반 주요 키워드 정리는 많이 등장한 순서대로 정렬해줘야해. 응답은 반드시 응답은 JSON 문자열 형식으로 주고, 백틱이나 마크다운 없이 순수 JSON만 반환해줘. 다음 JSON 형식으로 해줘. 형식만 따르고, 값은 생성한 값을 넣어줘야해. 질문에 대한 제안은 입력받은 질문 Id와 해당 질문에 매칭되는 제안 내용을 넣어줘. : \n");
+        sb.append("응답은 반드시 다음 JSON 형식으로 해줘. 형식만 따르고, 값은 생성한 값을 넣어줘야해. 질문에 대한 제안은 입력받은 질문 Id와 해당 질문에 매칭되는 제안 내용을 넣어줘. : \n");
         sb.append("{\n");
         sb.append("  \"report\": \"전체 리포트 마크다운 텍스트\",\n");
         sb.append("  \"suggestionsByQuestionId\": {\n");

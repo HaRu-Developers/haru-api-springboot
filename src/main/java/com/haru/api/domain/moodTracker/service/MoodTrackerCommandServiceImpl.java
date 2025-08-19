@@ -1,6 +1,5 @@
 package com.haru.api.domain.moodTracker.service;
 
-import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
@@ -108,7 +107,6 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             MoodTracker moodTracker,
             MoodTrackerRequestDTO.UpdateTitleRequest request
     ) {
-
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
@@ -117,8 +115,17 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
                 || moodTracker.getCreator().getId().equals(user.getId())))
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
+        // 엔티티 업데이트
         moodTracker.updateTitle(request.getTitle());
+        moodTrackerRepository.save(moodTracker);
 
+        // 마감일 이후 && 썸네일이 생성된 시점이라면,
+        if(moodTracker.getDueDate().isBefore(LocalDateTime.now()) && moodTracker.getThumbnailKey()!=null) {
+            // 기존 썸네일 및 다운로드 파일 삭제
+            moodTrackerReportService.deleteReportFileAndThumbnail(moodTracker.getId());
+            // S3에서 썸네일 및 다운로드 파일 업데이트
+            moodTrackerReportService.updateAndUploadReportFileAndThumbnail(moodTracker.getId());
+        }
     }
 
     /**
@@ -131,7 +138,6 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             User user,
             MoodTracker moodTracker
     ) {
-
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
@@ -140,8 +146,14 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
                 || moodTracker.getCreator().getId().equals(user.getId())))
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
-        moodTrackerRepository.delete(moodTracker);
+        // 마감일 이후 && 썸네일이 생성된 시점이라면,
+        if(moodTracker.getDueDate().isBefore(LocalDateTime.now()) && moodTracker.getThumbnailKey()!=null) {
+            // S3에서 썸네일 및 다운로드 파일 삭제
+            moodTrackerReportService.deleteReportFileAndThumbnail(moodTracker.getId());
+        }
 
+        // 엔티티 삭제
+        moodTrackerRepository.delete(moodTracker);
     }
 
     /**
