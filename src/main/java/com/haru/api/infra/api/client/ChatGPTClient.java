@@ -225,34 +225,36 @@ public class ChatGPTClient {
 
     public Mono<String> analyzeMeetingTranscript(String documentText, String agendaResult) {
         if (documentText == null || documentText.isBlank()) {
-            // 분석할 내용이 없으면 미리 정의된 응답을 반환합니다.
             return Mono.just("분석할 대화 내용이 없습니다.");
         }
 
-        // 안건 요약과 실제 대화록을 모두 포함하도록 프롬프트 수정
-        String prompt = "다음은 회의 전에 공유된 '안건 요약'과 실제 진행된 '회의 대화록'입니다. 두 내용을 모두 참고하여 다음 세 가지 작업을 수행해주세요.\n\n" +
+        String prompt = "다음은 회의 전에 공유된 '안건 요약'과 실제 진행된 '회의 대화록'입니다. 두 내용을 모두 참고하여 다음 작업을 수행해주세요.\n\n" +
                 "--- 안건 요약 ---\n" +
                 (agendaResult != null && !agendaResult.isBlank() ? agendaResult : "제공된 안건 요약 없음") + "\n\n" +
                 "--- 회의 대화록 ---\n" +
                 documentText + "\n\n" +
-                "1. 회의의 전체 내용을 3~4 문장으로 요약해주세요.\n" +
-                "2. 논의된 핵심 주제들을 발화 주제와 세부 사항으로 이루어지도록 추출해주세요.\n" +
-                "3. 회의에서 도출된 실행 과제(Action Item)가 있다면 목록으로 정리해주세요. 없다면 응답에 아예 포함하지 마세요.\n" +
-                "반드시 '요약 내용|||핵심 주제1,핵심 주제2|||실행 과제 목록' 형식으로 응답해주세요. 다른 설명은 절대 붙이지 마세요.\n" +
-                "또한, 응답하는 모든 내용은 마크다운(Markdown) 형식으로 작성해주세요. 예를 들어, 실행 과제는 마크다운의 리스트 형식(-)을 사용해주세요.";
+                "회의록을 아래의 마크다운 형식에 맞춰 정리해주세요. 각 항목의 내용은 회의 대화록을 기반으로 채워주세요.\n" +
+                "형식:\n" +
+                "1. (회의의 첫 번째 핵심 주제)\n" +
+                "    - (주제에 대한 세부 내용 또는 결정 사항 1)\n" +
+                "    - (주제에 대한 세부 내용 또는 결정 사항 2)\n" +
+                "2. (회의의 두 번째 핵심 주제)\n" +
+                "    - (주제에 대한 세부 내용...)\n" +
+                "(이후 논의된 핵심 주제가 있다면 3., 4. 형식으로 계속 이어서 작성해주세요.)\n" +
+                "각 넘버링된 핵심 주제 아래에는 반드시 한 개 이상의 불릿포인트(-)가 포함되어야 합니다.\n" +
+                "다른 설명 없이, 위 마크다운 형식의 결과만 반환해주세요.";
 
         List<Map<String, String>> messages = List.of(
-                Map.of("role", "system", "content", "너는 회의록을 분석하여 요약, 핵심 주제, 실행 과제를 정해진 형식에 따라 추출하는 전문 AI 비서야."),
+                Map.of("role", "system", "content", "너는 회의록을 지정된 마크다운 형식으로 정리하는 전문 AI 비서야."),
                 Map.of("role", "user", "content", prompt)
         );
 
         Map<String, Object> requestBody = Map.of(
                 "model", "gpt-4o",
                 "messages", messages,
-                "max_tokens", 800 // 응답 길이를 넉넉하게 설정
+                "max_tokens", 1000
         );
 
-        // WebClient를 통해 OpenAI API 호출
         return webClient.post()
                 .bodyValue(requestBody)
                 .retrieve()

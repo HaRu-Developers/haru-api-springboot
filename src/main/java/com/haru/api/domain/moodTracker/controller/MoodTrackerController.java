@@ -2,12 +2,16 @@ package com.haru.api.domain.moodTracker.controller;
 
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
+import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.moodTracker.service.MoodTrackerCommandService;
 import com.haru.api.domain.moodTracker.service.MoodTrackerQueryService;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
-import com.haru.api.domain.user.security.jwt.SecurityUtil;
+import com.haru.api.domain.user.entity.User;
+import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.global.annotation.AuthMoodTracker;
+import com.haru.api.global.annotation.AuthUser;
+import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.code.status.SuccessStatus;
-import com.haru.api.global.util.HashIdUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -29,7 +33,6 @@ public class MoodTrackerController {
     // 읽기 전용
     private final MoodTrackerQueryService moodTrackerQueryService;
 
-    private final HashIdUtil hashIdUtil;
 
     @GetMapping("/workspaces/{workspaceId}")
     @Operation(
@@ -40,11 +43,15 @@ public class MoodTrackerController {
             @Parameter(name = "workspaceId", description = "워크스페이스 ID (Path Variable)", required = true)
     })
     public ApiResponse<MoodTrackerResponseDTO.PreviewList> getMoodTrackerPreviewListByWorkspace(
-            @PathVariable String workspaceId
+            @PathVariable String workspaceId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        MoodTrackerResponseDTO.PreviewList result = moodTrackerQueryService.getMoodTrackerPreviewList(userId, Long.parseLong(workspaceId));
+
+        MoodTrackerResponseDTO.PreviewList result = moodTrackerQueryService.getMoodTrackerPreviewList(user, workspace);
+
         return ApiResponse.onSuccess(result);
+
     }
 
     @PostMapping("/workspaces/{workspaceId}")
@@ -57,11 +64,15 @@ public class MoodTrackerController {
     })
     public ApiResponse<MoodTrackerResponseDTO.CreateResult> createMoodTracker(
             @PathVariable String workspaceId,
-            @RequestBody @Valid MoodTrackerRequestDTO.CreateRequest request
+            @RequestBody @Valid MoodTrackerRequestDTO.CreateRequest request,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        MoodTrackerResponseDTO.CreateResult result = moodTrackerCommandService.create(userId, Long.parseLong(workspaceId),request);
+
+        MoodTrackerResponseDTO.CreateResult result = moodTrackerCommandService.create(user, workspace,request);
+
         return ApiResponse.of(SuccessStatus.MOOD_TRACKER_CREATED, result);
+
     }
 
     @PatchMapping("/{mood-tracker-hashed-Id}")
@@ -74,12 +85,15 @@ public class MoodTrackerController {
     })
     public ApiResponse<Void> updateMoodTrackerTitle(
             @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId,
-            @RequestBody @Valid MoodTrackerRequestDTO.UpdateTitleRequest request
+            @RequestBody @Valid MoodTrackerRequestDTO.UpdateTitleRequest request,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        moodTrackerCommandService.updateTitle(userId, moodTrackerId, request);
+
+        moodTrackerCommandService.updateTitle(user, moodTracker, request);
+
         return ApiResponse.of(SuccessStatus.MOOD_TRACKER_UPDATED, null);
+
     }
 
     @DeleteMapping("/{mood-tracker-hashed-Id}")
@@ -91,12 +105,15 @@ public class MoodTrackerController {
             @Parameter(name = "mood-tracker-hashed-Id", description = "해시된 16자 분위기 트래커 ID (Path Variable)", required = true)
     })
     public ApiResponse<Void> deleteMoodTracker(
-            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId
+            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        moodTrackerCommandService.delete(userId, moodTrackerId);
+
+        moodTrackerCommandService.delete(user, moodTracker);
+
         return ApiResponse.of(SuccessStatus.MOOD_TRACKER_DELETED, null);
+
     }
 
     @PostMapping("/{mood-tracker-hashed-Id}/emails")
@@ -108,11 +125,14 @@ public class MoodTrackerController {
             @Parameter(name = "mood-tracker-hashed-Id", description = "해시된 16자 분위기 트래커 ID (Path Variable)", required = true)
     })
     public ApiResponse<Void> sendMoodTrackerSurveyLink(
-            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId
+            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId,
+            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        moodTrackerCommandService.sendSurveyLink(moodTrackerId);
+
+        moodTrackerCommandService.sendSurveyLink(moodTracker);
+
         return ApiResponse.of(SuccessStatus.MOOD_TRACKER_EMAIL_SENT, null);
+
     }
 
     @PostMapping("/{mood-tracker-hashed-Id}/answer")
@@ -125,11 +145,14 @@ public class MoodTrackerController {
     })
     public  ApiResponse<Void> submitMoodTrackerSurveyAnswers(
             @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId,
-            @RequestBody MoodTrackerRequestDTO.SurveyAnswerList request
+            @RequestBody MoodTrackerRequestDTO.SurveyAnswerList request,
+            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        moodTrackerCommandService.submitSurveyAnswers(moodTrackerId, request);
+
+        moodTrackerCommandService.submitSurveyAnswers(moodTracker, request);
+
         return ApiResponse.of(SuccessStatus.MOOD_TRACKER_ANSWER_SUBMIT, null);
+
     }
 
     @GetMapping("/{mood-tracker-hashed-Id}/questions")
@@ -141,12 +164,15 @@ public class MoodTrackerController {
             @Parameter(name = "mood-tracker-hashed-Id", description = "분위기 트래커 ID (Hashed, Path Variable)", required = true)
     })
     public ApiResponse<MoodTrackerResponseDTO.QuestionResult> getMoodTrackerQuestionResult(
-            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId
+            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        MoodTrackerResponseDTO.QuestionResult result = moodTrackerQueryService.getQuestionResult(userId, moodTrackerId);
+
+        MoodTrackerResponseDTO.QuestionResult result = moodTrackerQueryService.getQuestionResult(user, moodTracker);
+
         return ApiResponse.onSuccess(result);
+
     }
 
     @GetMapping("/{mood-tracker-hashed-Id}/reports")
@@ -158,12 +184,15 @@ public class MoodTrackerController {
             @Parameter(name = "mood-tracker-hashed-Id", description = "분위기 트래커 ID (Hashed, Path Variable)", required = true)
     })
     public ApiResponse<MoodTrackerResponseDTO.ReportResult> getMoodTrackerReportResult(
-            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId
+            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        MoodTrackerResponseDTO.ReportResult result = moodTrackerQueryService.getReportResult(userId, moodTrackerId);
+
+        MoodTrackerResponseDTO.ReportResult result = moodTrackerQueryService.getReportResult(user, moodTracker);
+
         return ApiResponse.onSuccess(result);
+
     }
 
     @GetMapping("/{mood-tracker-hashed-Id}/responses")
@@ -175,12 +204,15 @@ public class MoodTrackerController {
             @Parameter(name = "mood-tracker-hashed-Id", description = "분위기 트래커 ID (Hashed, Path Variable)", required = true)
     })
     public ApiResponse<MoodTrackerResponseDTO.ResponseResult> getMoodTrackerResponseResult(
-            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId
+            @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        MoodTrackerResponseDTO.ResponseResult result = moodTrackerQueryService.getResponseResult(userId, moodTrackerId);
+
+        MoodTrackerResponseDTO.ResponseResult result = moodTrackerQueryService.getResponseResult(user, moodTracker);
+
         return ApiResponse.onSuccess(result);
+
     }
 
     @GetMapping("/{mood-tracker-hashed-Id}/download")
@@ -193,12 +225,15 @@ public class MoodTrackerController {
     })
     public ApiResponse<MoodTrackerResponseDTO.ReportDownLoadLinkResponse> downloadList(
             @PathVariable(name = "mood-tracker-hashed-Id") String moodTrackerHashedId,
-            @RequestParam Format format
+            @RequestParam Format format,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        MoodTrackerResponseDTO.ReportDownLoadLinkResponse result = moodTrackerCommandService.getDownloadLink(userId, moodTrackerId, format);
+
+        MoodTrackerResponseDTO.ReportDownLoadLinkResponse result = moodTrackerCommandService.getDownloadLink(user, moodTracker, format);
+
         return ApiResponse.onSuccess(result);
+
     }
 
     @PostMapping("/{mood-tracker-hashed-Id}/report-test")
@@ -210,11 +245,14 @@ public class MoodTrackerController {
             @Parameter(name = "mood-tracker-hashed-Id", description = "해시된 16자 분위기 트래커 ID (Path Variable)", required = true)
     })
     public  ApiResponse<Void> generateMoodTrackerReportTest (
-            @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId
+            @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId,
+            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        moodTrackerCommandService.generateReportTest(moodTrackerId);
+
+        moodTrackerCommandService.generateReportTest(moodTracker);
+
         return ApiResponse.of(SuccessStatus._OK, null);
+
     }
 
     @PostMapping("/{mood-tracker-hashed-Id}/report-file-thumbnail-test")
@@ -226,10 +264,13 @@ public class MoodTrackerController {
             @Parameter(name = "mood-tracker-hashed-Id", description = "해시된 16자 분위기 트래커 ID (Path Variable)", required = true)
     })
     public  ApiResponse<Void> generateMoodTrackerReportFileAndThumbnailTest (
-            @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId
+            @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId,
+            @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
-        Long moodTrackerId = hashIdUtil.decode(moodTrackerHashedId);
-        moodTrackerCommandService.generateReportFileAndThumbnailTest(moodTrackerId);
+
+        moodTrackerCommandService.generateReportFileAndThumbnailTest(moodTracker);
+
         return ApiResponse.of(SuccessStatus._OK, null);
+
     }
 }

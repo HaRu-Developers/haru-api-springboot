@@ -39,7 +39,7 @@ public class SnsEvent extends BaseEntity implements Documentable {
     @JoinColumn(name = "user_id")
     private User creator;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "workspace_id")
     private Workspace workspace;
 
