@@ -166,4 +166,22 @@ public class SnsEventController {
         );
     }
 
+    @Operation(
+            summary = "워크스페이스에 연동된 인스타그램 계정 조회 API [v1.0 (2025-08-20)]",
+            description = "# [v1.0 (2025-08-20)](https://www.notion.so/API-21e5da7802c581cca23dff937ac3f155?p=2545da7802c5801299c9f47578ba7d75&pm=s)" +
+                    " 워크스페이스에 연동된 인스타그램 계정을 조회하는 API입니다. Path Variable에 workspaceId를 넣어 요청해주세요."
+    )
+    @GetMapping("/{workspaceId}/instagram")
+    public ApiResponse<SnsEventResponseDTO.getInstagramAccountName> getInstagramAccountName(
+            @PathVariable String workspaceId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
+    ) {
+        return ApiResponse.onSuccess(
+                snsEventQueryService.getInstagramAccountName(
+                        user,
+                        workspace
+                )
+        );
+    }
 }

@@ -10,4 +10,6 @@ public interface SnsEventQueryService {
     SnsEventResponseDTO.GetSnsEventListRequest getSnsEventList(User user, Workspace workspace);
 
     SnsEventResponseDTO.GetSnsEventRequest getSnsEvent(User user, SnsEvent snsEvent);
+
+    SnsEventResponseDTO.getInstagramAccountName getInstagramAccountName(User user, Workspace workspace);
 }
