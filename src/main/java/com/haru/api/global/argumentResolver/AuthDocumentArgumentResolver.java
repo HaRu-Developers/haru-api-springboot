@@ -69,14 +69,13 @@ public class AuthDocumentArgumentResolver implements HandlerMethodArgumentResolv
             if (idString == null) {
                 throw new IllegalStateException("경로 변수 '" + pathVariableName + "'를 찾을 수 없습니다.");
             }
-            Long id = Long.parseLong(idString);
 
             // DocumentType에 맞는 finder를 찾아 객체를 조회
             DocumentFinder finder = finders.get(documentType);
             if (finder == null)
                 throw new IllegalStateException(documentType + " 타입을 처리할 Finder가 없습니다.");
 
-            return finder.findById(id);
+            return finder.findById(idString);
         }
     }
 

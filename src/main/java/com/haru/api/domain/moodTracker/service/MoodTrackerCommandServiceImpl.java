@@ -10,17 +10,16 @@ import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
 import com.haru.api.domain.moodTracker.repository.*;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
 import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
-import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.global.annotation.DeleteDocument;
+import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.global.util.HashIdUtil;
 import com.haru.api.infra.redis.RedisReportProducer;
-import com.haru.api.infra.s3.AmazonS3Manager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.haru.api.domain.moodTracker.entity.enums.QuestionType.*;
-import static com.haru.api.global.apiPayload.code.status.ErrorStatus.*;
 
 @Slf4j
 @Service
@@ -40,8 +38,6 @@ import static com.haru.api.global.apiPayload.code.status.ErrorStatus.*;
 public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService {
 
     private final MoodTrackerRepository moodTrackerRepository;
-    private final WorkspaceRepository workspaceRepository;
-    private final UserRepository userRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
 
     private final SurveyQuestionRepository surveyQuestionRepository;
@@ -60,9 +56,6 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     private final HashIdUtil hashIdUtil;
 
     private final UserDocumentLastOpenedService userDocumentLastOpenedService;
-    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
-
-    private final AmazonS3Manager amazonS3Manager;
 
     /**
      * 분위기 트래커 생성
@@ -70,18 +63,13 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     @Override
     @Transactional
     public MoodTrackerResponseDTO.CreateResult create(
-            Long userId,
-            Long workspaceId,
+            User user,
+            Workspace workspace,
             MoodTrackerRequestDTO.CreateRequest request
     ) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
-
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         // 분위기 트래커 생성 및 저장
-        MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, foundUser, foundWorkspace);
+        MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, user, workspace);
         MoodTracker savedMoodTracker = moodTrackerRepository.save(moodTracker);
 
         // 선택지 생성 및 저장
@@ -103,7 +91,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         // mood tracker 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(workspace.getId());
         userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
 
         return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
@@ -114,32 +102,23 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
      */
     @Override
     @Transactional
-    public void updateTitle(Long userId,
-                            Long moodTrackerId,
-                            MoodTrackerRequestDTO.UpdateTitleRequest request
+    @UpdateDocumentTitle
+    public void updateTitle(
+            User user,
+            MoodTracker moodTracker,
+            MoodTrackerRequestDTO.UpdateTitleRequest request
     ) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
 
-        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
-                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
-
-        Workspace foundWorkspace = workspaceRepository.findByMoodTrackerId(moodTrackerId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(foundWorkspace.getId(), foundUser.getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 워크스페이스 생성자이거나 해당 분위기 트래커 생성자인 경우 허용
         if (!(foundUserWorkspace.getAuth().equals(Auth.ADMIN)
-                || foundMoodTracker.getCreator().getId().equals(userId)))
+                || moodTracker.getCreator().getId().equals(user.getId())))
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
-        foundMoodTracker.updateTitle(request.getTitle());
+        moodTracker.updateTitle(request.getTitle());
 
-        // mood tracker 수정 시 워크스페이스에 속해있는 모든 유저에 대해
-        // last opened 테이블에서 해당 문서 정보 업데이트
-        userDocumentLastOpenedService.updateRecordsForWorkspaceUsers(foundMoodTracker);
     }
 
     /**
@@ -147,32 +126,22 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
      */
     @Override
     @Transactional
+    @DeleteDocument
     public void delete(
-            Long userId,
-            Long moodTrackerId
+            User user,
+            MoodTracker moodTracker
     ) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(MEMBER_NOT_FOUND));
 
-        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
-                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
-
-        Workspace foundWorkspace = workspaceRepository.findByMoodTrackerId(moodTrackerId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(foundWorkspace.getId(), foundUser.getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 워크스페이스 생성자이거나 해당 분위기 트래커 생성자인 경우 허용
         if (!(foundUserWorkspace.getAuth().equals(Auth.ADMIN)
-                || foundMoodTracker.getCreator().getId().equals(userId)))
+                || moodTracker.getCreator().getId().equals(user.getId())))
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
-        moodTrackerRepository.delete(foundMoodTracker);
+        moodTrackerRepository.delete(moodTracker);
 
-        // mood tracker 삭제 시 워크스페이스에 속해있는 모든 유저에 대해
-        // last opened 테이블에서 해당 문서 id를 가지고 있는 튜플 모두 삭제
-        userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(foundMoodTracker);
     }
 
     /**
@@ -181,18 +150,16 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     @Override
     @Transactional
     public void sendSurveyLink(
-            Long moodTrackerId
+            MoodTracker moodTracker
     ) {
-        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
-            .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
-        String creatorName = foundMoodTracker.getCreator().getName();  // 작성자 이름
-        String surveyTitle = foundMoodTracker.getTitle();              // 설문 제목
+        String creatorName = moodTracker.getCreator().getName();  // 작성자 이름
+        String surveyTitle = moodTracker.getTitle();              // 설문 제목
 
         String mailTitle = "%s 님이 나에게 [%s] 설문을 공유했습니다.".formatted(creatorName, surveyTitle);
         String mailContent = "%s 님의 [%s] 설문에 대한 소중한 의견을 보내주세요.".formatted(creatorName, surveyTitle);
 
-        moodTrackerMailService.sendSurveyLinkToEmail(moodTrackerId, mailTitle, mailContent);
+        moodTrackerMailService.sendSurveyLinkToEmail(moodTracker.getId(), mailTitle, mailContent);
     }
 
     /**
@@ -201,7 +168,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     @Override
     @Transactional
     public void submitSurveyAnswers(
-            Long moodTrackerId,
+            MoodTracker moodTracker,
             MoodTrackerRequestDTO.SurveyAnswerList request
     ) {
         List<SubjectiveAnswer> subjectiveAnswers = new ArrayList<>();
@@ -209,7 +176,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         List<CheckboxChoiceAnswer> checkboxChoiceAnswers = new ArrayList<>();
 
         // 전체 질문을 미리 조회 및 맵에 캐싱
-        List<SurveyQuestion> foundQuestions = surveyQuestionRepository.findAllByMoodTrackerId(moodTrackerId);
+        List<SurveyQuestion> foundQuestions = surveyQuestionRepository.findAllByMoodTrackerId(moodTracker.getId());
         Map<Long, SurveyQuestion> questionMap = foundQuestions.stream()
                 .collect(Collectors.toMap(SurveyQuestion::getId, q -> q));
 
@@ -266,39 +233,37 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         subjectiveAnswerRepository.saveAll(subjectiveAnswers);
 
         // 답변자 수 증가
-        moodTrackerRepository.addRespondentsNum(moodTrackerId);
+        moodTrackerRepository.addRespondentsNum(moodTracker.getId());
     }
 
     @Override
     @Transactional
     public MoodTrackerResponseDTO.ReportDownLoadLinkResponse getDownloadLink(
-            Long userId,
-            Long moodTrackerId,
+            User user,
+            MoodTracker moodTracker,
             Format format
     ) {
-        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
-                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
         // 권한 확인
         UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(
-                foundMoodTracker.getWorkspace().getId(), userId
+                moodTracker.getWorkspace().getId(), user.getId()
         ).orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         boolean hasAccess =
                 userWorkspace.getAuth().equals(Auth.ADMIN) ||
-                        foundMoodTracker.getCreator().getId().equals(userId) ||
-                        foundMoodTracker.getVisibility().equals(MoodTrackerVisibility.PUBLIC);
+                        moodTracker.getCreator().getId().equals(user.getId()) ||
+                        moodTracker.getVisibility().equals(MoodTrackerVisibility.PUBLIC);
 
         if (!hasAccess) {
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_ACCESS_DENIED);
         }
 
         // 마감 여부 확인
-        if (LocalDateTime.now().isBefore(foundMoodTracker.getDueDate())) {
+        if (LocalDateTime.now().isBefore(moodTracker.getDueDate())) {
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FINISHED);
         }
 
-        String generatedReportUrl = moodTrackerReportService.generateDownloadLink(foundMoodTracker, format);
+        String generatedReportUrl = moodTrackerReportService.generateDownloadLink(moodTracker, format);
 
         return MoodTrackerResponseDTO.ReportDownLoadLinkResponse.builder()
                 .downloadLink(generatedReportUrl)
@@ -308,16 +273,16 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     @Override
     @Transactional
     public void generateReportTest(
-            Long moodTrackerId
+            MoodTracker moodTracker
     ) {
-        moodTrackerReportService.generateReport(moodTrackerId);
+        moodTrackerReportService.generateReport(moodTracker.getId());
     }
 
     @Override
     @Transactional
     public void generateReportFileAndThumbnailTest(
-            Long moodTrackerId
+            MoodTracker moodTracker
     ) {
-        moodTrackerReportService.generateAndUploadReportFileAndThumbnail(moodTrackerId);
+        moodTrackerReportService.generateAndUploadReportFileAndThumbnail(moodTracker.getId());
     }
 }

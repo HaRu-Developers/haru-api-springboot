@@ -3,6 +3,7 @@ package com.haru.api.domain.moodTracker.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
 import com.haru.api.domain.moodTracker.entity.enums.QuestionType;
+import com.haru.api.global.common.entity.TitleHolder;
 import com.haru.api.global.util.json.ToLongDeserializer;
 import com.haru.api.global.util.json.ToLongListDeserializer;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -60,7 +61,7 @@ public class MoodTrackerRequestDTO {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class UpdateTitleRequest {
+    public static class UpdateTitleRequest implements TitleHolder {
         @NotBlank
         private String title;
     }

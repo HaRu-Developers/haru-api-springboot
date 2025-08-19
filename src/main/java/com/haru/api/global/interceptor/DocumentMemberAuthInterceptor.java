@@ -2,6 +2,7 @@ package com.haru.api.global.interceptor;
 
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
+import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
@@ -10,7 +11,9 @@ import com.haru.api.global.annotation.AuthDocument;
 import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
+import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
+import com.haru.api.global.util.HashIdUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +32,11 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
 
     private final UserRepository userRepository;
 
+    private final HashIdUtil hashIdUtil;
+
     private final MeetingRepository meetingRepository;
     private final SnsEventRepository snsEventRepository;
+    private final MoodTrackerRepository moodTrackerRepository;
 
     @Override
     public boolean preHandle(final HttpServletRequest request, final HttpServletResponse response, final Object handler) throws Exception {
@@ -78,24 +84,26 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
                 throw new BadRequestException("경로 변수 " + pathVariableName + "가 없습니다.");
             }
 
-            // userId, documentId 추출
+            // userId
             final Long userId = SecurityUtil.getCurrentUserId();
-            final Long documentId = Long.parseLong(documentIdStr);
 
-            Object foundDocument = null;
-
-            // 유저가 해당 문서가 속한 워크스페이스에 속해있는지 확인하고, 해당 객체를 반환함
-            switch (documentType) {
-                case AI_MEETING_MANAGER:
-                    foundDocument = meetingRepository.findMeetingByIdIfUserHasAccess(userId, documentId)
+            Object foundDocument = switch (documentType) {
+                case AI_MEETING_MANAGER -> {
+                    Long documentId = Long.parseLong(documentIdStr);
+                    yield meetingRepository.findMeetingByIdIfUserHasAccess(userId, documentId)
                             .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_HAS_NO_ACCESS_TO_MEETING));
-                    break;
-
-                case SNS_EVENT_ASSISTANT:
-                    foundDocument = snsEventRepository.findSnsEventByIdIfUserHasAccess(userId, documentId)
+                }
+                case SNS_EVENT_ASSISTANT -> {
+                    Long documentId = Long.parseLong(documentIdStr);
+                    yield snsEventRepository.findSnsEventByIdIfUserHasAccess(userId, documentId)
                             .orElseThrow(() -> new SnsEventHandler(ErrorStatus.SNS_EVENT_NOT_FOUND));
-                    break;
-            }
+                }
+                case TEAM_MOOD_TRACKER -> {
+                    Long documentId = hashIdUtil.decode(documentIdStr);
+                    yield moodTrackerRepository.findMoodTrackerByIdIfUserHasAccess(userId, documentId)
+                            .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
+                }
+            };
 
             // 유저 조회
             User foundUser = userRepository.findById(userId)

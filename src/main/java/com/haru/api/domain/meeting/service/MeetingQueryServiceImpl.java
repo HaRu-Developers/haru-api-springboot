@@ -1,6 +1,5 @@
 package com.haru.api.domain.meeting.service;
 
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
 import com.haru.api.domain.meeting.entity.Meeting;
@@ -40,7 +39,7 @@ public class MeetingQueryServiceImpl implements MeetingQueryService{
     }
 
     @Override
-    @TrackLastOpened(type = DocumentType.AI_MEETING_MANAGER)
+    @TrackLastOpened
     public MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(User user, Meeting meeting){
 
         User foundMeetingCreator = meeting.getCreator();
