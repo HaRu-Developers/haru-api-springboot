@@ -176,10 +176,13 @@ public class UserCommandServiceImpl implements UserCommandService{
         if (foundUser != null) {
             throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
         } else {
+
             User user = UserConverter.toUsers(request, password);
             userRepository.save(user);
 
-            workspaceCommandService.acceptInvite(token);
+            if(token != null) {
+                workspaceCommandService.acceptInvite(token);
+            }
 
             return login(UserRequestDTO.LoginRequest.builder()
                             .email(request.getEmail())

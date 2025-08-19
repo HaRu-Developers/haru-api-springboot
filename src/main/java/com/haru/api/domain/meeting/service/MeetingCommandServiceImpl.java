@@ -138,6 +138,9 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         }
 
         meeting.updateTitle(request.getTitle());
+
+        markdownFileUploader.updateFileTitle(meeting.getProceedingKeyName(), request.getTitle());
+
         meetingRepository.save(meeting);
     }
 
@@ -152,6 +155,9 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         if (!meeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
+
+        markdownFileUploader.deleteFileAndThumbnail(meeting.getProceedingKeyName(), meeting.getThumbnailKeyName());
+        markdownFileUploader.deleteS3File(meeting.getAudioFileKey());
 
         meetingRepository.delete(meeting);
     }
@@ -231,7 +237,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
                 // --- PDF 및 썸네일 생성/업데이트 로직 시작 ---
                 try {
                     // 생성된 PDF를 S3에 업로드
-                    String pdfKey = markdownFileUploader.createOrUpdatePdf(analysisResult, "proceedings/", currentMeeting.getProceedingKeyName());
+                    String pdfKey = markdownFileUploader.createOrUpdatePdf(analysisResult, "proceedings/", currentMeeting.getProceedingKeyName(), currentMeeting.getTitle());
                     currentMeeting.initProceedingKeyName(pdfKey);
 
                     // 썸네일 생성 및 업데이트
