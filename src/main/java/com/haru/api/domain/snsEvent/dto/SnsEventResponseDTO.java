@@ -117,4 +117,12 @@ public class SnsEventResponseDTO {
     public static class ListDownLoadLinkResponse {
         private String downloadLink;
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class getInstagramAccountName {
+        private String instagramAccountName;
+    }
 }

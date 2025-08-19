@@ -99,4 +99,12 @@ public class SnsEventConverter {
                 .account(winner.getNickname())
                 .build();
     }
+
+    public static SnsEventResponseDTO.getInstagramAccountName toGetInstagramAccountName(
+            String instagramAccountName
+    ) {
+        return SnsEventResponseDTO.getInstagramAccountName.builder()
+                .instagramAccountName(instagramAccountName)
+                .build();
+    }
 }
