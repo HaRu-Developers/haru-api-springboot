@@ -171,6 +171,11 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             MoodTracker moodTracker,
             MoodTrackerRequestDTO.SurveyAnswerList request
     ) {
+        // 마감일 이후이면 답변 불가능
+        if(moodTracker.getDueDate().isBefore(LocalDateTime.now())){
+            throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_FINISHED);
+        }
+
         List<SubjectiveAnswer> subjectiveAnswers = new ArrayList<>();
         List<MultipleChoiceAnswer> multipleChoiceAnswers = new ArrayList<>();
         List<CheckboxChoiceAnswer> checkboxChoiceAnswers = new ArrayList<>();
@@ -193,16 +198,25 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
             switch (dto.getType()) {
                 case MULTIPLE_CHOICE -> {
-                    // 선택지 엔티티 조회 후 추가
-                    MultipleChoice foundMultipleChoice = multipleChoiceRepository.findById(dto.getMultipleChoiceId())
-                            .orElseThrow();
+                    // 질문 id와 선택지 id 함께 객관식 선택지 엔티티 조회 후 추가
+                    MultipleChoice foundMultipleChoice = multipleChoiceRepository
+                            .findByIdAndSurveyQuestionId(dto.getMultipleChoiceId(), dto.getQuestionId())
+                            .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.INVALID_CHOICE_FOR_QUESTION));
+
                     multipleChoiceAnswers.add(
                             MoodTrackerConverter.toMultipleChoiceAnswer(foundMultipleChoice)
                     );
                 }
                 case CHECKBOX_CHOICE -> {
-                    // 체크박스 선택지 엔티티 목록 조회 후 추가
-                    List<CheckboxChoice> foundCheckboxChoices = checkboxChoiceRepository.findAllById(dto.getCheckboxChoiceIdList());
+                    // 질문 id와 선택지 id 함께 체크박스 선택지 엔티티 목록 조회 후 추가
+                    List<CheckboxChoice> foundCheckboxChoices = checkboxChoiceRepository
+                            .findAllByIdInAndSurveyQuestionId(dto.getCheckboxChoiceIdList(), dto.getQuestionId());
+
+                    // 요청 개수와 조회 개수가 다르면 → 유효하지 않은 선택지 포함
+                    if (foundCheckboxChoices.size() != dto.getCheckboxChoiceIdList().size()) {
+                        throw new MoodTrackerHandler(ErrorStatus.INVALID_CHOICE_FOR_QUESTION);
+                    }
+
                     checkboxChoiceAnswers.addAll(
                             MoodTrackerConverter.toCheckboxChoiceAnswerList(foundCheckboxChoices)
                     );

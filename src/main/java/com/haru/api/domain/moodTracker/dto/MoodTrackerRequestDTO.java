@@ -8,9 +8,7 @@ import com.haru.api.global.util.json.ToLongDeserializer;
 import com.haru.api.global.util.json.ToLongListDeserializer;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.springframework.validation.annotation.Validated;
 
@@ -31,6 +29,7 @@ public class MoodTrackerRequestDTO {
         private String description;
 
         @NotNull
+        @Future
         private LocalDateTime dueDate;
 
         @NotNull
