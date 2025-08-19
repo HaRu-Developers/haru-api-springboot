@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 @Slf4j
 @Component
@@ -27,9 +29,17 @@ public class MarkdownToPdfConverter {
             try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
                 PdfRendererBuilder builder = new PdfRendererBuilder();
                 builder.useFastMode();
-                // 폰트
-                builder.useFont(new File(getClass().getClassLoader().getResource("/templates/NotoSansKR-Regular.ttf").getFile()), "NanumGothic");
-                builder.withHtmlContent(htmlContent, null);
+
+                try (InputStream fontStream = getClass().getClassLoader().getResourceAsStream("/templates/NotoSansKR-Regular.ttf")) {
+                    if (fontStream == null) {
+                        throw new IOException("폰트 파일을 찾을 수 없습니다.");
+                    }
+                    builder.useFont(() -> fontStream, "NotoSansKR");
+                }
+
+                String styledHtml = "<html><body style=\"font-family: 'NotoSansKR';\">" + htmlContent + "</body></html>";
+                builder.withHtmlContent(styledHtml, null);
+
                 builder.toStream(os);
                 builder.run();
                 log.info("Markdown to PDF 변환 성공");
@@ -40,5 +50,6 @@ public class MarkdownToPdfConverter {
             throw new RuntimeException("PDF 데이터 생성에 실패했습니다.", e);
         }
     }
+
 }
 
