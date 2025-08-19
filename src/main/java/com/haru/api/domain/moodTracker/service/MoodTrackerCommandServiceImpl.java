@@ -13,6 +13,7 @@ import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
 import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.domain.workspace.repository.WorkspaceRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -55,6 +56,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     private final HashIdUtil hashIdUtil;
 
     private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+    private final WorkspaceRepository workspaceRepository;
 
     /**
      * 분위기 트래커 생성
@@ -67,8 +69,11 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             MoodTrackerRequestDTO.CreateRequest request
     ) {
 
+        Workspace foundWorkspace = workspaceRepository.findById(workspace.getId())
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+
         // 분위기 트래커 생성 및 저장
-        MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, user, workspace);
+        MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, user, foundWorkspace);
         MoodTracker savedMoodTracker = moodTrackerRepository.save(moodTracker);
 
         // 선택지 생성 및 저장
@@ -90,7 +95,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
         // mood tracker 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(workspace.getId());
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
         userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
 
         return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
