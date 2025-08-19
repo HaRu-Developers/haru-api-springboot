@@ -180,11 +180,14 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     @Override
     @Transactional
     public void submitSurveyAnswers(
-            MoodTracker moodTracker,
+            Long moodTrackerId,
             MoodTrackerRequestDTO.SurveyAnswerList request
     ) {
+        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
+                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
+
         // 마감일 이후이면 답변 불가능
-        if(moodTracker.getDueDate().isBefore(LocalDateTime.now())){
+        if(foundMoodTracker.getDueDate().isBefore(LocalDateTime.now())){
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_FINISHED);
         }
 
@@ -193,7 +196,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         List<CheckboxChoiceAnswer> checkboxChoiceAnswers = new ArrayList<>();
 
         // 전체 질문을 미리 조회 및 맵에 캐싱
-        List<SurveyQuestion> foundQuestions = surveyQuestionRepository.findAllByMoodTrackerId(moodTracker.getId());
+        List<SurveyQuestion> foundQuestions = surveyQuestionRepository.findAllByMoodTrackerId(foundMoodTracker.getId());
         Map<Long, SurveyQuestion> questionMap = foundQuestions.stream()
                 .collect(Collectors.toMap(SurveyQuestion::getId, q -> q));
 
@@ -259,7 +262,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         subjectiveAnswerRepository.saveAll(subjectiveAnswers);
 
         // 답변자 수 증가
-        moodTrackerRepository.addRespondentsNum(moodTracker.getId());
+        moodTrackerRepository.addRespondentsNum(foundMoodTracker.getId());
     }
 
     @Override
