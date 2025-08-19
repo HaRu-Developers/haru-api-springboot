@@ -35,7 +35,7 @@ public class MoodTracker extends BaseEntity implements Documentable {
     private User creator;
 
     // 🔹 작업공간과 N:1 관계
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "workspace_id", nullable = false)
     private Workspace workspace;
 
