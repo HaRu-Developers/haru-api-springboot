@@ -46,7 +46,7 @@ public class AmazonS3Manager{
         return keyName;
     }
 
-    // 썸네일을 위한 uploadFile
+    // uploadFile
     public String uploadFile(String keyName, byte[] fileBytes, String contentType) {
         if (fileBytes == null || fileBytes.length == 0) {
             throw new IllegalArgumentException("업로드할 파일이 비어있습니다.");
@@ -57,6 +57,30 @@ public class AmazonS3Manager{
                     .key(keyName)
                     .contentType(contentType)
                     .contentLength((long) fileBytes.length)
+                    .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(fileBytes));
+        } catch (Exception e) {
+            log.error("S3 파일 업로드에 실패했습니다. key: {}", keyName, e);
+            throw new RuntimeException("S3 upload failed", e);
+        }
+        return keyName;
+    }
+
+
+    public String uploadFileWithTitle(String keyName, byte[] fileBytes, String contentType, String fileTitle) {
+        if (fileBytes == null || fileBytes.length == 0) {
+            throw new IllegalArgumentException("업로드할 파일이 비어있습니다.");
+        }
+        try {
+            String contentDisposition = createContentDisposition(fileTitle);
+
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(amazonConfig.getBucket())
+                    .key(keyName)
+                    .contentType(contentType)
+                    .contentLength((long) fileBytes.length)
+                    .contentDisposition(contentDisposition)
                     .build();
 
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(fileBytes));
@@ -149,6 +173,26 @@ public class AmazonS3Manager{
             // S3 API 호출 중 에러가 발생하면 로그를 남기고 런타임 예외를 발생시킵니다.
             log.error("S3 파일 삭제 중 에러가 발생했습니다. Key: {}", keyName, e);
             throw new RuntimeException("S3 파일 삭제에 실패했습니다.", e);
+        }
+    }
+
+
+
+    /**
+     * Content-Disposition 헤더 값을 생성합니다.
+     * 한글 등 비 ASCII 문자를 RFC 5987 표준에 따라 인코딩합니다.
+     *
+     * @param displayName 사용자에게 보여줄 파일명
+     * @return 생성된 Content-Disposition 헤더 값
+     */
+    private String createContentDisposition(String displayName) {
+        try {
+            String encodedFilename = URLEncoder.encode(displayName, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20");
+            return "attachment; filename*=UTF-8''" + encodedFilename;
+        } catch (Exception e) {
+            log.warn("파일명 인코딩에 실패했습니다. displayName: {}", displayName);
+            // 인코딩 실패 시, ASCII 문자만 포함된 기본 파일명을 사용하거나 다른 대체 로직을 수행할 수 있습니다.
+            return "attachment; filename=\"file\"";
         }
     }
 

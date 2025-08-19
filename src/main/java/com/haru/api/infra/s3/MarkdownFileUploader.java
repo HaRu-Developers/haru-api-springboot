@@ -23,7 +23,7 @@ public class MarkdownFileUploader {
      * @param featurePath 파일이 저장될 기능별 경로 (예: "aimeeting")
      * @return 생성된 PDF 파일의 S3 key
      */
-    public String createOrUpdatePdf(String markdownText, String featurePath, String existingPdfKey) {
+    public String createOrUpdatePdf(String markdownText, String featurePath, String existingPdfKey, String fileTitle) {
         // 1. Markdown을 PDF 데이터로 변환
         byte[] pdfBytes = markdownToPdfConverter.convert(markdownText);
 
@@ -40,7 +40,7 @@ public class MarkdownFileUploader {
         }
 
         // 3. 결정된 키로 PDF 파일을 S3에 업로드
-        amazonS3Manager.uploadFile(pdfKeyToUse, pdfBytes, "application/pdf");
+        amazonS3Manager.uploadFileWithTitle(pdfKeyToUse, pdfBytes, "application/pdf", fileTitle);
         log.info("PDF 업로드/갱신 성공. Key: {}", pdfKeyToUse);
 
         // 4. 사용된 PDF의 key를 반환
