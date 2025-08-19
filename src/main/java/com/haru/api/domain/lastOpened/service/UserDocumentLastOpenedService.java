@@ -16,4 +16,6 @@ public interface UserDocumentLastOpenedService {
     void deleteRecordsForWorkspaceUsers(Documentable document);
 
     void updateRecordsForWorkspaceUsers(Documentable document, TitleHolder titleHolder);
+
+    void updateRecordsTitleAndThumbnailForWorkspaceUsers(List<User> usersInWorkspace, Documentable documentable, TitleHolder titleHolder);
 }

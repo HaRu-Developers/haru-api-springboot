@@ -112,4 +112,18 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
         return recordsToProcess;
     }
 
+    @Override
+    @Transactional
+    public void updateRecordsTitleAndThumbnailForWorkspaceUsers(List<User> usersInWorkspace, Documentable documentable, TitleHolder titleHolder) {
+        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
+
+        if (!recordsToUpdate.isEmpty()) {
+            for (UserDocumentLastOpened record : recordsToUpdate) {
+                record.updateTitle(titleHolder.getTitle());
+                record.updateThumbnailKeyName(documentable.getThumbnailKeyName());
+            }
+        }
+    }
+
 }
