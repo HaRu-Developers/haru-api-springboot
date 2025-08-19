@@ -145,20 +145,22 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     @Transactional
     @DeleteDocument
     public void deleteMeeting(User user, Meeting meeting) {
+        Meeting foundMeeting = meetingRepository.findById(meeting.getId())
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), meeting.getWorkspace().getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), foundMeeting.getWorkspace().getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
-        if (!meeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
+        if (!foundMeeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
 
-        markdownFileUploader.deleteS3File(meeting.getProceedingPdfKeyName());
-        markdownFileUploader.deleteS3File(meeting.getThumbnailKeyName());
-        markdownFileUploader.deleteS3File(meeting.getProceedingWordKeyName());
-        markdownFileUploader.deleteS3File(meeting.getAudioFileKey());
+        markdownFileUploader.deleteS3File(foundMeeting.getProceedingPdfKeyName());
+        markdownFileUploader.deleteS3File(foundMeeting.getThumbnailKeyName());
+        markdownFileUploader.deleteS3File(foundMeeting.getProceedingWordKeyName());
+        markdownFileUploader.deleteS3File(foundMeeting.getAudioFileKey());
 
-        meetingRepository.delete(meeting);
+        meetingRepository.delete(foundMeeting);
     }
 
     @Override
