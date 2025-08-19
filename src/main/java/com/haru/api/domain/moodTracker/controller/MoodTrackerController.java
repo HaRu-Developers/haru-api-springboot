@@ -145,7 +145,7 @@ public class MoodTrackerController {
     })
     public  ApiResponse<Void> submitMoodTrackerSurveyAnswers(
             @PathVariable("mood-tracker-hashed-Id") String moodTrackerHashedId,
-            @RequestBody MoodTrackerRequestDTO.SurveyAnswerList request,
+            @Valid @RequestBody MoodTrackerRequestDTO.SurveyAnswerList request,
             @Parameter(hidden = true) @AuthMoodTracker MoodTracker moodTracker
     ) {
 

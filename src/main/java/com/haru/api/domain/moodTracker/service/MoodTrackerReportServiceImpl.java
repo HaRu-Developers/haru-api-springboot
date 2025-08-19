@@ -10,7 +10,6 @@ import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.infra.api.client.ChatGPTClient;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.s3.MarkdownFileUploader;
-import com.lowagie.text.pdf.BaseFont;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
@@ -201,15 +200,11 @@ public class MoodTrackerReportServiceImpl implements MoodTrackerReportService {
         return downloadLink;
     }
 
-    @Override
-    public void generateAndUploadReportFileAndThumbnail(Long moodTrackerId){
-
-        // 리포트 생성
-        generateReport(moodTrackerId);
-
+    private void uploadReportFileAndThumbnail(Long moodTrackerId){
         MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
+        // 리포트 파일 생성
         byte[] pdfReportBytes;
         byte[] docxReportBytes;
 
@@ -251,15 +246,40 @@ public class MoodTrackerReportServiceImpl implements MoodTrackerReportService {
 
         amazonS3Manager.uploadFile(pdfReportKey, pdfReportBytes, "application/pdf");
         amazonS3Manager.uploadFile(wordReportKey, docxReportBytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-
         foundMoodTracker.updateReportKeyName(pdfReportKey, wordReportKey);
 
+        // 리포트 썸네일 생성
         String thumbnailKey = markdownFileUploader.createOrUpdateThumbnailWithPdfBytes(
                 pdfReportBytes,
                 "mood-tracker",
                 null
         );
         foundMoodTracker.updateThumbnailKey(thumbnailKey);
+    }
+
+    @Override
+    public void generateAndUploadReportFileAndThumbnail(Long moodTrackerId){
+        // 리포트 생성
+        generateReport(moodTrackerId);
+
+        // 리포트 파일 및 썸네일 업데이트
+        uploadReportFileAndThumbnail(moodTrackerId);
+    }
+
+    @Override
+    public void updateAndUploadReportFileAndThumbnail(Long moodTrackerId) {
+        // 리포트 파일 및 썸네일 업데이트
+        uploadReportFileAndThumbnail(moodTrackerId);
+    }
+
+    @Override
+    public void deleteReportFileAndThumbnail(Long moodTrackerId) {
+        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
+                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
+
+        amazonS3Manager.deleteFile(foundMoodTracker.getPdfReportKey());
+        amazonS3Manager.deleteFile(foundMoodTracker.getWordReportKey());
+        amazonS3Manager.deleteFile(foundMoodTracker.getThumbnailKey());
     }
 
     /* ========================= 헬퍼들 ========================= */
