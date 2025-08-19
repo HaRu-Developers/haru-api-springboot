@@ -46,7 +46,10 @@ public class Meeting extends BaseEntity implements Documentable {
 
     // AI 회의록 정리본 파일
     @Column(columnDefinition = "TEXT")
-    private String proceedingKeyName;
+    private String proceedingPdfKeyName;
+
+    @Column(columnDefinition = "TEXT")
+    private String proceedingWordKeyName;
 
     @Column(columnDefinition = "TEXT")
     private String thumbnailKeyName;
@@ -77,7 +80,8 @@ public class Meeting extends BaseEntity implements Documentable {
     public void updateProceeding(String proceeding) {
         this.proceeding = proceeding;
     }
-    public void initProceedingKeyName(String proceedingKeyName) { this.proceedingKeyName = proceedingKeyName; }
+    public void initProceedingPdfKeyName(String proceedingPdfKeyName) { this.proceedingPdfKeyName = proceedingPdfKeyName; }
+    public void initProceedingWordKeyName(String proceedingWordKeyName) { this.proceedingWordKeyName = proceedingWordKeyName; }
     public void initThumbnailKeyName(String thumbnailKeyName) { this.thumbnailKeyName = thumbnailKeyName; }
     public void initStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
