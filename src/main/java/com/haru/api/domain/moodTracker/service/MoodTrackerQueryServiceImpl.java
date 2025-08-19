@@ -38,7 +38,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
     private final SurveyQuestionRepository surveyQuestionRepository;
 
     @Override
-    public MoodTrackerResponseDTO.PreviewList getMoodTrackerPreviewList(User user, Workspace workspace) {
+    public MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace) {
 
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
@@ -62,6 +62,32 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
 
         MoodTrackerResponseDTO.PreviewList previewList = MoodTrackerConverter.toPreviewListDTO(accessibleMoodTrackers, hashIdUtil);
         return previewList;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @TrackLastOpened
+    public MoodTrackerResponseDTO.BaseResult getBaseResult(User user, MoodTracker moodTracker) {
+
+        // 워크스페이스 권한 조회
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(
+                moodTracker.getWorkspace().getId(), user.getId()
+        ).orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
+
+        // 권한 검증
+        boolean hasAccess =
+                // 워크스페이스 생성자
+                foundUserWorkspace.getAuth().equals(Auth.ADMIN)
+                        // 해당 MoodTracker 생성자
+                        || moodTracker.getCreator().getId().equals(user.getId())
+                        // 공개된 설문
+                        || moodTracker.getVisibility().equals(MoodTrackerVisibility.PUBLIC);
+
+        if (!hasAccess) {
+            throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_ACCESS_DENIED);
+        }
+
+        return MoodTrackerConverter.toBaseResultDTO(moodTracker, hashIdUtil);
     }
 
     @Override
