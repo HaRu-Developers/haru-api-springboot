@@ -64,6 +64,8 @@ public enum ErrorStatus implements BaseErrorCode {
     MOOD_TRACKER_WRONG_FORMAT(HttpStatus.BAD_REQUEST, "MOODTRACKER4007", "분위기 트래커의 잘못된 다운로드 파일 형식입니다."),
     MOOD_TRACKER_DOWNLOAD_ERROR(HttpStatus.BAD_REQUEST, "MOODTRACKER4008", "분위기 트래커 다운로드중 오류가 발생했습니다."),
     MOOD_TRACKER_KEYNAME_NOT_FOUND(HttpStatus.BAD_REQUEST, "MOODTRACKER4009", "분위기 트래커 다운로드중 키 이름이 존재하지 않습니다."),
+    MOOD_TRACKER_FINISHED(HttpStatus.BAD_REQUEST, "MOODTRACKER4010", "분위기 트래커 마감일 이후입니다."),
+    INVALID_CHOICE_FOR_QUESTION(HttpStatus.BAD_REQUEST, "MOODTRACKER4011", "분위기 트래커 질문에 유효하지 않은 선택지입니다."),
 
     // 메일 관련 에러
     MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다."),
