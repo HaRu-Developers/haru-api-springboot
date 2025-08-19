@@ -155,10 +155,10 @@ public class MoodTrackerController {
 
     }
 
-    @GetMapping("/{mood-tracker-hashed-Id}")
+    @GetMapping("/{mood-tracker-hashed-Id}/bases")
     @Operation(
             summary = "분위기 트래커 설문 팀분위기 베이스 정보 조회 API",
-            description = "# [v1.0 (2025-08-19)](https://www.notion.so/2545da7802c580dd9742d971d3a4bc08?source=copy_link) 분위기 트래커(moodTrackerId)에 대한 베이스 정보를 조회합니다."
+            description = "# [v1.1 (2025-08-19)](https://www.notion.so/2545da7802c580dd9742d971d3a4bc08?source=copy_link) 분위기 트래커(moodTrackerId)에 대한 베이스 정보를 조회합니다."
     )
     @Parameters({
             @Parameter(name = "mood-tracker-hashed-Id", description = "분위기 트래커 ID (Hashed, Path Variable)", required = true)
