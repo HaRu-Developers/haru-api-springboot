@@ -150,6 +150,7 @@ public class ChatGPTClient {
         sb.append("### 2. 주요 인사이트 요약 (HaRu AI가 뽑은 핵심 요약)\n");
         sb.append("   - 사용자의 응답 중 반복되거나 주목할 만한 인사이트를 요약\n");
         sb.append("   - 전체 응답자의 몇 %가 어떤 패턴을 보였는지도 서술\n");
+        sb.append("   - 서술시에 질문 숫자 id가 아닌 질문 내용 텍스트 기반으로 설명\n");
         sb.append("### 3. 자유 응답 기반 주요 키워드 정리\n");
         sb.append("   - 예: 잦힌 (37건), 말은 덜 불분명 (29건) 등\n\n");
 
