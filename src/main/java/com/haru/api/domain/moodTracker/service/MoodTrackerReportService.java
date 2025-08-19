@@ -9,6 +9,12 @@ public interface MoodTrackerReportService {
     void generateAndUploadReportFileAndThumbnail(
             Long moodTrackerId
     );
+    void updateAndUploadReportFileAndThumbnail(
+            Long moodTrackerId
+    );
+    void deleteReportFileAndThumbnail(
+            Long moodTrackerId
+    );
     String generateDownloadLink(
             MoodTracker moodTracker,
             Format format

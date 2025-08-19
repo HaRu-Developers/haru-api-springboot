@@ -181,7 +181,7 @@ public class UserCommandServiceImpl implements UserCommandService{
             userRepository.save(user);
 
             if(token != null) {
-                workspaceCommandService.acceptInvite(token);
+                workspaceCommandService.acceptInvite(token, user);
             }
 
             return login(UserRequestDTO.LoginRequest.builder()
