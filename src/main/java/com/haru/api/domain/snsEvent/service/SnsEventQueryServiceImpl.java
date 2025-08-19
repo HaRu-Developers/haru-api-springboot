@@ -48,4 +48,16 @@ public class SnsEventQueryServiceImpl implements SnsEventQueryService {
         );
 
     }
+
+    @Override
+    public SnsEventResponseDTO.getInstagramAccountName getInstagramAccountName(User user, Workspace workspace) {
+        if (workspace.getInstagramAccountName() == null) {
+            return SnsEventConverter.toGetInstagramAccountName(
+                    ""
+            );
+        }
+        return SnsEventConverter.toGetInstagramAccountName(
+                workspace.getInstagramAccountName()
+        );
+    }
 }
