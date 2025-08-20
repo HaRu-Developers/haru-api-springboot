@@ -130,6 +130,11 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             moodTrackerReportService.deleteReportFileAndThumbnail(moodTracker.getId());
             // S3에서 썸네일 및 다운로드 파일 업데이트
             moodTrackerReportService.updateAndUploadReportFileAndThumbnail(moodTracker.getId());
+            // Mood Tracker 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
+            MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTracker.getId())
+                    .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
+            List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundMoodTracker.getWorkspace().getId());
+            userDocumentLastOpenedService.updateRecordsTitleAndThumbnailForWorkspaceUsers(usersInWorkspace, foundMoodTracker, request);
         }
     }
 

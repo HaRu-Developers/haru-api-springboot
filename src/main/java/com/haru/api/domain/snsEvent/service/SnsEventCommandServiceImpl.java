@@ -226,8 +226,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         // sns event 썸네일 key name 초기화
         savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
 
-        // sns event 생성 시 워크스페이스에 속해있는 모든 유저에 대해
-        // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
+        // SNS Event 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
         List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(savedSnsEvent.getWorkspace().getId());
         userDocumentLastOpenedService.updateRecordsTitleAndThumbnailForWorkspaceUsers(usersInWorkspace, savedSnsEvent, request);
     }
