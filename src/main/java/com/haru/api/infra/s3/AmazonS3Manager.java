@@ -153,6 +153,7 @@ public class AmazonS3Manager{
         }
     }
 
+    // newDisplayName에 확장자 포함되어있음
     public void updateFileTitle(String keyName, String newDisplayName) {
 
         try {
