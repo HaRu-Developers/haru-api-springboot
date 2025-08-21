@@ -36,7 +36,7 @@ public class RedisReportConsumer {
 
             for (String id : dueIds) {
                 // Worker Queue로 push
-                redisTemplate.opsForList().leftPush("report-worker-queue", id);
+                redisTemplate.opsForList().leftPush("REPORT_WORKER_QUEUE", id);
                 // ZSET에서는 제거
                 redisTemplate.opsForZSet().remove(QUEUE_KEY, id);
             }
