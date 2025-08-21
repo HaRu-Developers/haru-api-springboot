@@ -59,11 +59,9 @@ public class RedisReportConsumer {
         }
     }
 
-    @Scheduled(cron = "0 0/1 * * * *") // 정각부터 5분 마다 실행
+    @Scheduled(cron = "0 0/1 * * * *") // 매 1분
     public void pollFailedQueueEvery1Minutes() {
         long now = Instant.now().getEpochSecond();
-        log.info("[RedisReportConsumer] pollQueueEvery5Minutes 실행됨 (now = {})", now);
-
         Set<String> failedIds = redisTemplate.opsForZSet()
                 .rangeByScore(FAILED_QUEUE, 0, now, 0, BATCH_SIZE);
 
@@ -72,17 +70,13 @@ public class RedisReportConsumer {
             return;
         }
 
-        log.info("[RedisReportConsumer] 실패 큐 처리할 dueIds: {}", failedIds);
-
         for (String id : failedIds) {
-            try {
-                reportService.generateAndUploadReportFileAndThumbnail(Long.valueOf(id));
+            // 다시 Worker 큐로 push
+            redisTemplate.opsForList().leftPush(WORKER_QUEUE, id);
+            log.info("[RedisReportConsumer] 실패 큐 → 워커 큐 이동: {}", id);
 
-                // 실패 큐에서 제거
-                redisTemplate.opsForZSet().remove(FAILED_QUEUE, id);
-            } catch (Exception e) {
-                log.error("[RedisReportConsumer] 실패 큐 재실행 중 에러 → {}", id, e);
-            }
+            // 실패 큐에서 제거
+            redisTemplate.opsForZSet().remove(FAILED_QUEUE, id);
         }
     }
 

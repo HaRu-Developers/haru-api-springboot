@@ -155,7 +155,9 @@ public class ChatGPTClient {
         sb.append("### 3. 자유 응답 기반 주요 키워드 정리\n");
         sb.append("   - 예: 잦힌 (37건), 말은 덜 불분명 (29건) 등\n\n");
 
-        sb.append("응답은 반드시 다음 JSON 형식으로 해줘. 벡틱(`)과 json 표시는 제외하고 본문만 출력해줘야해. 형식만 따르고, 값은 생성한 값을 넣어줘야해. 질문에 대한 제안은 입력받은 질문 Id와 해당 질문에 매칭되는 제안 내용을 넣어줘. : \n");
+        sb.append("응답은 반드시 다음 JSON 형식으로 해줘. 반드시 순수 JSON만 반환하세요. \n");
+        sb.append("```json, ``` 와 같은 마크다운 포맷은 절대 포함하지 마세요.\\n\"");
+        sb.append(" 아래의 형식만 따르고, 값은 생성한 값을 넣어줘야해. 질문에 대한 제안은 입력받은 질문 Id와 해당 질문에 매칭되는 제안 내용을 넣어줘. : \n");
         sb.append("{\n");
         sb.append("  \"report\": \"전체 리포트 마크다운 텍스트\",\n");
         sb.append("  \"suggestionsByQuestionId\": {\n");
