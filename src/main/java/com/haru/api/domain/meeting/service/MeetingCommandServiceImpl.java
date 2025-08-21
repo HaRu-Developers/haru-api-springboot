@@ -200,6 +200,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
             String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meeting" + meeting.getId(), meeting.getThumbnailKeyName());
             log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
             // Meeting AI 회의록 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
+            foundMeeting.initThumbnailKeyName(newThumbnailKey);
             List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(foundMeeting.getId(), AI_MEETING_MANAGER);
             foundLastOpenedList.forEach(userDocumentLastOpened -> {
                 userDocumentLastOpened.updateThumbnailKeyName(newThumbnailKey);
