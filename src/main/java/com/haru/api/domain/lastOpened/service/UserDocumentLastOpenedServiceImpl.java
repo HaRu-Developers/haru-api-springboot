@@ -12,6 +12,7 @@ import com.haru.api.global.common.entity.TitleHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -27,7 +28,7 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
     private final UserRepository userRepository;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateLastOpened(UserDocumentId userDocumentId, Long workspaceId, String title) {
 
         UserDocumentLastOpened record = userDocumentLastOpenedRepository.findById(userDocumentId)

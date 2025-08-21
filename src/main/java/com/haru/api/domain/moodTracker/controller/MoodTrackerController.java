@@ -194,7 +194,7 @@ public class MoodTrackerController {
 
     @GetMapping("/{mood-tracker-hashed-Id}/reports")
     @Operation(
-            summary = "분위기 트래커 설문 팀분위기 리포트 조회 API",
+            summary = "분위기 트래커 설문 팀분위기 리포트 조회 API + last opend 처리",
             description = "# [v1.2 (2025-08-05)](https://www.notion.so/2295da7802c580ba8401c449389e8f78) 분위기 트래커(moodTrackerId)에 대한 팀 전체 리포트를 조회합니다."
     )
     @Parameters({
@@ -214,7 +214,7 @@ public class MoodTrackerController {
 
     @GetMapping("/{mood-tracker-hashed-Id}/responses")
     @Operation(
-            summary = "분위기 트래커 설문 응답 조회 API",
+            summary = "분위기 트래커 설문 응답 조회 API + last opend 처리",
             description = "# [v1.2 (2025-08-05)](https://www.notion.so/2265da7802c5808290adf17d8d4591a4) 분위기 트래커(moodTrackerId)에 대한 개별 응답 데이터를 조회합니다."
     )
     @Parameters({
