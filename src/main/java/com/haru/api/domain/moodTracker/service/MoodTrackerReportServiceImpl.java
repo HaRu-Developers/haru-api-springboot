@@ -11,6 +11,7 @@ import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.s3.MarkdownFileUploader;
 import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfWriter;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -201,6 +202,7 @@ public class MoodTrackerReportServiceImpl implements MoodTrackerReportService {
     }
 
     @Override
+    @Transactional
     public void generateAndUploadReportFileAndThumbnail(Long moodTrackerId){
 
         // 리포트 생성
