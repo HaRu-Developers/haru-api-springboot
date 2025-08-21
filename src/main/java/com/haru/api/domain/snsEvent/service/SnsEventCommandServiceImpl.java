@@ -221,9 +221,14 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
         // S3문서 제목, S3 문서내 제목, 썸네일 이미지의 제목 변경
         deleteS3FileAndThumnailImage(savedSnsEvent);
+
         String thumbnailKeyName = createAndUploadListFileAndThumbnail(savedSnsEvent);
         // sns event 썸네일 key name 초기화
         savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
+
+        // SNS Event 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
+        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(savedSnsEvent.getWorkspace().getId());
+        userDocumentLastOpenedService.updateRecordsTitleAndThumbnailForWorkspaceUsers(usersInWorkspace, savedSnsEvent, request);
     }
 
     @Override
