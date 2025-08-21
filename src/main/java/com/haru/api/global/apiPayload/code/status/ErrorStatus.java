@@ -69,7 +69,8 @@ public enum ErrorStatus implements BaseErrorCode {
     INVALID_CHOICE_FOR_QUESTION(HttpStatus.BAD_REQUEST, "MOODTRACKER4011", "분위기 트래커 질문에 유효하지 않은 선택지입니다."),
 
     // 메일 관련 에러
-    MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다."),
+    MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다. (존재하지 않는 이메일일 수 있습니다)"),
+    MAIL_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "MAIL400", "이메일 형식이 잘못되었습니다."),
 
     // SNS 이벤트 관련 에러
     SNS_EVENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "SNSEVENT4001", "SNS 이벤트가 존재하지 않습니다."),
