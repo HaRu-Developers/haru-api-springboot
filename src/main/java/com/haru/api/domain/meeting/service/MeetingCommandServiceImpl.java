@@ -176,8 +176,22 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         if (!meeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
+        String editedProceeding = newProceeding.getProceeding();
+        meeting.updateProceeding(editedProceeding);
+        try {
+            // 생성된 PDF를 S3에 업로드
+            String pdfKey = markdownFileUploader.createOrUpdatePdf(editedProceeding, "meeting/pdf", meeting.getProceedingPdfKeyName(), meeting.getTitle());
+            String wordKey = markdownFileUploader.createOrUpdateWord(editedProceeding, "meeting/word", meeting.getProceedingWordKeyName(), meeting.getTitle());
 
-        meeting.updateProceeding(newProceeding.getProceeding());
+            // 썸네일 생성 및 업데이트
+            String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meeting" + meeting.getId(), meeting.getThumbnailKeyName());
+            log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
+
+        } catch (Exception e) {
+            log.error("meetingId: {}의 PDF 또는 썸네일 생성/업로드 중 에러 발생", meeting.getId(), e);
+        }
+
+
         meetingRepository.save(meeting);
 
     }
