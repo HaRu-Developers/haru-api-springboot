@@ -16,8 +16,7 @@ public interface SnsEventRepository extends JpaRepository<SnsEvent, Long> {
     @Query("SELECT m FROM SnsEvent m WHERE m.workspace.id = :workspaceId")
     List<SnsEvent> findAllByWorkspaceId(Long workspaceId);
 
-    List<SnsEvent> findAllByWorkspace(Workspace foundWorkspace);
-
+    List<SnsEvent> findAllByWorkspaceOrderByUpdatedAtDesc(Workspace foundWorkspace);
 
     @Query("SELECT mt FROM SnsEvent mt " +
             "WHERE mt.workspace.id = :workspaceId " +

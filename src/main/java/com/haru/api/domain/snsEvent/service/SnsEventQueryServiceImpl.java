@@ -27,7 +27,7 @@ public class SnsEventQueryServiceImpl implements SnsEventQueryService {
     @Override
     public SnsEventResponseDTO.GetSnsEventListRequest getSnsEventList(User user, Workspace workspace) {
 
-        List<SnsEvent> snsEventList = snsEventRepository.findAllByWorkspace(workspace);
+        List<SnsEvent> snsEventList = snsEventRepository.findAllByWorkspaceOrderByUpdatedAtDesc(workspace);
 
         return SnsEventConverter.toGetSnsEventListRequest(snsEventList);
 
