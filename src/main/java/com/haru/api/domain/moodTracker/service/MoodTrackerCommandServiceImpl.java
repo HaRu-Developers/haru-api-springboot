@@ -146,6 +146,9 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             User user,
             MoodTracker moodTracker
     ) {
+        // redis queue에서 비워줘서 중복 처리 제외
+        redisReportConsumer.removeFromQueue(moodTracker.getId());
+
         UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
