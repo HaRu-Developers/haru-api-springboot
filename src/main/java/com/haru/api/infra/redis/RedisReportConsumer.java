@@ -18,7 +18,6 @@ import java.util.Set;
 public class RedisReportConsumer {
 
     private final StringRedisTemplate redisTemplate;
-    private final MoodTrackerReportService moodTrackerReportService;
 
     @Value("${queue-name}")
     private String QUEUE_KEY;
@@ -45,10 +44,6 @@ public class RedisReportConsumer {
                     // Worker Queue로 push
                     redisTemplate.opsForList().leftPush("REPORT_WORKER_QUEUE", id);
                     log.info("[RedisReportConsumer] REPORT_WORKER_QUEUE에 추가됨 → {}", id);
-
-                    // ZSET에서 제거
-                    redisTemplate.opsForZSet().remove(QUEUE_KEY, id);
-                    log.info("[RedisReportConsumer] ZSET({})에서 제거됨 → {}", QUEUE_KEY, id);
 
                 } catch (Exception e) {
                     log.error("[RedisReportConsumer] id={} 처리 중 에러", id, e);
