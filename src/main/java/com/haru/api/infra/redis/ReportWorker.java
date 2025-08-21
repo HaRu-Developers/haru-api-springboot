@@ -20,8 +20,6 @@ public class ReportWorker {
     private final MoodTrackerReportService reportService;
     private final ExecutorService executor = Executors.newFixedThreadPool(5); // 5개 병렬 Worker
 
-    @Value("${queue-name}")
-    private String QUEUE_KEY;
     private static final String WORKER_QUEUE = "REPORT_WORKER_QUEUE";
     private static final String FAILED_QUEUE = "REPORT_FAILED_QUEUE";
 
@@ -38,9 +36,7 @@ public class ReportWorker {
         try {
             reportService.generateAndUploadReportFileAndThumbnail(moodTrackerId);
             log.info("Report 생성 성공: {}", moodTrackerId);
-            // ZSET에서 제거
-            redisTemplate.opsForZSet().remove(QUEUE_KEY, moodTrackerId);
-            log.info("[RedisReportConsumer] ZSET({})에서 제거됨 → {}", QUEUE_KEY, moodTrackerId);
+
         } catch (Exception e) {
             log.error("Report 생성 실패 (재시도 예정): {}", moodTrackerId, e);
 

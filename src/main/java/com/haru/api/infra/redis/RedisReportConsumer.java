@@ -23,6 +23,9 @@ public class RedisReportConsumer {
     private String QUEUE_KEY;
     private static final long BATCH_SIZE = 20;
 
+    private static final String WORKER_QUEUE = "REPORT_WORKER_QUEUE";
+    private static final String FAILED_QUEUE = "REPORT_FAILED_QUEUE";
+
     @Scheduled(cron = "0 0/5 * * * *") // 정각부터 5분 마다 실행
     public void pollQueueEvery5Minutes() {
         long now = Instant.now().getEpochSecond();
@@ -42,12 +45,45 @@ public class RedisReportConsumer {
             for (String id : dueIds) {
                 try {
                     // Worker Queue로 push
-                    redisTemplate.opsForList().leftPush("REPORT_WORKER_QUEUE", id);
+                    redisTemplate.opsForList().leftPush(WORKER_QUEUE, id);
                     log.info("[RedisReportConsumer] REPORT_WORKER_QUEUE에 추가됨 → {}", id);
 
+                    // ZSET에서 제거
+                    redisTemplate.opsForZSet().remove(QUEUE_KEY, id);
+                    log.info("[RedisReportConsumer] ZSET({})에서 제거됨 → {}", QUEUE_KEY, id);
                 } catch (Exception e) {
                     log.error("[RedisReportConsumer] id={} 처리 중 에러", id, e);
                 }
+            }
+        }
+    }
+
+    @Scheduled(cron = "0 0/1 * * * *") // 정각부터 5분 마다 실행
+    public void pollFailedQueueEvery1Minutes() {
+        long now = Instant.now().getEpochSecond();
+        log.info("[RedisReportConsumer] pollQueueEvery5Minutes 실행됨 (now = {})", now);
+
+        Set<String> failedIds = redisTemplate.opsForZSet()
+                .rangeByScore(FAILED_QUEUE, 0, now, 0, BATCH_SIZE);
+
+        if (failedIds == null || failedIds.isEmpty()) {
+            log.info("[RedisReportConsumer] 실패 큐 없음");
+            return;
+        }
+
+        log.info("[RedisReportConsumer] 실패 큐 처리할 dueIds: {}", failedIds);
+
+        for (String id : failedIds) {
+            try {
+                // 다시 워커 큐로 push
+                redisTemplate.opsForList().leftPush("REPORT_WORKER_QUEUE", id);
+                log.info("[RedisReportConsumer] 실패 큐 재실행 → {}", id);
+
+                // 실패 큐에서 제거
+                redisTemplate.opsForZSet().remove("REPORT_FAILED_QUEUE", id);
+
+            } catch (Exception e) {
+                log.error("[RedisReportConsumer] 실패 큐 재실행 중 에러 → {}", id, e);
             }
         }
     }
