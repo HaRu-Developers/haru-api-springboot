@@ -53,6 +53,8 @@ public class Workspace extends BaseEntity {
         this.title = title;
     }
 
+    public void initKeyName(String keyName) {this.keyName = keyName;}
+
     public void saveInstagramId(String userId) {
         this.instagramId = userId;
     }
