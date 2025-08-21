@@ -44,4 +44,18 @@ public class RedisReportConsumer {
             }
         }
     }
+
+    @Transactional
+    public void removeFromQueue(Long moodTrackerId) {
+        try {
+            Long removed = redisTemplate.opsForZSet().remove(QUEUE_KEY, moodTrackerId.toString());
+            if (removed != null && removed > 0) {
+                log.info("즉시 생성 API 호출로 큐에서 제거됨: {}", moodTrackerId);
+            } else {
+                log.info("큐에 존재하지 않아 제거할 항목 없음: {}", moodTrackerId);
+            }
+        } catch (Exception e) {
+            log.error("큐 제거 실패: {}", moodTrackerId, e);
+        }
+    }
 }
