@@ -17,6 +17,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RedisReportConsumer {
 
+    private final MoodTrackerReportService reportService;
     private final StringRedisTemplate redisTemplate;
 
     @Value("${queue-name}")
@@ -75,13 +76,10 @@ public class RedisReportConsumer {
 
         for (String id : failedIds) {
             try {
-                // 다시 워커 큐로 push
-                redisTemplate.opsForList().leftPush("REPORT_WORKER_QUEUE", id);
-                log.info("[RedisReportConsumer] 실패 큐 재실행 → {}", id);
+                reportService.generateAndUploadReportFileAndThumbnail(Long.valueOf(id));
 
                 // 실패 큐에서 제거
-                redisTemplate.opsForZSet().remove("REPORT_FAILED_QUEUE", id);
-
+                redisTemplate.opsForZSet().remove(FAILED_QUEUE, id);
             } catch (Exception e) {
                 log.error("[RedisReportConsumer] 실패 큐 재실행 중 에러 → {}", id, e);
             }

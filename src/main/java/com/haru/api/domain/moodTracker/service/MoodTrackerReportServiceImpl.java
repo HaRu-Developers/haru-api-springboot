@@ -125,6 +125,59 @@ public class MoodTrackerReportServiceImpl implements MoodTrackerReportService {
 
     }
 
+    /* ========================= 헬퍼들 ========================= */
+
+    @SuppressWarnings("unchecked")
+    private String extractContentSafely(Map<String, Object> responseBody) {
+        Object choicesObj = responseBody.get("choices");
+        if (!(choicesObj instanceof List<?> choices) || choices.isEmpty())
+            throw new MoodTrackerHandler(ErrorStatus.GPT_FAILED);
+
+        Object first = choices.get(0);
+        if (!(first instanceof Map<?, ?> firstMap))
+            throw new MoodTrackerHandler(ErrorStatus.GPT_FAILED);
+
+        Object messageObj = firstMap.get("message");
+        if (messageObj instanceof Map<?, ?> messageMap) {
+            Object contentObj = messageMap.get("content");
+            if (contentObj instanceof String s) return s;
+        }
+        Object textObj = firstMap.get("text");
+        if (textObj instanceof String s) return s;
+
+        throw new MoodTrackerHandler(ErrorStatus.GPT_FAILED);
+    }
+
+    /** ```json ... ``` 형태여도 첫 번째 JSON 오브젝트만 추출 */
+    private String extractFirstJsonObject(String content) {
+        if (content == null || content.isBlank())
+            throw new MoodTrackerHandler(ErrorStatus.GPT_FAILED);
+
+        String cleaned = content
+                .replaceAll("(?s)```json\\s*", "")
+                .replaceAll("(?s)```\\s*", "")
+                .trim();
+
+        int start = cleaned.indexOf('{');
+        int end = findMatchingBrace(cleaned, start);
+        if (start >= 0 && end > start) return cleaned.substring(start, end + 1);
+        return cleaned; // 순수 JSON일 수도 있음
+    }
+
+    private int findMatchingBrace(String s, int start) {
+        if (start < 0) return -1;
+        int depth = 0;
+        for (int i = start; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '{') depth++;
+            else if (c == '}') {
+                depth--;
+                if (depth == 0) return i;
+            }
+        }
+        return -1;
+    }
+
     private String buildPrompt(String title,
                                List<SurveyQuestion> questions,
                                Map<Long, List<SubjectiveAnswer>> subjectiveMap,

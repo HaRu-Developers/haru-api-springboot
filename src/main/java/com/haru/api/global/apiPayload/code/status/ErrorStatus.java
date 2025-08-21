@@ -72,6 +72,9 @@ public enum ErrorStatus implements BaseErrorCode {
     MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다. (존재하지 않는 이메일일 수 있습니다)"),
     MAIL_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "MAIL400", "이메일 형식이 잘못되었습니다."),
 
+    // GPT 에러
+    GPT_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "GPT500", "GPT 에러입니다."),
+
     // SNS 이벤트 관련 에러
     SNS_EVENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "SNSEVENT4001", "SNS 이벤트가 존재하지 않습니다."),
     SNS_EVENT_LINK_NOT_FOUND(HttpStatus.BAD_REQUEST, "SNS_EVENT4002", "잘못된 인스타그램 게시물 링크 형식입니다."),
