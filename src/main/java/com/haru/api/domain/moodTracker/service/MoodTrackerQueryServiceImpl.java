@@ -1,5 +1,7 @@
 package com.haru.api.domain.moodTracker.service;
 
+import com.haru.api.domain.lastOpened.entity.UserDocumentId;
+import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
@@ -11,7 +13,6 @@ import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
 import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
-import com.haru.api.global.annotation.TrackLastOpened;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
@@ -36,6 +37,8 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
     private final HashIdUtil hashIdUtil;
 
     private final SurveyQuestionRepository surveyQuestionRepository;
+
+    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
 
     @Override
     public MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace) {
@@ -85,9 +88,16 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    @TrackLastOpened
+    @Transactional
     public MoodTrackerResponseDTO.ReportResult getReportResult(User user, MoodTracker moodTracker) {
+
+        // 최근 문서 조회 동기화
+        Long workspaceId = moodTracker.getWorkspaceId();
+        String title = moodTracker.getTitle();
+
+        UserDocumentId userDocumentId = new UserDocumentId(user.getId(), moodTracker.getId(), moodTracker.getDocumentType());
+
+        userDocumentLastOpenedService.updateLastOpened(userDocumentId, workspaceId, title);
 
         // 권한 확인
         UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(
@@ -117,9 +127,16 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    @TrackLastOpened
+    @Transactional
     public MoodTrackerResponseDTO.ResponseResult getResponseResult(User user, MoodTracker moodTracker) {
+
+        // 최근 문서 조회 동기화
+        Long workspaceId = moodTracker.getWorkspaceId();
+        String title = moodTracker.getTitle();
+
+        UserDocumentId userDocumentId = new UserDocumentId(user.getId(), moodTracker.getId(), moodTracker.getDocumentType());
+
+        userDocumentLastOpenedService.updateLastOpened(userDocumentId, workspaceId, title);
 
         // 권한 확인
         UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(
