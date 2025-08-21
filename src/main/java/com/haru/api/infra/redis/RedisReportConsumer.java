@@ -21,7 +21,7 @@ public class RedisReportConsumer {
     private final StringRedisTemplate redisTemplate;
 
     @Value("${queue-name}")
-    private String QUEUE_KEY;
+    private String POLL_QUEUE_KEY;
     private static final long BATCH_SIZE = 20;
 
     private static final String WORKER_QUEUE_KEY = "REPORT_WORKER_QUEUE";
@@ -34,7 +34,7 @@ public class RedisReportConsumer {
 
         while (true) {
             Set<String> dueIds = redisTemplate.opsForZSet()
-                    .rangeByScore(QUEUE_KEY, 0, now, 0, BATCH_SIZE);
+                    .rangeByScore(POLL_QUEUE_KEY, 0, now, 0, BATCH_SIZE);
 
             if (dueIds == null || dueIds.isEmpty()) {
                 log.info("[RedisReportConsumer] dueIds 없음 → 반복 종료");
@@ -50,8 +50,8 @@ public class RedisReportConsumer {
                     log.info("[RedisReportConsumer] WORKER_QUEUE에 추가됨 → {}", id);
 
                     // 본 큐에서 제거
-                    redisTemplate.opsForZSet().remove(QUEUE_KEY, id);
-                    log.info("[RedisReportConsumer] ZSET({})에서 제거됨 → {}", QUEUE_KEY, id);
+                    redisTemplate.opsForZSet().remove(POLL_QUEUE_KEY, id);
+                    log.info("[RedisReportConsumer] ZSET({})에서 제거됨 → {}", POLL_QUEUE_KEY, id);
 
                 } catch (Exception e) {
                     log.error("[RedisReportConsumer] id={} 처리 중 에러 → 실패 큐로 이동", id, e);
@@ -102,7 +102,7 @@ public class RedisReportConsumer {
     @Transactional
     public void removeFromQueue(Long moodTrackerId) {
         try {
-            Long removed = redisTemplate.opsForZSet().remove(QUEUE_KEY, moodTrackerId.toString());
+            Long removed = redisTemplate.opsForZSet().remove(POLL_QUEUE_KEY, moodTrackerId.toString());
             if (removed != null && removed > 0) {
                 log.info("[RedisReportConsumer] 즉시 생성 API → 큐에서 제거됨: {}", moodTrackerId);
             } else {

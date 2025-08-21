@@ -117,7 +117,7 @@ public class MoodTrackerReportServiceImpl implements MoodTrackerReportService {
         } catch (IllegalStateException e) {
             log.warn("이미 suggestion이 생성된 질문이 존재합니다. 일부 항목은 건너뜁니다.");
         } catch (Exception e) {
-            throw new RuntimeException("GPT 응답 파싱 실패", e);
+            throw new RuntimeException("GPT 응답 파싱 실패.....", e);
         }
 
         moodTrackerRepository.save(foundMoodTracker);
