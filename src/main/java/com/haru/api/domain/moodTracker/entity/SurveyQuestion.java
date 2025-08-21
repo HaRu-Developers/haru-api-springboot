@@ -27,7 +27,7 @@ public class SurveyQuestion {
     @JoinColumn(name = "mood_tracker_id", nullable = false)
     private MoodTracker moodTracker; // 분위기 트래커 ID (외래키, Survey 엔티티가 있다면 @ManyToOne 처리 가능)
 
-    @Column(length = 30)
+    @Column(length = 100)
     private String title;
 
     @Enumerated(EnumType.STRING)
