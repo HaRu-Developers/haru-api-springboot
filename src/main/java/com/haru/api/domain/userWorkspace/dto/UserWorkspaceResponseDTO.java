@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 public class UserWorkspaceResponseDTO {
 
@@ -13,6 +14,7 @@ public class UserWorkspaceResponseDTO {
         @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
         private String title;
+        @Setter
         private String imageUrl;
         private Boolean isOwner;
 
