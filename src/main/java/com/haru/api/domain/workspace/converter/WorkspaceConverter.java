@@ -24,10 +24,11 @@ public class WorkspaceConverter {
     private final HashIdUtil hashIdUtil;
     private final AmazonS3Manager s3Manager;
 
-    public static WorkspaceResponseDTO.Workspace toWorkspaceDTO(Workspace workspace) {
+    public static WorkspaceResponseDTO.Workspace toWorkspaceDTO(Workspace workspace, String presignedUrl) {
         return WorkspaceResponseDTO.Workspace.builder()
                 .workspaceId(workspace.getId())
                 .title(workspace.getTitle())
+                .imageUrl(presignedUrl)
                 .build();
     }
 
@@ -79,12 +80,6 @@ public class WorkspaceConverter {
     public static WorkspaceResponseDTO.DocumentSidebarList toDocumentSidebarList(List<WorkspaceResponseDTO.DocumentSidebar> documentList) {
         return WorkspaceResponseDTO.DocumentSidebarList.builder()
                 .documents(documentList)
-                .build();
-    }
-
-    public static WorkspaceResponseDTO.DocumentCalendarList toDocumentCalendarList(List<WorkspaceResponseDTO.DocumentCalendar> documentList) {
-        return WorkspaceResponseDTO.DocumentCalendarList.builder()
-                .documentList(documentList)
                 .build();
     }
 

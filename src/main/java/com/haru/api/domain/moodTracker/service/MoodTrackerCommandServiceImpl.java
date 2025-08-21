@@ -130,6 +130,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
             moodTrackerReportService.deleteReportFileAndThumbnail(moodTracker.getId());
             // S3에서 썸네일 및 다운로드 파일 업데이트
             moodTrackerReportService.updateAndUploadReportFileAndThumbnail(moodTracker.getId());
+
         }
     }
 
