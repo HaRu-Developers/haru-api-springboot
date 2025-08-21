@@ -1,5 +1,7 @@
 package com.haru.api.domain.meeting.service;
 
+import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
+import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
@@ -42,6 +44,8 @@ import java.io.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.haru.api.domain.lastOpened.entity.enums.DocumentType.AI_MEETING_MANAGER;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -54,6 +58,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final KeywordRepository keywordRepository;
     private final ChatGPTClient chatGPTClient;
     private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final WebSocketSessionRegistry webSocketSessionRegistry;
     private final SpeechSegmentRepository speechSegmentRepository;
     private final MarkdownFileUploader markdownFileUploader;
@@ -194,11 +199,12 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
             // 썸네일 생성 및 업데이트
             String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meeting" + meeting.getId(), meeting.getThumbnailKeyName());
             log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
-
             // Meeting AI 회의록 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
-            foundMeeting.initProceedingPdfKeyName(newThumbnailKey);
-            List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundMeeting.getWorkspace().getId());
-            userDocumentLastOpenedService.updateRecordsThumbnailForWorkspaceUsers(usersInWorkspace, foundMeeting);
+            List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(foundMeeting.getId(), AI_MEETING_MANAGER);
+            foundLastOpenedList.forEach(userDocumentLastOpened -> {
+                userDocumentLastOpened.updateThumbnailKeyName(newThumbnailKey);
+            });
+
         } catch (Exception e) {
             log.error("meetingId: {}의 PDF 또는 썸네일 생성/업로드 중 에러 발생", meeting.getId(), e);
             throw new RuntimeException("파일 갱신 중 오류가 발생했습니다.", e);
@@ -275,15 +281,22 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
                     currentMeeting.initThumbnailKeyName(newThumbnailKey); // Meeting 엔티티에 썸네일 키 저장
                     log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
 
+
+                    List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(currentMeeting.getId(), AI_MEETING_MANAGER);
+                    foundLastOpenedList.forEach(userDocumentLastOpened -> {
+                        userDocumentLastOpened.updateThumbnailKeyName(newThumbnailKey);
+                    });
+
+
+
                 } catch (Exception e) {
                     log.error("meetingId: {}의 PDF 또는 썸네일 생성/업로드 중 에러 발생", currentMeeting.getId(), e);
+                    throw new MeetingHandler(ErrorStatus.MEETING_FILE_UPLOAD_FAIL);
                 }
                 log.info("meetingId: {}의 AI 회의록 생성 및 저장 완료.", currentMeeting.getId());
             } else {
                 log.warn("meetingId: {}의 AI 분석 결과가 비어있습니다.", currentMeeting.getId());
             }
-
-
 
         } else {
             log.warn("meetingId: {}에 처리할 오디오 데이터가 없습니다.", currentMeeting.getId());
