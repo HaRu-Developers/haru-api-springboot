@@ -81,7 +81,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
                 .auth(Auth.ADMIN)
                 .build());
 
-        return WorkspaceConverter.toWorkspaceDTO(workspace);
+        return WorkspaceConverter.toWorkspaceDTO(workspace, amazonS3Manager.generatePresignedUrl(keyName));
     }
 
     @Transactional
@@ -102,7 +102,9 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
             amazonS3Manager.uploadMultipartFile(workspace.getKeyName(), image);
         }
 
-        return WorkspaceConverter.toWorkspaceDTO(workspace);
+        workspaceRepository.save(workspace);
+
+        return WorkspaceConverter.toWorkspaceDTO(workspace, amazonS3Manager.generatePresignedUrl(workspace.getKeyName()));
     }
 
     @Override
