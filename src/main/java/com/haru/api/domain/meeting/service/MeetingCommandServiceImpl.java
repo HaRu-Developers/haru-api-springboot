@@ -199,11 +199,12 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
             // 썸네일 생성 및 업데이트
             String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meeting" + meeting.getId(), meeting.getThumbnailKeyName());
             log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
-
             // Meeting AI 회의록 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
-            foundMeeting.initProceedingPdfKeyName(newThumbnailKey);
-            List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundMeeting.getWorkspace().getId());
-            userDocumentLastOpenedService.updateRecordsThumbnailForWorkspaceUsers(usersInWorkspace, foundMeeting);
+            List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(foundMeeting.getId(), AI_MEETING_MANAGER);
+            foundLastOpenedList.forEach(userDocumentLastOpened -> {
+                userDocumentLastOpened.updateThumbnailKeyName(newThumbnailKey);
+            });
+
         } catch (Exception e) {
             log.error("meetingId: {}의 PDF 또는 썸네일 생성/업로드 중 에러 발생", meeting.getId(), e);
             throw new RuntimeException("파일 갱신 중 오류가 발생했습니다.", e);
@@ -285,6 +286,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
                     foundLastOpenedList.forEach(userDocumentLastOpened -> {
                         userDocumentLastOpened.updateThumbnailKeyName(newThumbnailKey);
                     });
+
 
 
                 } catch (Exception e) {
