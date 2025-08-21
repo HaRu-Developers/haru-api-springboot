@@ -1,5 +1,6 @@
 package com.haru.api.infra.api.restTemplate;
 
+import com.haru.api.domain.snsEvent.entity.enums.InstagramRedirectType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -21,12 +22,17 @@ public class InstagramOauth2RestTemplate {
     private String instagramClientId;
     @Value("${instagram.client.secret}")
     private String instagramClientSecret;
-    @Value("${instagram.redirect.uri}")
-    private String instagramRedirectUri;
+    @Value("${instagram.redirect.uri-onboarding}")
+    private String instagramRedirectUriOnboarding;
+    @Value("${instagram.redirect.uri-workspace}")
+    private String instagramRedirectUriWorkspace;
 
     private final RestTemplate restTemplate;
 
-    public String getShortLivedAccessTokenUrl(String code) {
+    public String getShortLivedAccessTokenUrl(
+            String code,
+            InstagramRedirectType instagramRedirectType
+    ) {
         // 1. Access Token 요청
         String tokenUrl = "https://api.instagram.com/oauth/access_token";
         RestTemplate restTemplate = new RestTemplate();
@@ -35,7 +41,13 @@ public class InstagramOauth2RestTemplate {
         params.add("client_id", instagramClientId);          // 인스타 앱의 클라이언트 ID
         params.add("client_secret", instagramClientSecret);  // 인스타 앱의 클라이언트 시크릿
         params.add("grant_type", "authorization_code");
-        params.add("redirect_uri", instagramRedirectUri);              // 인가코드와 동일한 redirect_uri
+        // 인가코드와 동일한 redirect_uri
+        if (instagramRedirectType == InstagramRedirectType.ONBOARDING) {
+            params.add("redirect_uri", instagramRedirectUriOnboarding);
+        } else if(instagramRedirectType == InstagramRedirectType.WORKSPACE) {
+            System.out.println("Using workspace redirect URI: " + instagramRedirectUriWorkspace);
+            params.add("redirect_uri", instagramRedirectUriWorkspace);
+        }
         params.add("code", code);
 
         HttpHeaders headers = new HttpHeaders();

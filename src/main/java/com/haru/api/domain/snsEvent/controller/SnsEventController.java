@@ -4,6 +4,7 @@ import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
 import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.domain.snsEvent.entity.enums.InstagramRedirectType;
 import com.haru.api.domain.snsEvent.entity.enums.ListType;
 import com.haru.api.domain.snsEvent.service.SnsEventCommandService;
 import com.haru.api.domain.snsEvent.service.SnsEventQueryService;
@@ -56,19 +57,20 @@ public class SnsEventController {
     }
 
     @Operation(
-            summary = "인스타그램 연동 API [v1.1 (2025-08-07)]",
-            description = "# [v1.1 (2025-08-07)](https://www.notion.so/API-21e5da7802c581cca23dff937ac3f155?p=23f5da7802c5803b98abe74d511c2cf4&pm=s)" +
+            summary = "인스타그램 연동 API [v1.1 (2025-08-21)]",
+            description = "# [v1.1 (2025-08-21)](https://www.notion.so/API-21e5da7802c581cca23dff937ac3f155?p=23f5da7802c5803b98abe74d511c2cf4&pm=s)" +
                     " 인스타그램 로그인 후 인증 서버로부터 받은 code를 header에 넣어주시고, workspaceId를 Path Variable로 넣어주세요."
     )
     @PostMapping("/{workspaceId}/link-instagram")
     public ApiResponse<SnsEventResponseDTO.LinkInstagramAccountResponse> linkInstagramAccount(
             @RequestHeader("code") String code,
             @PathVariable String workspaceId,
+            @RequestParam InstagramRedirectType instagramRedirectType,
             @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
         System.out.println("Received accessToken: " + code);
         return ApiResponse.onSuccess(
-                snsEventCommandService.getInstagramAccessTokenAndAccount(code, workspace)
+                snsEventCommandService.getInstagramAccessTokenAndAccount(code, workspace, instagramRedirectType)
         );
     }
 
