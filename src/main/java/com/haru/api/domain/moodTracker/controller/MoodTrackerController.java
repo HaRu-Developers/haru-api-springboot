@@ -255,7 +255,7 @@ public class MoodTrackerController {
 
     @PostMapping("/{mood-tracker-hashed-Id}/report-test")
     @Operation(
-            summary = "분위기 트래커 설문 리포트 즉시 생성 테스트 API",
+            summary = "분위기 트래커 설문 리포트 즉시 생성 API",
             description = "# [v1.0 (2025-07-26)](https://www.notion.so/23f5da7802c58080b4a5e6d24b47d924) 해당 ID의 분위기 트래커 설문 리포트를 즉시 생성합니다."
     )
     @Parameters({
@@ -274,7 +274,7 @@ public class MoodTrackerController {
 
     @PostMapping("/{mood-tracker-hashed-Id}/report-file-thumbnail-test")
     @Operation(
-            summary = "분위기 트래커 설문 리포트, 파일, 썸네일 즉시 생성 테스트 API",
+            summary = "분위기 트래커 설문 리포트, 파일, 썸네일 즉시 생성 테스트 API + redis에서 제외하여 마감일시에 중복 생성 불가",
             description = "# [v1.0 (2025-08-14)](https://www.notion.so/24f5da7802c58019a1f7d9c8e882226e) 해당 ID의 분위기 트래커 설문 리포트를 즉시 생성합니다."
     )
     @Parameters({

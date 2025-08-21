@@ -19,6 +19,7 @@ import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.global.util.HashIdUtil;
+import com.haru.api.infra.redis.RedisReportConsumer;
 import com.haru.api.infra.redis.RedisReportProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
     private final MoodTrackerReportService moodTrackerReportService;
     private final RedisReportProducer redisReportProducer;
+    private final RedisReportConsumer redisReportConsumer;
 
     private final HashIdUtil hashIdUtil;
 
@@ -318,6 +320,10 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
     public void generateReportFileAndThumbnailTest(
             MoodTracker moodTracker
     ) {
+        // 중복 처리 제외
+        redisReportConsumer.removeFromQueue(moodTracker.getId());
+
+        // 즉시 생성
         moodTrackerReportService.generateAndUploadReportFileAndThumbnail(moodTracker.getId());
     }
 }

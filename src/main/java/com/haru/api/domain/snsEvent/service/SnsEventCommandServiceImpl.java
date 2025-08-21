@@ -8,6 +8,7 @@ import com.haru.api.domain.snsEvent.entity.Participant;
 import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.entity.Winner;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.domain.snsEvent.entity.enums.InstagramRedirectType;
 import com.haru.api.domain.snsEvent.entity.enums.ListType;
 import com.haru.api.domain.snsEvent.repository.ParticipantRepository;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
@@ -170,14 +171,18 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     @Transactional
     public SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(
             String code,
-            Workspace workspace
+            Workspace workspace,
+            InstagramRedirectType instagramRedirectType
     ) {
         String shortLivedAccessToken;
         String longLivedAccessToken;
         Map<String, Object> userInfo;
         try {
             // 1. Access Token 요청
-            shortLivedAccessToken = instagramOauth2RestTemplate.getShortLivedAccessTokenUrl(code);
+            shortLivedAccessToken = instagramOauth2RestTemplate.getShortLivedAccessTokenUrl(
+                    code,
+                    instagramRedirectType
+            );
             // 2. 단기 토큰을 장기(Long-Lived) 토큰으로 교환
             longLivedAccessToken = instagramOauth2RestTemplate.getLongLivedAccessToken(shortLivedAccessToken);
             // 3. 장기 토큰으로 사용자 계정 정보 요청
