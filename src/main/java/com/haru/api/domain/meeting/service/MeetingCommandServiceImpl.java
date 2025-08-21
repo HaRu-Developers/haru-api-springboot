@@ -139,7 +139,8 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
 
         meeting.updateTitle(request.getTitle());
 
-        markdownFileUploader.updateFileTitle(meeting.getProceedingPdfKeyName(), request.getTitle());
+        markdownFileUploader.updateFileTitle(meeting.getProceedingPdfKeyName(), request.getTitle() + ".pdf");
+        markdownFileUploader.updateFileTitle(meeting.getProceedingWordKeyName(), request.getTitle() + ".docx");
 
         meetingRepository.save(meeting);
     }

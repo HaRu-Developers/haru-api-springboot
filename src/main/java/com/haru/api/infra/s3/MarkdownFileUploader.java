@@ -42,7 +42,7 @@ public class MarkdownFileUploader {
         }
 
         // 3. 결정된 키로 PDF 파일을 S3에 업로드
-        amazonS3Manager.uploadFileWithTitle(pdfKeyToUse, pdfBytes, "application/pdf", fileTitle);
+        amazonS3Manager.uploadFileWithTitle(pdfKeyToUse, pdfBytes, "application/pdf", fileTitle + ".pdf");
         log.info("PDF 업로드/갱신 성공. Key: {}", pdfKeyToUse);
 
         // 4. 사용된 PDF의 key를 반환
@@ -65,7 +65,7 @@ public class MarkdownFileUploader {
 
         // 3. 결정된 키로 Word 파일을 S3에 업로드
         String contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        amazonS3Manager.uploadFileWithTitle(wordKeyToUse, wordBytes, contentType, fileTitle);
+        amazonS3Manager.uploadFileWithTitle(wordKeyToUse, wordBytes, contentType, fileTitle + ".docx");
         log.info("Word 파일 업로드/갱신 성공. Key: {}", wordKeyToUse);
 
         // 4. 사용된 Word의 key를 반환
