@@ -44,7 +44,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 모든 분위기 트래커 조회
-        List<MoodTracker> foundMoodTrackers = moodTrackerRepository.findAllByWorkspaceId(workspace.getId());
+        List<MoodTracker> foundMoodTrackers = moodTrackerRepository.findAllByWorkspaceIdOrderByUpdatedAtDesc(workspace.getId());
 
         // 권한에 따른 필터링
         List<MoodTracker> accessibleMoodTrackers = foundMoodTrackers.stream()

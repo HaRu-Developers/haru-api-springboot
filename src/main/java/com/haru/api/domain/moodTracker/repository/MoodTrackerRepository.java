@@ -16,7 +16,10 @@ public interface MoodTrackerRepository extends JpaRepository<MoodTracker, Long> 
 
     @Query("SELECT m FROM MoodTracker m WHERE m.workspace.id = :workspaceId")
     List<MoodTracker> findAllByWorkspaceId(Long workspaceId);
-  
+
+    @Query("SELECT m FROM MoodTracker m WHERE m.workspace.id = :workspaceId ORDER BY m.updatedAt DESC")
+    List<MoodTracker> findAllByWorkspaceIdOrderByUpdatedAtDesc(Long workspaceId);
+
     @Modifying
     @Transactional
     @Query("UPDATE MoodTracker m SET m.respondentsNum = m.respondentsNum + 1 WHERE m.id = :moodTrackerId")
