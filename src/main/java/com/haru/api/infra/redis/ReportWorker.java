@@ -19,7 +19,7 @@ public class ReportWorker {
     private final MoodTrackerReportService reportService;
     private final ExecutorService executor = Executors.newFixedThreadPool(5); // 5개 병렬 Worker
 
-    private static final String WORKER_QUEUE = "report-worker-queue";
+    private static final String WORKER_QUEUE = "REPORT_WORKER_QUEUE";
 
     @Scheduled(fixedDelay = 2000) // 2초마다 큐 확인
     public void consumeTasks() {
@@ -44,7 +44,7 @@ public class ReportWorker {
                 redisTemplate.opsForList().leftPush(WORKER_QUEUE, moodTrackerId.toString());
             } else {
                 log.error("재시도 한계 초과, 실패 큐로 이동: {}", moodTrackerId);
-                redisTemplate.opsForList().leftPush("report-failed-queue", moodTrackerId.toString());
+                redisTemplate.opsForList().leftPush("REPORT_FAILED_QUEUE", moodTrackerId.toString());
             }
         }
     }

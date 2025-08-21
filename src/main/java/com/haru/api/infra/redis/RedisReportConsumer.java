@@ -24,7 +24,6 @@ public class RedisReportConsumer {
     private String QUEUE_KEY;
     private static final long BATCH_SIZE = 20;
 
-    @Transactional
     @Scheduled(cron = "0 0/5 * * * *") // 정각부터 5분 마다 실행
     public void pollQueueEvery30Minutes() {
         long now = Instant.now().getEpochSecond();
@@ -37,7 +36,7 @@ public class RedisReportConsumer {
 
             for (String id : dueIds) {
                 // Worker Queue로 push
-                redisTemplate.opsForList().leftPush("report-worker-queue", id);
+                redisTemplate.opsForList().leftPush("REPORT_WORKER_QUEUE", id);
                 // ZSET에서는 제거
                 redisTemplate.opsForZSet().remove(QUEUE_KEY, id);
             }
