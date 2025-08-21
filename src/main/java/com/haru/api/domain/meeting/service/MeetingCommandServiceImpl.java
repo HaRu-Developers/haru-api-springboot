@@ -174,16 +174,30 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     @Override
     @Transactional
     public void adjustProceeding(User user, Meeting meeting, MeetingRequestDTO.meetingProceedingRequest newProceeding){
+        Meeting foundMeeting = meetingRepository.findById(meeting.getId())
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), meeting.getWorkspace().getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), foundMeeting.getWorkspace().getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
-        if (!meeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
+        if (!foundMeeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
+        String editedProceeding = newProceeding.getProceeding();
+        foundMeeting.updateProceeding(editedProceeding);
+        try {
+            // 생성된 PDF를 S3에 업로드
+            String pdfKey = markdownFileUploader.createOrUpdatePdf(editedProceeding, "meeting/pdf", meeting.getProceedingPdfKeyName(), meeting.getTitle());
+            String wordKey = markdownFileUploader.createOrUpdateWord(editedProceeding, "meeting/word", meeting.getProceedingWordKeyName(), meeting.getTitle());
 
-        meeting.updateProceeding(newProceeding.getProceeding());
-        meetingRepository.save(meeting);
+            // 썸네일 생성 및 업데이트
+            String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meeting" + meeting.getId(), meeting.getThumbnailKeyName());
+            log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
+
+        } catch (Exception e) {
+            log.error("meetingId: {}의 PDF 또는 썸네일 생성/업로드 중 에러 발생", meeting.getId(), e);
+            throw new RuntimeException("파일 갱신 중 오류가 발생했습니다.", e);
+        }
 
     }
 
