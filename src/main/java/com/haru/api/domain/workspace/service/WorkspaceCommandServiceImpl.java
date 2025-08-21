@@ -95,16 +95,20 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
             throw new WorkspaceHandler(ErrorStatus.WORKSPACE_MODIFY_NOT_ALLOWED);
 
         String keyName = workspace.getKeyName();
+
+        if(keyName == null){
+            keyName = amazonS3Manager.generateKeyName("workspace/image");
+            workspace.initKeyName(keyName);
+        }
+
         // 제목 수정
         workspace.updateTitle(request.getTitle());
 
         // 이미지 수정
         if (image != null) {
-            keyName = amazonS3Manager.uploadMultipartFile(keyName, image);
+            amazonS3Manager.uploadMultipartFile(keyName, image);
         }
 
-        workspace.initKeyName(keyName);
-        
         workspaceRepository.save(workspace);
 
         return WorkspaceConverter.toWorkspaceDTO(workspace, amazonS3Manager.generatePresignedUrl(workspace.getKeyName()));

@@ -29,9 +29,6 @@ public class AmazonS3Manager{
 
     //MultipartFile S3에 비공개 업로드
     public String uploadMultipartFile(String keyName, MultipartFile file) {
-        if(keyName == null){
-            keyName = generateKeyName("workspace/image");
-        }
         try {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(amazonConfig.getBucket())
