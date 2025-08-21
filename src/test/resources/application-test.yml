@@ -57,4 +57,5 @@ instagram:
     id: "dummy-client-id"
     secret: "dummy-client-secret"
   redirect:
-    uri: "dummy-redirect-uri"
+    uri-onboarding: "dummy-redirect-uri"
+    uri-workspace: "dummy-redirect-uri"
