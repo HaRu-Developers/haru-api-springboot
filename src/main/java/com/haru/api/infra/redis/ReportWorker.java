@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,8 +47,9 @@ public class ReportWorker {
             if (retry != null && retry <= 3) {
                 redisTemplate.opsForList().leftPush(WORKER_QUEUE, moodTrackerId.toString());
             } else {
-                log.error("재시도 한계 초과, 실패 큐로 이동: {}", moodTrackerId);
-                redisTemplate.opsForList().leftPush(FAILED_QUEUE, moodTrackerId.toString());
+                long retryTime = Instant.now().plusSeconds(60).getEpochSecond();
+                redisTemplate.opsForZSet().add(FAILED_QUEUE, moodTrackerId.toString(), retryTime);
+                log.error("재시도 한계 초과, 실패 큐(ZSET)로 이동: {}", moodTrackerId);
             }
         }
     }
