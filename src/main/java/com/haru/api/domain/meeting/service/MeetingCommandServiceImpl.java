@@ -163,6 +163,11 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         markdownFileUploader.deleteS3File(foundMeeting.getProceedingWordKeyName());
         markdownFileUploader.deleteS3File(foundMeeting.getAudioFileKey());
 
+
+        List<SpeechSegment> segmentsToDelete = speechSegmentRepository.findByMeeting(foundMeeting);
+
+        speechSegmentRepository.deleteAll(segmentsToDelete);
+
         meetingRepository.delete(foundMeeting);
     }
 
