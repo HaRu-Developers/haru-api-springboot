@@ -25,6 +25,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_USERNAME_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4005", "해당 아이디를 가진 유저가 존재하지 않습니다."), //
     MEMBER_PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "MEMBER4006", "비밀번호가 일치하지 않습니다."),
     SAME_WITH_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER4007", "변경하고자하는 비밀번호와 이전 비밀번호가 일치합니다."),
+    MEMBER_HAS_NO_ACCESS_TO_MEETING(HttpStatus.FORBIDDEN, "MEMBER4008", "유저가 해당 문서에 접근 권한이 없습니다."),
 
     // Workspace 관련 에러
     WORKSPACE_NOT_FOUND(HttpStatus.BAD_REQUEST,"WORKSPACE4001", "워크스페이스가 없습니다."),
@@ -44,6 +45,7 @@ public enum ErrorStatus implements BaseErrorCode {
     MEETING_AUDIO_FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MEETING4003", "음성 파일을 s3에 업로드하는데 오류가 발생했습니다."),
     MEETING_FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MEETING4004", "음성 파일을 s3에 업로드하는데 오류가 발생했습니다."),
     MEETING_PROCEEDING_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEETING4005", "AI회의록이 없습니다"),
+    MEETING_INVALID_FILE_FORMAT(HttpStatus.BAD_REQUEST, "MEETING4006", "잘못된 다운로드 파일 형식입니다."),
 
     // 인가 관련 에러
     AUTHORIZATION_EXCEPTION(HttpStatus.UNAUTHORIZED, "AUTHORIZATION4001", "인증에 실패하였습니다."),
@@ -63,9 +65,12 @@ public enum ErrorStatus implements BaseErrorCode {
     MOOD_TRACKER_WRONG_FORMAT(HttpStatus.BAD_REQUEST, "MOODTRACKER4007", "분위기 트래커의 잘못된 다운로드 파일 형식입니다."),
     MOOD_TRACKER_DOWNLOAD_ERROR(HttpStatus.BAD_REQUEST, "MOODTRACKER4008", "분위기 트래커 다운로드중 오류가 발생했습니다."),
     MOOD_TRACKER_KEYNAME_NOT_FOUND(HttpStatus.BAD_REQUEST, "MOODTRACKER4009", "분위기 트래커 다운로드중 키 이름이 존재하지 않습니다."),
+    MOOD_TRACKER_FINISHED(HttpStatus.BAD_REQUEST, "MOODTRACKER4010", "분위기 트래커 마감일 이후입니다."),
+    INVALID_CHOICE_FOR_QUESTION(HttpStatus.BAD_REQUEST, "MOODTRACKER4011", "분위기 트래커 질문에 유효하지 않은 선택지입니다."),
 
     // 메일 관련 에러
-    MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다."),
+    MAIL_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MAIL500", "이메일 전송에 실패했습니다. (존재하지 않는 이메일일 수 있습니다)"),
+    MAIL_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "MAIL400", "이메일 형식이 잘못되었습니다."),
 
     // SNS 이벤트 관련 에러
     SNS_EVENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "SNSEVENT4001", "SNS 이벤트가 존재하지 않습니다."),

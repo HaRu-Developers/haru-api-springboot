@@ -32,15 +32,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String[] whitelist = {
             "/api/v1/users/signup",
             "/api/v1/users/login",
+            "/api/v1/users/signup-and-login",
             "/swagger-ui/**",
             "/v3/**",
             "/users/admin/**",
             "/ws/audio/**",
+            "/ws/test",
             "/api/v1/workspaces/invite-accept",
             "/api/v1/terms",
             "/api/v1/sns/oauth/callback",
             "/api/v1/users/signup/same",
-            "/favicon.ico"
+            "/favicon.ico",
+            "/api/v1/mood-trackers/*/questions",
+            "/api/v1/mood-trackers/*/answer",
+            "/api/v1/mood-trackers/*/bases"
     };
     private final JwtUtils jwtUtils;
     private final RedisTemplate<String, String> redisTemplate;

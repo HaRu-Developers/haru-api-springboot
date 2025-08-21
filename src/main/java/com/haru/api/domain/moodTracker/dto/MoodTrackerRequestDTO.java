@@ -3,13 +3,12 @@ package com.haru.api.domain.moodTracker.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
 import com.haru.api.domain.moodTracker.entity.enums.QuestionType;
+import com.haru.api.global.common.entity.TitleHolder;
 import com.haru.api.global.util.json.ToLongDeserializer;
 import com.haru.api.global.util.json.ToLongListDeserializer;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.springframework.validation.annotation.Validated;
 
@@ -30,6 +29,7 @@ public class MoodTrackerRequestDTO {
         private String description;
 
         @NotNull
+        @Future
         private LocalDateTime dueDate;
 
         @NotNull
@@ -60,7 +60,7 @@ public class MoodTrackerRequestDTO {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class UpdateTitleRequest {
+    public static class UpdateTitleRequest implements TitleHolder {
         @NotBlank
         private String title;
     }

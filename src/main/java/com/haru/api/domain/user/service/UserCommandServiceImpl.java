@@ -8,6 +8,7 @@ import com.haru.api.domain.user.entity.enums.EmailStatus;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.user.security.jwt.JwtUtils;
 import com.haru.api.domain.user.security.jwt.SecurityUtil;
+import com.haru.api.domain.workspace.service.WorkspaceCommandService;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import jakarta.transaction.Transactional;
@@ -34,7 +35,9 @@ public class UserCommandServiceImpl implements UserCommandService{
     private int accessExpTime;
     @Value("${jwt.refresh-expiration}")
     private int refreshExpTime;
+
     private final UserRepository userRepository;
+    private final WorkspaceCommandService workspaceCommandService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtUtils jwtUtils;
@@ -160,5 +163,31 @@ public class UserCommandServiceImpl implements UserCommandService{
     @Override
     public UserResponseDTO.CheckOriginalPasswordResponse checkOriginalPassword(UserRequestDTO.CheckOriginalPasswordRequest request, User user) {
         return UserConverter.toCheckOriginalPassword(passwordEncoder.matches(request.getRequestPassword(), user.getPassword()));
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDTO.LoginResponse signupAndLoginAndInviteAccept(UserRequestDTO.SignUpRequest request, String token) {
+
+        String password = passwordEncoder.encode(request.getPassword());
+
+        User foundUser = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+        if (foundUser != null) {
+            throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
+        } else {
+
+            User user = UserConverter.toUsers(request, password);
+            userRepository.save(user);
+
+            if(token != null) {
+                workspaceCommandService.acceptInvite(token, user);
+            }
+
+            return login(UserRequestDTO.LoginRequest.builder()
+                            .email(request.getEmail())
+                            .password(request.getPassword())
+                            .build());
+        }
     }
 }

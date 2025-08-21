@@ -3,6 +3,8 @@ package com.haru.api.infra.mail;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.infra.mail.handler.MailHandler;
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,13 @@ public class SmtpEmailSender implements EmailSender {
             String title,
             String content
     ) {
+        // 1. 이메일 형식 검증
+        if (!isValidEmail(to)) {
+            log.warn("잘못된 이메일 형식 - {}", to);
+            throw new MailHandler(ErrorStatus.MAIL_INVALID_FORMAT);
+        }
+
+        // 2. 메일 전송 시도
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
@@ -42,6 +51,17 @@ public class SmtpEmailSender implements EmailSender {
         } catch (MessagingException e) {
             log.error("이메일 전송 실패 - 수신자: {}", to, e);
             throw new MailHandler(ErrorStatus.MAIL_SEND_FAIL);
+        }
+    }
+
+    // RFC 형식 검증
+    private boolean isValidEmail(String email) {
+        try {
+            InternetAddress internetAddress = new InternetAddress(email);
+            internetAddress.validate(); // 형식이 틀리면 AddressException 발생
+            return true;
+        } catch (AddressException e) {
+            return false;
         }
     }
 }

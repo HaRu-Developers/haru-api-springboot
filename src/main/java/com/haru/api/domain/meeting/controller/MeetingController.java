@@ -2,13 +2,21 @@ package com.haru.api.domain.meeting.controller;
 
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
+import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.service.MeetingCommandService;
 import com.haru.api.domain.meeting.service.MeetingQueryService;
-import com.haru.api.domain.user.security.jwt.SecurityUtil;
+import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.domain.snsEvent.entity.enums.ListType;
+import com.haru.api.domain.user.entity.User;
+import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.global.annotation.AuthMeeting;
+import com.haru.api.global.annotation.AuthUser;
+import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.ApiResponse;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.GeneralException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
 import lombok.RequiredArgsConstructor;
@@ -45,15 +53,16 @@ public class MeetingController {
     )
     public ApiResponse<MeetingResponseDTO.createMeetingResponse> createMeeting(
             @RequestPart("agendaFile") MultipartFile agendaFile,
-            @RequestPart("request") MeetingRequestDTO.createMeetingRequest request) {
+            @RequestPart("request") MeetingRequestDTO.createMeetingRequest request,
+            @Parameter(hidden = true) @AuthUser User user
+    ) {
 
         // file업로드가 되지 않는 경우 controller단에서 요청 처리
         if (agendaFile == null || agendaFile.isEmpty()) {
             throw new GeneralException(ErrorStatus.MEETING_AGENDAFILE_NOT_FOUND);
         }
-        Long userId = SecurityUtil.getCurrentUserId();
 
-        MeetingResponseDTO.createMeetingResponse response = meetingCommandService.createMeeting(userId, agendaFile, request);
+        MeetingResponseDTO.createMeetingResponse response = meetingCommandService.createMeeting(user, agendaFile, request);
 
         return ApiResponse.onSuccess(response);
     }
@@ -64,11 +73,12 @@ public class MeetingController {
     )
     @GetMapping("/workspaces/{workspaceId}")
     public ApiResponse<List<MeetingResponseDTO.getMeetingResponse>> getMeetings(
-            @PathVariable("workspaceId") String workspaceId){
+            @PathVariable("workspaceId") String workspaceId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
+    ) {
 
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryService.getMeetings(userId, Long.parseLong(workspaceId));
+        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryService.getMeetings(user, workspace);
 
         return ApiResponse.onSuccess(response);
     }
@@ -79,11 +89,12 @@ public class MeetingController {
     @PatchMapping("/{meetingId}/title")
     public ApiResponse<String> updateMeetingTitle(
             @PathVariable("meetingId")String meetingId,
-            @RequestBody MeetingRequestDTO.updateTitle request) {
+            @RequestBody MeetingRequestDTO.updateTitle request,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMeeting Meeting meeting
+    ) {
 
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        meetingCommandService.updateMeetingTitle(userId, Long.parseLong(meetingId), request.getTitle());
+        meetingCommandService.updateMeetingTitle(user, meeting, request);
 
         return ApiResponse.onSuccess("제목수정이 완료되었습니다.");
     }
@@ -93,11 +104,12 @@ public class MeetingController {
     )
     @DeleteMapping("/{meetingId}")
     public ApiResponse<String> deleteMeeting(
-            @PathVariable("meetingId") String meetingId) {
+            @PathVariable("meetingId") String meetingId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMeeting Meeting meeting
+    ) {
 
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        meetingCommandService.deleteMeeting(userId, Long.parseLong(meetingId));
+        meetingCommandService.deleteMeeting(user, meeting);
 
         return ApiResponse.onSuccess("회의가 삭제되었습니다.");
     }
@@ -107,12 +119,15 @@ public class MeetingController {
     )
     @GetMapping("/{meetingId}/ai-proceeding")
     public ApiResponse<MeetingResponseDTO.getMeetingProceeding> getMeetingProceeding(
-        @PathVariable("meetingId")String meetingId) {
+        @PathVariable("meetingId")String meetingId,
+        @Parameter(hidden = true) @AuthUser User user,
+        @Parameter(hidden = true) @AuthMeeting Meeting meeting
+    ) {
 
-        Long userId = SecurityUtil.getCurrentUserId();
-        MeetingResponseDTO.getMeetingProceeding response = meetingQueryService.getMeetingProceeding(userId, Long.parseLong(meetingId));
+        MeetingResponseDTO.getMeetingProceeding response = meetingQueryService.getMeetingProceeding(user, meeting);
 
         return ApiResponse.onSuccess(response);
+
     }
 
 
@@ -122,13 +137,15 @@ public class MeetingController {
     @PatchMapping("/{meetingId}")
     public ApiResponse<String> adjustProceeding(
             @PathVariable("meetingId") String meetingId,
-            @RequestBody MeetingRequestDTO.meetingProceedingRequest request) {
+            @RequestBody MeetingRequestDTO.meetingProceedingRequest request,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMeeting Meeting meeting
+    ) {
 
-        Long userId = SecurityUtil.getCurrentUserId();
-
-        meetingCommandService.adjustProceeding(userId, Long.parseLong(meetingId), request);
+        meetingCommandService.adjustProceeding(user, meeting, request);
 
         return ApiResponse.onSuccess("회의가 수정되었습니다.");
+
     }
 
     @Operation(summary = "회의 종료", description =
@@ -137,13 +154,15 @@ public class MeetingController {
     )
     @PostMapping("/{meetingId}/end")
     public ApiResponse<String> endMeeting(
-            @PathVariable("meetindId") String meetingId
+            @PathVariable("meetingId") String meetingId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
 
-        meetingCommandService.endMeeting(userId, Long.parseLong(meetingId));
+        meetingCommandService.endMeeting(user, meeting);
 
         return ApiResponse.onSuccess("회의가 종료되었습니다");
+
     }
 
     @Operation(summary = "회의록 다운로드", description =
@@ -152,13 +171,16 @@ public class MeetingController {
     )
     @GetMapping("{meetingId}/ai-proceeding/download")
     public ApiResponse<MeetingResponseDTO.proceedingDownLoadLinkResponse> downloadMeeting(
-            @PathVariable("meetingId") String meetingId
+            @PathVariable("meetingId") String meetingId,
+            @RequestParam Format format,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ){
-        Long userId = SecurityUtil.getCurrentUserId();
 
-        MeetingResponseDTO.proceedingDownLoadLinkResponse response = meetingQueryService.downloadMeeting(userId, Long.parseLong(meetingId));
+        MeetingResponseDTO.proceedingDownLoadLinkResponse response = meetingQueryService.downloadMeeting(user, meeting, format);
 
         return ApiResponse.onSuccess(response);
+
     }
 
 
@@ -168,14 +190,32 @@ public class MeetingController {
     )
     @GetMapping("/{meetingId}/transcript")
     public ApiResponse<MeetingResponseDTO.TranscriptResponse> getMeetingTranscript(
-            @PathVariable("meetingId") String meetingId
+            @PathVariable("meetingId") String meetingId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ) {
-        Long userId = SecurityUtil.getCurrentUserId();
 
-        MeetingResponseDTO.TranscriptResponse transcriptResponse = meetingQueryService.getTranscript(userId, Long.parseLong(meetingId));
+        MeetingResponseDTO.TranscriptResponse transcriptResponse = meetingQueryService.getTranscript(user, meeting);
 
         return ApiResponse.onSuccess(transcriptResponse);
+
     }
 
 
+    @Operation(summary = "회의록 음성파일 조회API", description =
+            "# [v1.0 (2025-08-14)](https://www.notion.so/AI-24f5da7802c580bc882fe01607e01bbc)" +
+                    "회의록을 다운로드하는 API입니다. URL을 반환합니다."
+    )
+    @GetMapping("{meetingId}/ai-proceeding/voice")
+    public ApiResponse<MeetingResponseDTO.proceedingVoiceLinkResponse> MeetingvoiceFile(
+            @PathVariable("meetingId") String meetingId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthMeeting Meeting meeting
+    ){
+
+        MeetingResponseDTO.proceedingVoiceLinkResponse response = meetingQueryService.getMeetingVoiceFile(user, meeting);
+
+        return ApiResponse.onSuccess(response);
+
+    }
 }

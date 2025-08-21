@@ -1,6 +1,7 @@
 package com.haru.api.domain.moodTracker.service;
 
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.domain.lastOpened.entity.UserDocumentId;
+import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
@@ -8,18 +9,13 @@ import com.haru.api.domain.moodTracker.entity.SurveyQuestion;
 import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
 import com.haru.api.domain.moodTracker.repository.*;
 import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
 import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
-import com.haru.api.domain.workspace.repository.WorkspaceRepository;
-import com.haru.api.global.annotation.TrackLastOpened;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
-import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
-import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.global.util.HashIdUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,27 +32,22 @@ import java.util.stream.Collectors;
 public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
     private final MoodTrackerRepository moodTrackerRepository;
 
-    private final UserRepository userRepository;
-    private final WorkspaceRepository workspaceRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
 
     private final HashIdUtil hashIdUtil;
 
     private final SurveyQuestionRepository surveyQuestionRepository;
 
+    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+
     @Override
-    public MoodTrackerResponseDTO.PreviewList getMoodTrackerPreviewList(Long userId, Long workspaceId) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    public MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace) {
 
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(foundWorkspace.getId(), foundUser.getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 모든 분위기 트래커 조회
-        List<MoodTracker> foundMoodTrackers = moodTrackerRepository.findAllByWorkspaceId(workspaceId);
+        List<MoodTracker> foundMoodTrackers = moodTrackerRepository.findAllByWorkspaceIdOrderByUpdatedAtDesc(workspace.getId());
 
         // 권한에 따른 필터링
         List<MoodTracker> accessibleMoodTrackers = foundMoodTrackers.stream()
@@ -65,7 +56,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
                         foundUserWorkspace.getAuth().equals(Auth.ADMIN)
 
                         // 또는 해당 설문 생성자인 경우 허용
-                        || moodTracker.getCreator().getId().equals(userId)
+                        || moodTracker.getCreator().getId().equals(user.getId())
 
                         // 또는 공개된 설문인 경우 허용
                         || moodTracker.getVisibility().equals(MoodTrackerVisibility.PUBLIC)
@@ -78,78 +69,96 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
 
     @Override
     @Transactional(readOnly = true)
-    @TrackLastOpened(type = DocumentType.TEAM_MOOD_TRACKER)
-    public MoodTrackerResponseDTO.QuestionResult getQuestionResult(Long userId, Long moodTrackerId) {
+    public MoodTrackerResponseDTO.BaseResult getBaseResult(Long moodTrackerId) {
         MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
-        List<SurveyQuestion> questionList = surveyQuestionRepository.findAllByMoodTrackerId(moodTrackerId);
+        return MoodTrackerConverter.toBaseResultDTO(foundMoodTracker, hashIdUtil);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MoodTrackerResponseDTO.QuestionResult getQuestionResult(Long moodTrackerId) {
+        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
+                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
+
+        List<SurveyQuestion> questionList = surveyQuestionRepository.findAllByMoodTrackerId(foundMoodTracker.getId());
 
         return MoodTrackerConverter.toQuestionResultDTO(foundMoodTracker, questionList, hashIdUtil);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    @TrackLastOpened(type = DocumentType.TEAM_MOOD_TRACKER)
-    public MoodTrackerResponseDTO.ReportResult getReportResult(Long userId, Long moodTrackerId) {
-        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
-                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
+    @Transactional
+    public MoodTrackerResponseDTO.ReportResult getReportResult(User user, MoodTracker moodTracker) {
+
+        // 최근 문서 조회 동기화
+        Long workspaceId = moodTracker.getWorkspaceId();
+        String title = moodTracker.getTitle();
+
+        UserDocumentId userDocumentId = new UserDocumentId(user.getId(), moodTracker.getId(), moodTracker.getDocumentType());
+
+        userDocumentLastOpenedService.updateLastOpened(userDocumentId, workspaceId, title);
 
         // 권한 확인
         UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(
-                foundMoodTracker.getWorkspace().getId(), userId
+                moodTracker.getWorkspace().getId(), user.getId()
         ).orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         boolean hasAccess =
                 userWorkspace.getAuth().equals(Auth.ADMIN) ||
-                        foundMoodTracker.getCreator().getId().equals(userId) ||
-                        foundMoodTracker.getVisibility().equals(MoodTrackerVisibility.PUBLIC);
+                        moodTracker.getCreator().getId().equals(user.getId()) ||
+                        moodTracker.getVisibility().equals(MoodTrackerVisibility.PUBLIC);
 
         if (!hasAccess) {
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_ACCESS_DENIED);
         }
 
         // 마감 여부 확인
-        if (LocalDateTime.now().isBefore(foundMoodTracker.getDueDate())) {
+        if (LocalDateTime.now().isBefore(moodTracker.getDueDate())) {
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FINISHED);
         }
 
-        List<String> suggestionList = surveyQuestionRepository.findAllByMoodTrackerId(moodTrackerId).stream()
+        List<String> suggestionList = surveyQuestionRepository.findAllByMoodTrackerId(moodTracker.getId()).stream()
                 .map(SurveyQuestion::getSuggestion)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        return MoodTrackerConverter.toReportResultDTO(foundMoodTracker, suggestionList, hashIdUtil);
+        return MoodTrackerConverter.toReportResultDTO(moodTracker, suggestionList, hashIdUtil);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    @TrackLastOpened(type = DocumentType.TEAM_MOOD_TRACKER)
-    public MoodTrackerResponseDTO.ResponseResult getResponseResult(Long userId, Long moodTrackerId) {
-        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
-                .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
+    @Transactional
+    public MoodTrackerResponseDTO.ResponseResult getResponseResult(User user, MoodTracker moodTracker) {
+
+        // 최근 문서 조회 동기화
+        Long workspaceId = moodTracker.getWorkspaceId();
+        String title = moodTracker.getTitle();
+
+        UserDocumentId userDocumentId = new UserDocumentId(user.getId(), moodTracker.getId(), moodTracker.getDocumentType());
+
+        userDocumentLastOpenedService.updateLastOpened(userDocumentId, workspaceId, title);
 
         // 권한 확인
         UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(
-                foundMoodTracker.getWorkspace().getId(), userId
+                moodTracker.getWorkspace().getId(), user.getId()
         ).orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         boolean hasAccess =
                 userWorkspace.getAuth().equals(Auth.ADMIN) ||
-                        foundMoodTracker.getCreator().getId().equals(userId) ||
-                        foundMoodTracker.getVisibility().equals(MoodTrackerVisibility.PUBLIC);
+                        moodTracker.getCreator().getId().equals(user.getId()) ||
+                        moodTracker.getVisibility().equals(MoodTrackerVisibility.PUBLIC);
 
         if (!hasAccess) {
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_ACCESS_DENIED);
         }
 
         // 마감 여부 확인
-        if (LocalDateTime.now().isBefore(foundMoodTracker.getDueDate())) {
+        if (LocalDateTime.now().isBefore(moodTracker.getDueDate())) {
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FINISHED);
         }
 
-        List<SurveyQuestion> questions = surveyQuestionRepository.findAllByMoodTrackerId(moodTrackerId);
+        List<SurveyQuestion> questions = surveyQuestionRepository.findAllByMoodTrackerId(moodTracker.getId());
 
-        return MoodTrackerConverter.toResponseResultDTO(foundMoodTracker, questions, hashIdUtil);
+        return MoodTrackerConverter.toResponseResultDTO(moodTracker, questions, hashIdUtil);
     }
 }

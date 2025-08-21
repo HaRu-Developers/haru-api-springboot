@@ -36,20 +36,23 @@ public class Meeting extends BaseEntity implements Documentable {
     @Column(columnDefinition="TEXT")
     private String proceeding;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User creator;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "workspace_id")
     private Workspace workspace;
 
     // AI 회의록 정리본 파일
     @Column(columnDefinition = "TEXT")
-    private String proceedingKeyName;
+    private String proceedingPdfKeyName;
 
     @Column(columnDefinition = "TEXT")
-    private String thumbnailKey;
+    private String proceedingWordKeyName;
+
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailKeyName;
 
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MeetingKeyword> meetingKeywords = new ArrayList<>();
@@ -60,9 +63,6 @@ public class Meeting extends BaseEntity implements Documentable {
     // s3 음성 파일 key
     @Setter
     private String audioFileKey;
-
-    @Column(columnDefinition = "TEXT")
-    private String thumbnailKeyName;
 
     private Meeting(String title, String agendaResult, User user, Workspace workspace) {
         this.title = title;
@@ -80,8 +80,9 @@ public class Meeting extends BaseEntity implements Documentable {
     public void updateProceeding(String proceeding) {
         this.proceeding = proceeding;
     }
-    public void initProceedingKeyName(String proceedingKeyName) {this.proceedingKeyName = proceedingKeyName;}
-    public void initThumbnailKey(String thumbnailKey) {this.thumbnailKey = thumbnailKey;}
+    public void initProceedingPdfKeyName(String proceedingPdfKeyName) { this.proceedingPdfKeyName = proceedingPdfKeyName; }
+    public void initProceedingWordKeyName(String proceedingWordKeyName) { this.proceedingWordKeyName = proceedingWordKeyName; }
+    public void initThumbnailKeyName(String thumbnailKeyName) { this.thumbnailKeyName = thumbnailKeyName; }
     public void initStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
     }

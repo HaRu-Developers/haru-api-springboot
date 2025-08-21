@@ -3,15 +3,16 @@ package com.haru.api.domain.lastOpened.service;
 import com.haru.api.domain.lastOpened.entity.Documentable;
 import com.haru.api.domain.lastOpened.entity.UserDocumentId;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
+import com.haru.api.global.common.entity.TitleHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -27,16 +28,15 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
     private final UserRepository userRepository;
 
     @Override
-    @Transactional
-    public void updateLastOpened(Long userId, DocumentType documentType, Long documentId, Long workspaceId, String title) {
-        UserDocumentId id = new UserDocumentId(userId, documentId, documentType);
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateLastOpened(UserDocumentId userDocumentId, Long workspaceId, String title) {
 
-        UserDocumentLastOpened record = userDocumentLastOpenedRepository.findById(id)
+        UserDocumentLastOpened record = userDocumentLastOpenedRepository.findById(userDocumentId)
                 .orElseGet(() -> {
-                    User foundUser = userRepository.findById(userId)
+                    User foundUser = userRepository.findById(userDocumentId.getUserId())
                             .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
                     return UserDocumentLastOpened.builder()
-                            .id(id)
+                            .id(userDocumentId)
                             .user(foundUser)
                             .workspaceId(workspaceId)
                             .title(title)
@@ -50,6 +50,7 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
     }
 
     @Override
+    @Transactional
     public void createInitialRecordsForWorkspaceUsers(List<User> usersInWorkspace, Documentable document) {
 
         // 저장할 엔티티 리스트 생성
@@ -74,14 +75,15 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
     }
 
     @Override
-    public void updateRecordsForWorkspaceUsers(Documentable documentable) {
+    @Transactional
+    public void updateRecordsForWorkspaceUsers(Documentable documentable, TitleHolder titleHolder) {
 
         // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
         List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
 
         if (!recordsToUpdate.isEmpty()) {
             for (UserDocumentLastOpened record : recordsToUpdate) {
-                record.updateTitle(documentable.getTitle());
+                record.updateTitle(titleHolder.getTitle());
             }
         }
     }
@@ -109,6 +111,20 @@ public class UserDocumentLastOpenedServiceImpl implements UserDocumentLastOpened
         }
 
         return recordsToProcess;
+    }
+
+    @Override
+    @Transactional
+    public void updateRecordsTitleAndThumbnailForWorkspaceUsers(List<User> usersInWorkspace, Documentable documentable, TitleHolder titleHolder) {
+        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
+
+        if (!recordsToUpdate.isEmpty()) {
+            for (UserDocumentLastOpened record : recordsToUpdate) {
+                record.updateTitle(titleHolder.getTitle());
+                record.updateThumbnailKeyName(documentable.getThumbnailKeyName());
+            }
+        }
     }
 
 }

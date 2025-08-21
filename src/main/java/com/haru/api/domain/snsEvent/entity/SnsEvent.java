@@ -30,17 +30,16 @@ public class SnsEvent extends BaseEntity implements Documentable {
     @Column(nullable = false, length = 100)
     private String title;
 
-    @Column(length = 255)
     private String snsLink;
 
     @Column(length = 200)
     private String snsLinkTitle;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User creator;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "workspace_id")
     private Workspace workspace;
 

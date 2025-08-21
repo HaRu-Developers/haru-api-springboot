@@ -97,15 +97,16 @@ public class ChatGPTClient {
 
     public String getMoodTrackerReportRaw(String userMessageContent) {
         StringBuilder sb = new StringBuilder();
-        sb.append("너는 팀 심리 및 조직 문화 분석가야. 아래의 설문 응답을 통해 전체 설문을 종합한 마크다운 형식의 분석 리포트를 작성하고, 설문 질문 별로 개선 제안을 각 1개씩 제시해줘.\n\n");
+        sb.append("너는 팀 심리 및 조직 문화 분석가야. 아래의 설문 응답을 통해 전체 설문을 종합한 마크다운 형식의 분석 리포트를 작성하고, 설문 질문 별로 개선 제안을 각 1개씩 제시해줘. 아래의 형식에서 ###이 붙은 제목은 고정이고, 내용은 너가 채워주면 돼.\n\n");
 
-        sb.append("💡 최종 리포트 형식은 다음과 같아야 합니다:\n");
-        sb.append("1. {title} + 리포트\n");
+        sb.append("💡 최종 리포트 형식은 무조건 다음과 같은 마크다운 형식이어야만 합니다:\n");
+        sb.append("### 1. 팀 분위기 트래커 리포트\n");
         sb.append("   - 대상과 목적, 분석 방식 등을 간단히 정리\n");
-        sb.append("2. 주요 인사이트 요약 (AI가 뽑은 핵심 요약)\n");
+        sb.append("### 2. 주요 인사이트 요약 (HaRu AI가 뽑은 핵심 요약)\n");
         sb.append("   - 사용자의 응답 중 반복되거나 주목할 만한 인사이트를 요약\n");
         sb.append("   - 전체 응답자의 몇 %가 어떤 패턴을 보였는지도 서술\n");
-        sb.append("3. 자유 응답 기반 주요 키워드 정리 (많이 등장한 순서대로)\n");
+        sb.append("   - 서술시에 질문 숫자 id가 아닌 질문 내용 텍스트 기반으로 설명\n");
+        sb.append("### 3. 자유 응답 기반 주요 키워드 정리\n");
         sb.append("   - 예: 잦힌 (37건), 말은 덜 불분명 (29건) 등\n\n");
 
         sb.append("응답은 반드시 다음 JSON 형식으로 해줘. 형식만 따르고, 값은 생성한 값을 넣어줘야해. 질문에 대한 제안은 입력받은 질문 Id와 해당 질문에 매칭되는 제안 내용을 넣어줘. : \n");
@@ -142,18 +143,19 @@ public class ChatGPTClient {
 
     public Mono<SurveyReportResponse> getMoodTrackerReport(String userMessageContent) {
         StringBuilder sb = new StringBuilder();
-        sb.append("너는 팀 심리 및 조직 문화 분석가야. 아래의 설문 응답을 통해 전체 설문을 종합한 마크다운 형식의 분석 리포트를 작성하고, 설문 질문 별로 개선 제안을 각 1개씩 제시해줘.\n\n");
+        sb.append("너는 팀 심리 및 조직 문화 분석가야. 아래의 설문 응답을 통해 전체 설문을 종합한 마크다운 형식의 분석 리포트를 작성하고, 설문 질문 별로 개선 제안을 각 1개씩 제시해줘. 아래의 형식에서 ###이 붙은 제목은 고정이고, 내용은 너가 채워주면 돼.\n\n");
 
-        sb.append("💡 최종 리포트 형식은 다음과 같아야 합니다:\n");
-        sb.append("1. {title} + 리포트\n");
+        sb.append("💡 최종 리포트 형식은 무조건 다음과 같은 마크다운 형식이어야만 합니다:\n");
+        sb.append("### 1. 팀 분위기 트래커 리포트\n");
         sb.append("   - 대상과 목적, 분석 방식 등을 간단히 정리\n");
-        sb.append("2. 주요 인사이트 요약 (AI가 뽑은 핵심 요약)\n");
+        sb.append("### 2. 주요 인사이트 요약 (HaRu AI가 뽑은 핵심 요약)\n");
         sb.append("   - 사용자의 응답 중 반복되거나 주목할 만한 인사이트를 요약\n");
         sb.append("   - 전체 응답자의 몇 %가 어떤 패턴을 보였는지도 서술\n");
-        sb.append("3. 자유 응답 기반 주요 키워드 정리 (많이 등장한 순서대로)\n");
+        sb.append("   - 서술시에 질문 숫자 id가 아닌 질문 내용 텍스트 기반으로 설명\n");
+        sb.append("### 3. 자유 응답 기반 주요 키워드 정리\n");
         sb.append("   - 예: 잦힌 (37건), 말은 덜 불분명 (29건) 등\n\n");
 
-        sb.append("응답은 반드시 응답은 JSON 문자열 형식으로 주고, 백틱이나 마크다운 없이 순수 JSON만 반환해줘. 다음 JSON 형식으로 해줘. 형식만 따르고, 값은 생성한 값을 넣어줘야해. 질문에 대한 제안은 입력받은 질문 Id와 해당 질문에 매칭되는 제안 내용을 넣어줘. : \n");
+        sb.append("응답은 반드시 다음 JSON 형식으로 해줘. 형식만 따르고, 값은 생성한 값을 넣어줘야해. 질문에 대한 제안은 입력받은 질문 Id와 해당 질문에 매칭되는 제안 내용을 넣어줘. : \n");
         sb.append("{\n");
         sb.append("  \"report\": \"전체 리포트 마크다운 텍스트\",\n");
         sb.append("  \"suggestionsByQuestionId\": {\n");
@@ -225,34 +227,36 @@ public class ChatGPTClient {
 
     public Mono<String> analyzeMeetingTranscript(String documentText, String agendaResult) {
         if (documentText == null || documentText.isBlank()) {
-            // 분석할 내용이 없으면 미리 정의된 응답을 반환합니다.
             return Mono.just("분석할 대화 내용이 없습니다.");
         }
 
-        // 안건 요약과 실제 대화록을 모두 포함하도록 프롬프트 수정
-        String prompt = "다음은 회의 전에 공유된 '안건 요약'과 실제 진행된 '회의 대화록'입니다. 두 내용을 모두 참고하여 다음 세 가지 작업을 수행해주세요.\n\n" +
+        String prompt = "다음은 회의 전에 공유된 '안건 요약'과 실제 진행된 '회의 대화록'입니다. 두 내용을 모두 참고하여 다음 작업을 수행해주세요.\n\n" +
                 "--- 안건 요약 ---\n" +
                 (agendaResult != null && !agendaResult.isBlank() ? agendaResult : "제공된 안건 요약 없음") + "\n\n" +
                 "--- 회의 대화록 ---\n" +
                 documentText + "\n\n" +
-                "1. 회의의 전체 내용을 3~4 문장으로 요약해주세요.\n" +
-                "2. 논의된 핵심 주제들을 발화 주제와 세부 사항으로 이루어지도록 추출해주세요.\n" +
-                "3. 회의에서 도출된 실행 과제(Action Item)가 있다면 목록으로 정리해주세요. 없다면 응답에 아예 포함하지 마세요.\n" +
-                "반드시 '요약 내용|||핵심 주제1,핵심 주제2|||실행 과제 목록' 형식으로 응답해주세요. 다른 설명은 절대 붙이지 마세요.\n" +
-                "또한, 응답하는 모든 내용은 마크다운(Markdown) 형식으로 작성해주세요. 예를 들어, 실행 과제는 마크다운의 리스트 형식(-)을 사용해주세요.";
+                "회의록을 아래의 마크다운 형식에 맞춰 정리해주세요. 각 항목의 내용은 회의 대화록을 기반으로 채워주세요.\n" +
+                "형식:\n" +
+                "1. (회의의 첫 번째 핵심 주제)\n" +
+                "    - (주제에 대한 세부 내용 또는 결정 사항 1)\n" +
+                "    - (주제에 대한 세부 내용 또는 결정 사항 2)\n" +
+                "2. (회의의 두 번째 핵심 주제)\n" +
+                "    - (주제에 대한 세부 내용...)\n" +
+                "(이후 논의된 핵심 주제가 있다면 3., 4. 형식으로 계속 이어서 작성해주세요.)\n" +
+                "각 넘버링된 핵심 주제 아래에는 반드시 한 개 이상의 불릿포인트(-)가 포함되어야 합니다.\n" +
+                "다른 설명 없이, 위 마크다운 형식의 결과만 반환해주세요.";
 
         List<Map<String, String>> messages = List.of(
-                Map.of("role", "system", "content", "너는 회의록을 분석하여 요약, 핵심 주제, 실행 과제를 정해진 형식에 따라 추출하는 전문 AI 비서야."),
+                Map.of("role", "system", "content", "너는 회의록을 지정된 마크다운 형식으로 정리하는 전문 AI 비서야."),
                 Map.of("role", "user", "content", prompt)
         );
 
         Map<String, Object> requestBody = Map.of(
                 "model", "gpt-4o",
                 "messages", messages,
-                "max_tokens", 800 // 응답 길이를 넉넉하게 설정
+                "max_tokens", 1000
         );
 
-        // WebClient를 통해 OpenAI API 호출
         return webClient.post()
                 .bodyValue(requestBody)
                 .retrieve()

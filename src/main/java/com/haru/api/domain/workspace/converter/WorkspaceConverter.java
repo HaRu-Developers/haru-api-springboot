@@ -24,10 +24,11 @@ public class WorkspaceConverter {
     private final HashIdUtil hashIdUtil;
     private final AmazonS3Manager s3Manager;
 
-    public static WorkspaceResponseDTO.Workspace toWorkspaceDTO(Workspace workspace) {
+    public static WorkspaceResponseDTO.Workspace toWorkspaceDTO(Workspace workspace, String presignedUrl) {
         return WorkspaceResponseDTO.Workspace.builder()
                 .workspaceId(workspace.getId())
                 .title(workspace.getTitle())
+                .imageUrl(presignedUrl)
                 .build();
     }
 
@@ -79,12 +80,6 @@ public class WorkspaceConverter {
     public static WorkspaceResponseDTO.DocumentSidebarList toDocumentSidebarList(List<WorkspaceResponseDTO.DocumentSidebar> documentList) {
         return WorkspaceResponseDTO.DocumentSidebarList.builder()
                 .documents(documentList)
-                .build();
-    }
-
-    public static WorkspaceResponseDTO.DocumentCalendarList toDocumentCalendarList(List<WorkspaceResponseDTO.DocumentCalendar> documentList) {
-        return WorkspaceResponseDTO.DocumentCalendarList.builder()
-                .documentList(documentList)
                 .build();
     }
 
@@ -151,8 +146,16 @@ public class WorkspaceConverter {
     public WorkspaceResponseDTO.RecentDocument toRecentDocument(UserDocumentLastOpened userDocumentLastOpened) {
         String thumbnailUrl = s3Manager.generatePresignedUrl(userDocumentLastOpened.getThumbnailKeyName());
 
+        String documentId;
+
+        if(userDocumentLastOpened.getId().getDocumentType().equals(DocumentType.TEAM_MOOD_TRACKER)) {
+            documentId = hashIdUtil.encode(userDocumentLastOpened.getId().getDocumentId());
+        } else {
+            documentId = String.valueOf(userDocumentLastOpened.getId().getDocumentId());
+        }
+
         return WorkspaceResponseDTO.RecentDocument.builder()
-                .documentId(userDocumentLastOpened.getId().getDocumentId())
+                .documentId(documentId)
                 .title(userDocumentLastOpened.getTitle())
                 .documentType(userDocumentLastOpened.getId().getDocumentType())
                 .thumbnailUrl(thumbnailUrl)

@@ -1,13 +1,11 @@
 package com.haru.api.domain.workspace.service;
 
 import com.haru.api.domain.lastOpened.converter.UserDocumentLastOpenedConverter;
+import com.haru.api.domain.lastOpened.entity.Documentable;
 import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
 import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
-import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
-import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.user.entity.User;
 import com.haru.api.domain.user.repository.UserRepository;
@@ -67,7 +65,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         if (image != null) {
             // s3에 사진 추가하는 메서드
             String path = amazonS3Manager.generateKeyName("workspace/image");
-            keyName = amazonS3Manager.uploadFile(path, image);
+            keyName = amazonS3Manager.uploadMultipartFile(path, image);
         }
 
         // workspace entity 생성
@@ -83,7 +81,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
                 .auth(Auth.ADMIN)
                 .build());
 
-        return WorkspaceConverter.toWorkspaceDTO(workspace);
+        return WorkspaceConverter.toWorkspaceDTO(workspace, amazonS3Manager.generatePresignedUrl(keyName));
     }
 
     @Transactional
@@ -96,19 +94,28 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
         if(userWorkspace.getAuth() != Auth.ADMIN)
             throw new WorkspaceHandler(ErrorStatus.WORKSPACE_MODIFY_NOT_ALLOWED);
 
+        String keyName = workspace.getKeyName();
+
+        if(keyName == null){
+            keyName = amazonS3Manager.generateKeyName("workspace/image");
+            workspace.initKeyName(keyName);
+        }
+
         // 제목 수정
         workspace.updateTitle(request.getTitle());
 
         // 이미지 수정
         if (image != null) {
-            amazonS3Manager.uploadFile(workspace.getKeyName(), image);
+            amazonS3Manager.uploadMultipartFile(keyName, image);
         }
 
-        return WorkspaceConverter.toWorkspaceDTO(workspace);
+        workspaceRepository.save(workspace);
+
+        return WorkspaceConverter.toWorkspaceDTO(workspace, amazonS3Manager.generatePresignedUrl(workspace.getKeyName()));
     }
 
-    @Transactional
     @Override
+    @Transactional
     public WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token) {
 
         WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findByToken(token)
@@ -175,8 +182,7 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
                 .auth(Auth.MEMBER)
                 .build());
 
-        // 각 문서 조회
-        // 각 문서 UserDocumentLastOpened로 변환
+        // 각 문서 조회 후, UserDocumentLastOpened로 변환
         List<UserDocumentLastOpened> userDocumentLastOpenedList = addDocumentsToUserLastOpened(foundWorkspace, signedUser);
 
         // 워크스페이스에 속해있는 모든 문서를 user_document_last_opened에 추가
@@ -223,17 +229,16 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
     }
 
     private List<UserDocumentLastOpened> addDocumentsToUserLastOpened(Workspace workspace, User user) {
-        List<Meeting> meetingList = meetingRepository.findAllByWorkspaceId(workspace.getId());
-        List<SnsEvent> snsEventList = snsEventRepository.findAllByWorkspaceId(workspace.getId());
-        List<MoodTracker> moodTrackerList = moodTrackerRepository.findAllByWorkspaceId(workspace.getId());
+
+        List<Documentable> documentList = new ArrayList<>();
+
+        documentList.addAll(meetingRepository.findAllByWorkspaceId(workspace.getId()));
+        documentList.addAll(snsEventRepository.findAllByWorkspaceId(workspace.getId()));
+        documentList.addAll(moodTrackerRepository.findAllByWorkspaceId(workspace.getId()));
 
         List<UserDocumentLastOpened> userDocumentLastOpenedList = new ArrayList<>();
-        for(Meeting meeting : meetingList)
-            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(meeting, user));
-        for(SnsEvent snsEvent : snsEventList)
-            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(snsEvent, user));
-        for(MoodTracker moodTracker : moodTrackerList)
-            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(moodTracker, user));
+        for(Documentable documentable : documentList)
+            userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(documentable, user));
 
         userDocumentLastOpenedRepository.saveAll(userDocumentLastOpenedList);
 
@@ -250,11 +255,11 @@ public class WorkspaceCommandServiceImpl implements WorkspaceCommandService {
                         "  <p>아래 버튼을 클릭하여 워크스페이스에 합류해 주세요!</p>" +
                         "  <p style=\"margin-top: 20px;\">" + // 버튼 스타일
                         "    <a href=\"%s\" " +
-                        "       style=\"display: inline-block; padding: 10px 20px; font-size: 16px; color: white; background-color: #007bff; text-decoration: none; border-radius: 5px;\">" +
+                        "       style=\"display: inline-block; padding: 10px 20px; font-size: 16px; color: white; background-color: #E65787; text-decoration: none; border-radius: 5px;\">" +
                         "      초대 수락하기" +
                         "    </a>" +
                         "  </p>" +
-                        "  <p style=\"margin-top: 30px;\">감사합니다.<br/><b>HaRu 팀 드림</b></p>" +
+                        "  <p style=\"margin-top: 30px;\">감사합니다.<br/><b>Team HaRu 드림</b></p>" +
                         "</body>" +
                         "</html>",
                 invitedEmail, inviterName, workspaceName, invitationLink

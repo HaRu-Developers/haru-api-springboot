@@ -1,13 +1,18 @@
 package com.haru.api.domain.moodTracker.service;
 
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
+import com.haru.api.domain.moodTracker.entity.MoodTracker;
+import com.haru.api.domain.user.entity.User;
+import com.haru.api.domain.workspace.entity.Workspace;
 
 public interface MoodTrackerQueryService {
-    MoodTrackerResponseDTO.PreviewList getMoodTrackerPreviewList(Long userId, Long workspaceId);
+    MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace);
 
-    MoodTrackerResponseDTO.QuestionResult getQuestionResult(Long userId, Long moodTrackerId);
+    MoodTrackerResponseDTO.BaseResult getBaseResult(Long moodTrackerId);
 
-    MoodTrackerResponseDTO.ReportResult getReportResult(Long userId, Long moodTrackerId);
+    MoodTrackerResponseDTO.QuestionResult getQuestionResult(Long moodTrackerId);
 
-    MoodTrackerResponseDTO.ResponseResult getResponseResult(Long userId, Long moodTrackerId);
+    MoodTrackerResponseDTO.ReportResult getReportResult(User user, MoodTracker moodTracker);
+
+    MoodTrackerResponseDTO.ResponseResult getResponseResult(User user, MoodTracker moodTracker);
 }
