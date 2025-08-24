@@ -97,7 +97,14 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         List<Participant> filteredCommentList = new ArrayList<>();
         Set<String> filteredCommentSet = new HashSet<>();
         List<Winner> winnerList = new ArrayList<>();
+        int cnt = 0;
         for (SnsEventResponseDTO.Media media : instagramMediaResponse.getData()) {
+            System.out.println("리스트 Instagram Media shortCode: " + media.getShortcode());
+            System.out.println("리스트 Instagram Media id: " + media.getId());            // 응답이 null이거나 게시물이 아예 없으면 예외 발생
+        }
+        for (SnsEventResponseDTO.Media media : instagramMediaResponse.getData()) {
+            System.out.println("리스트 중 하나 Instagram Media shortCode: " + media.getShortcode());
+            System.out.println("리스트 중 하나 Instagram Media id: " + media.getId());
             if (requestShortCode.equals(media.getShortcode())) {
                 System.out.println("Instagram Media shortCode: " + media.getShortcode());
                 System.out.println("Instagram Media id: " + media.getId());
@@ -113,7 +120,15 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                     }
                     // 조건 2: 키워드 필터
                     if (pass && request.getSnsCondition().getIsKeyword()) {
-                        if (comment.getText() == null || !comment.getText().contains(request.getSnsCondition().getKeyword())) {
+                        Boolean hasKeyword = false;
+                        String[] keywords = request.getSnsCondition().getKeyword().trim().split(" ");
+                        for (String keyword : keywords) {
+                            System.out.println("키워드: " + keyword);
+                            if (comment.getText() == null || !comment.getText().contains(keyword)) {
+                                hasKeyword = true;
+                            }
+                        }
+                        if (!hasKeyword) {
                             pass = false;
                         }
                     }
@@ -131,7 +146,9 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
                 break;
             }
             // 마지막까지 돌았는데 shortcode파싱해둔것과 일치하는게 없다면 error처리해야됨.
-            throw new SnsEventHandler(SNS_EVENT_LINK_NOT_FOUND);
+            if (cnt == instagramMediaResponse.getData().size() - 1) {
+                throw new SnsEventHandler(SNS_EVENT_LINK_NOT_FOUND);
+            }
         }
         // 참여자 저장
         for (String nickname : filteredCommentSet) {
@@ -414,7 +431,6 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         // 가져오는 값 없거나 error뜨면 error처리해야됨.
         try {
             SnsEventResponseDTO.InstagramMediaResponse response = restTemplate.getForObject(url, SnsEventResponseDTO.InstagramMediaResponse.class);
-            // 응답이 null이거나 게시물이 아예 없으면 예외 발생
             if (response == null || response.getData() == null || response.getData().isEmpty()) {
                 throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_API_NO_MEDIA);
             }
@@ -439,6 +455,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         String url = UriComponentsBuilder
                 .fromHttpUrl(baseUrl)
                 .queryParam("fields", "from,text,timestamp")
+                .queryParam("limit", 50)
                 .queryParam("access_token", accessToken)
                 .toUriString();
 
@@ -447,6 +464,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
             SnsEventResponseDTO.InstagramCommentResponse response = restTemplate.getForObject(url, SnsEventResponseDTO.InstagramCommentResponse.class);
 
             if (response == null || response.getData() == null || response.getData().isEmpty()) {
+                System.out.println("게시물에 댓글이 없습니다.");
                 throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_API_NO_COMMENT);
             }
             return response.getData();
